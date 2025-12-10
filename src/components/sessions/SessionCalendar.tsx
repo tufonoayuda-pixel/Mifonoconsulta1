@@ -45,16 +45,16 @@ const SessionCalendar: React.FC<SessionCalendarProps> = ({ sessions, onSelectSes
     let backgroundColor = "";
     switch (event.resource.status) {
       case "Programada":
-        backgroundColor = "#3b82f6"; // blue-500
+        backgroundColor = "hsl(var(--primary))"; // Red Ranger
         break;
       case "Atendida":
-        backgroundColor = "#22c55e"; // green-500
+        backgroundColor = "hsl(var(--success))"; // Green Ranger
         break;
       case "No Atendida":
-        backgroundColor = "#ef4444"; // red-500
+        backgroundColor = "hsl(var(--destructive))"; // Destructive Red
         break;
       default:
-        backgroundColor = "#6b7280"; // gray-500
+        backgroundColor = "hsl(var(--muted))"; // Muted dark
     }
     return { style: { backgroundColor, borderRadius: '4px', border: 'none' } };
   };

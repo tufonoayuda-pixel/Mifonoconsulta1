@@ -105,7 +105,7 @@ const Index = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Bienvenido a MiFonoConsulta</h1>
         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-          <Circle className="h-3 w-3 fill-green-500 text-green-500 animate-pulse" />
+          <Circle className="h-3 w-3 fill-success text-success animate-pulse" /> {/* Use success color */}
           En vivo
         </div>
       </div>

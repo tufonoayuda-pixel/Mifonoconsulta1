@@ -27,9 +27,9 @@ interface SessionColumnsProps {
 const getSessionBadgeVariant = (status: Session["status"]) => {
   switch (status) {
     case "Programada":
-      return "default";
+      return "default"; // This will map to primary in the new theme
     case "Atendida":
-      return "success"; // Assuming you have a 'success' variant for Badge
+      return "success"; // Use the new 'success' variant
     case "No Atendida":
       return "destructive";
     default:

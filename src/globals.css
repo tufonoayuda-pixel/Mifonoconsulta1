@@ -4,55 +4,52 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 220 10% 10%; /* Dark background */
+    --foreground: 210 40% 98%; /* Light text */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 220 10% 15%; /* Slightly lighter dark for cards */
+    --card-foreground: 210 40% 98%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 220 10% 15%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 0 80% 50%; /* Red Ranger */
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 220 80% 50%; /* Blue Ranger */
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 220 10% 20%; /* Muted dark */
+    --muted-foreground: 215.4 16.3% 60%; /* Lighter muted text */
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 45 90% 50%; /* Yellow Ranger */
+    --accent-foreground: 222.2 47.4% 11.2%; /* Dark text for yellow */
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84.2% 60.2%; /* Standard destructive red */
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --success: 120 80% 30%; /* Green Ranger */
+    --success-foreground: 210 40% 98%;
+
+    --border: 220 10% 25%; /* Darker border */
+    --input: 220 10% 20%;
+    --ring: 0 80% 50%; /* Primary red ring */
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 220 10% 10%; /* Same as background */
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 0 80% 50%; /* Red for active sidebar item */
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 220 10% 20%; /* Darker accent for hover */
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 220 10% 25%;
+    --sidebar-ring: 0 80% 50%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    /* Keep dark mode consistent with the new base theme, as the base is already dark */
+    --background: 222.2 84% 4.9%; /* Original dark background, can be adjusted */
     --foreground: 210 40% 98%;
 
     --card: 222.2 84% 4.9%;
@@ -61,7 +58,7 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
+    --primary: 210 40% 98%; /* This was light primary, now it should be the dark theme's primary */
     --primary-foreground: 222.2 47.4% 11.2%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -107,7 +104,7 @@
 .rbc-calendar {
   font-family: var(--font-sans);
   color: hsl(var(--foreground));
-  background-color: hsl(var(--background));
+  background-color: hsl(var(--card)); /* Use card background */
   border-radius: var(--radius);
   border: 1px solid hsl(var(--border));
 }
@@ -123,11 +120,11 @@
 }
 
 .rbc-today {
-  background-color: hsl(var(--accent));
+  background-color: hsl(var(--muted)); /* Use muted for today's background */
 }
 
 .rbc-event {
-  background-color: hsl(var(--primary));
+  background-color: hsl(var(--primary)); /* Default event color */
   color: hsl(var(--primary-foreground));
   border: none;
   border-radius: 4px;
@@ -141,7 +138,7 @@
 
 .rbc-toolbar button {
   color: hsl(var(--foreground));
-  background-color: hsl(var(--secondary));
+  background-color: hsl(var(--secondary)); /* Use secondary for toolbar buttons */
   border: 1px solid hsl(var(--border));
   border-radius: var(--radius);
   padding: 0.25rem 0.75rem;
@@ -149,8 +146,8 @@
 }
 
 .rbc-toolbar button:hover {
-  background-color: hsl(var(--secondary-foreground));
-  color: hsl(var(--background));
+  background-color: hsl(var(--primary)); /* Hover to primary */
+  color: hsl(var(--primary-foreground));
 }
 
 .rbc-toolbar button.rbc-active {
