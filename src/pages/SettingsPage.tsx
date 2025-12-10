@@ -3,11 +3,14 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Wifi, WifiOff, Settings, Users, Calendar, ClipboardList } from "lucide-react";
+import { Wifi, WifiOff, Settings, Users, Calendar, ClipboardList, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { showError } from "@/utils/toast";
+import { showError, showSuccess } from "@/utils/toast"; // Import showSuccess
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button"; // Import Button
+import JSZip from "jszip"; // Import JSZip
+import { saveAs } from "file-saver"; // Import saveAs
 
 interface DashboardStats {
   patients: number;
@@ -64,6 +67,24 @@ const SettingsPage: React.FC = () => {
     queryFn: fetchDashboardStats,
     refetchInterval: 60000, // Refetch every minute
   });
+
+  const exportData = async (tableName: string, displayName: string) => {
+    try {
+      const { data, error } = await supabase.from(tableName).select("*");
+      if (error) throw error;
+
+      const zip = new JSZip();
+      const fileName = `${displayName.toLowerCase().replace(/ /g, '_')}_${format(new Date(), 'yyyyMMdd_HHmmss')}.json`;
+      zip.file(fileName, JSON.stringify(data, null, 2));
+
+      const content = await zip.generateAsync({ type: "blob" });
+      saveAs(content, `${displayName.toLowerCase().replace(/ /g, '_')}_export_${format(new Date(), 'yyyyMMdd_HHmmss')}.zip`);
+      showSuccess(`Datos de ${displayName} exportados exitosamente.`);
+    } catch (error: any) {
+      showError(`Error al exportar datos de ${displayName}: ` + error.message);
+      console.error(`Error exporting ${displayName} data:`, error);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6 p-4 lg:p-6">
@@ -133,7 +154,29 @@ const SettingsPage: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Futuras tarjetas aquí */}
+        {/* Tarjeta: Exportación de Datos */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Exportación de Datos</CardTitle>
+            <Download className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <CardDescription className="mb-4">
+              Exporta tus datos de pacientes, sesiones y registros clínicos en formato ZIP.
+            </CardDescription>
+            <div className="grid gap-2">
+              <Button onClick={() => exportData("patients", "Pacientes")}>
+                Exportar Pacientes
+              </Button>
+              <Button onClick={() => exportData("sessions", "Sesiones")}>
+                Exportar Sesiones
+              </Button>
+              <Button onClick={() => exportData("clinical_records", "Registros Clínicos")}>
+                Exportar Registros Clínicos
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
