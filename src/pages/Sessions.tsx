@@ -19,6 +19,34 @@ import { toast } from "sonner"; // Import sonner toast
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"; // Import useQuery, useMutation and useQueryClient
 import { es } from "date-fns/locale"; // Import es locale for date-fns
 
+// Helper function to map frontend status to DB status
+const mapFrontendStatusToDb = (status: Session["status"]): string => {
+  switch (status) {
+    case "Programada":
+      return "scheduled";
+    case "Atendida":
+      return "attended";
+    case "No Atendida":
+      return "not_attended";
+    default:
+      return "scheduled"; // Default to scheduled if unknown
+  }
+};
+
+// Helper function to map DB status to frontend status
+const mapDbStatusToFrontend = (dbStatus: string): Session["status"] => {
+  switch (dbStatus) {
+    case "scheduled":
+      return "Programada";
+    case "attended":
+      return "Atendida";
+    case "not_attended":
+      return "No Atendida";
+    default:
+      return "Programada"; // Default to Programada if unknown
+  }
+};
+
 const Sessions = () => {
   const queryClient = useQueryClient();
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -53,7 +81,7 @@ const Sessions = () => {
         time: s.time,
         duration: s.duration,
         type: s.type,
-        status: s.status,
+        status: mapDbStatusToFrontend(s.status), // Map DB status to frontend status
         observationsAttended: s.observations_attended,
         continueSessions: s.continue_sessions,
         justificationNotAttended: s.justification_not_attended,
@@ -143,7 +171,7 @@ const Sessions = () => {
           ...newSession,
           patientId: patient.id, // Link to patient ID
           date: format(currentDate, "yyyy-MM-dd"),
-          status: "Programada",
+          status: "Programada", // Always programada for new recurring sessions
           isRecurring: true,
           recurrencePattern: newSession.recurrencePattern,
           recurrenceEndDate: newSession.recurrenceEndDate,
@@ -177,7 +205,7 @@ const Sessions = () => {
       time: s.time,
       duration: s.duration,
       type: s.type,
-      status: s.status,
+      status: mapFrontendStatusToDb(s.status), // Map frontend status to DB status
       observations_attended: s.observationsAttended,
       continue_sessions: s.continueSessions,
       justification_not_attended: s.justificationNotAttended,
@@ -201,7 +229,7 @@ const Sessions = () => {
       time: updatedSession.time,
       duration: updatedSession.duration,
       type: updatedSession.type,
-      status: updatedSession.status,
+      status: mapFrontendStatusToDb(updatedSession.status), // Map frontend status to DB status
       observations_attended: updatedSession.observationsAttended,
       continue_sessions: updatedSession.continueSessions,
       justification_not_attended: updatedSession.justificationNotAttended,
