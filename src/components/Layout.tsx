@@ -7,6 +7,7 @@ import Sidebar from "./Sidebar";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MadeWithDyad } from "./made-with-dyad";
+import { cn } from "@/lib/utils"; // Import cn utility
 
 const Layout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
