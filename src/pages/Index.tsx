@@ -1,12 +1,13 @@
 "use client";
 
+import React, { useState, useEffect } from "react"; // Importa useEffect y useState
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, CalendarDays, FileText, Bell, Circle } from "lucide-react";
 import MyScheduleCard from "@/components/MyScheduleCard";
-import { supabase } from "@/integrations/supabase/client"; // Import supabase client
-import { useQuery } from "@tanstack/react-query"; // Import useQuery
-import { showError } from "@/utils/toast"; // Import showError for error handling
-import { format } from "date-fns"; // Import format for date handling
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { showError } from "@/utils/toast";
+import { format } from "date-fns";
 
 interface DashboardStats {
   totalPatients: number;
@@ -28,7 +29,7 @@ const fetchDashboardStats = async (): Promise<DashboardStats> => {
       .from("sessions")
       .select("id", { count: "exact", head: true })
       .eq("date", today)
-      .eq("status", "Programada"); // Only count scheduled sessions for today
+      .eq("status", "Programada");
     if (sessionsError) throw sessionsError;
 
     const { count: totalClinicalRecords, error: clinicalRecordsError } = await supabase
@@ -39,7 +40,7 @@ const fetchDashboardStats = async (): Promise<DashboardStats> => {
     const { count: pendingNotifications, error: notificationsError } = await supabase
       .from("notifications")
       .select("id", { count: "exact", head: true })
-      .eq("read", false); // Only count unread notifications
+      .eq("read", false);
     if (notificationsError) throw notificationsError;
 
     return {
@@ -55,10 +56,33 @@ const fetchDashboardStats = async (): Promise<DashboardStats> => {
 };
 
 const Index = () => {
+  const [currentDateTime, setCurrentDateTime] = useState<string>("");
+
+  useEffect(() => {
+    const updateDateTime = () => {
+      const now = new Date();
+      const formatter = new Intl.DateTimeFormat("es-CL", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        timeZone: "America/Santiago",
+      });
+      setCurrentDateTime(formatter.format(now));
+    };
+
+    updateDateTime(); // Set initial time
+    const intervalId = setInterval(updateDateTime, 1000); // Update every second
+
+    return () => clearInterval(intervalId); // Clean up on component unmount
+  }, []);
+
   const { data: stats, isLoading, isError, error } = useQuery<DashboardStats, Error>({
     queryKey: ["dashboardStats"],
     queryFn: fetchDashboardStats,
-    refetchInterval: 30000, // Refetch every 30 seconds for near real-time data
+    refetchInterval: 30000,
   });
 
   if (isLoading) {
@@ -110,6 +134,9 @@ const Index = () => {
       </div>
       <p className="text-lg text-gray-600 dark:text-gray-400">
         Tu sistema de gestión integral para fonoaudiólogos. Aquí encontrarás un resumen rápido de tu consulta.
+      </p>
+      <p className="text-md text-gray-700 dark:text-gray-300 font-medium">
+        Fecha y Hora Actual (Chile Continental): {currentDateTime}
       </p>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
