@@ -37,20 +37,20 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
             <Input value={patientAge !== undefined ? patientAge.toString() : "N/A"} disabled />
           </FormControl>
         </FormItem>
+        <FormField
+          control={form.control}
+          name="data.schoolLevel"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nivel Escolar</FormLabel>
+              <FormControl>
+                <Input placeholder="Ej: Educación Básica" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
-      <FormField
-        control={form.control}
-        name="data.schoolLevel"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Nivel Escolar</FormLabel>
-            <FormControl>
-              <Input placeholder="Ej: Educación Básica" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
       <FormField
         control={form.control}
         name="data.reasonForConsultation"
@@ -120,60 +120,64 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
       />
 
       <h3 className="text-lg font-semibold mt-8">III. CONTEXTO DE EVALUACIÓN</h3>
-      <FormField
-        control={form.control}
-        name="data.environmentConditions"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Condiciones del Entorno</FormLabel>
-            <FormControl>
-              <Textarea placeholder="Describe las condiciones del ambiente de evaluación..." {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="data.hearingAidUse"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Uso de Dispositivos Auditivos</FormLabel>
-            <FormControl>
-              <Input placeholder="Ej: Audífono bilateral, Implante Coclear" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="data.environmentConditions"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Condiciones del Entorno</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Describe las condiciones del ambiente de evaluación..." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="data.hearingAidUse"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Uso de Dispositivos Auditivos</FormLabel>
+              <FormControl>
+                <Input placeholder="Ej: Audífono bilateral, Implante Coclear" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
 
       <h3 className="text-lg font-semibold mt-8">IV. INSTRUMENTOS DE EVALUACIÓN</h3>
-      <FormField
-        control={form.control}
-        name="data.appliedTests"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Tests Aplicados</FormLabel>
-            <FormControl>
-              <Textarea placeholder="Lista de pruebas estandarizadas o informales aplicadas..." {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="data.clinicalObservationMethods"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Métodos de Observación Clínica</FormLabel>
-            <FormControl>
-              <Textarea placeholder="Describe los métodos de observación utilizados..." {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="data.appliedTests"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Tests Aplicados</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Lista de pruebas estandarizadas o informales aplicadas..." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="data.clinicalObservationMethods"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Métodos de Observación Clínica</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Describe los métodos de observación utilizados..." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
 
       <h3 className="text-lg font-semibold mt-8">V. HALLAZGOS DE EVALUACIÓN</h3>
       <FormField
@@ -190,71 +194,73 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
         )}
       />
       <h4 className="text-md font-medium mt-4">Percepción Acústica</h4>
-      <FormField
-        control={form.control}
-        name="data.acousticPerceptionDetection"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Detección</FormLabel>
-            <FormControl>
-              <Input placeholder="Hallazgos en detección de sonidos..." {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="data.acousticPerceptionDiscrimination"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Discriminación</FormLabel>
-            <FormControl>
-              <Input placeholder="Hallazgos en discriminación de sonidos..." {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="data.acousticPerceptionIdentification"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Identificación</FormLabel>
-            <FormControl>
-              <Input placeholder="Hallazgos en identificación de sonidos..." {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="data.acousticPerceptionRecognition"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Reconocimiento</FormLabel>
-            <FormControl>
-              <Input placeholder="Hallazgos en reconocimiento de sonidos..." {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="data.acousticPerceptionComprehension"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Comprensión</FormLabel>
-            <FormControl>
-              <Input placeholder="Hallazgos en comprensión de sonidos..." {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="data.acousticPerceptionDetection"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Detección</FormLabel>
+              <FormControl>
+                <Input placeholder="Hallazgos en detección de sonidos..." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="data.acousticPerceptionDiscrimination"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Discriminación</FormLabel>
+              <FormControl>
+                <Input placeholder="Hallazgos en discriminación de sonidos..." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="data.acousticPerceptionIdentification"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Identificación</FormLabel>
+              <FormControl>
+                <Input placeholder="Hallazgos en identificación de sonidos..." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="data.acousticPerceptionRecognition"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Reconocimiento</FormLabel>
+              <FormControl>
+                <Input placeholder="Hallazgos en reconocimiento de sonidos..." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="data.acousticPerceptionComprehension"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Comprensión</FormLabel>
+              <FormControl>
+                <Input placeholder="Hallazgos en comprensión de sonidos..." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
 
       <h4 className="text-md font-medium mt-4">Habilidades Lingüísticas</h4>
       <FormField

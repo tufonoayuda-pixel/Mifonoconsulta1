@@ -56,20 +56,20 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
             <Input value={patientAgeDisplay !== undefined ? patientAgeDisplay.toString() : "N/A"} disabled />
           </FormControl>
         </FormItem>
+        <FormField
+          control={form.control}
+          name="data.schooling"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Escolaridad</FormLabel>
+              <FormControl>
+                <Input placeholder="Ej: 3° Básico" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
-      <FormField
-        control={form.control}
-        name="data.schooling"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Escolaridad</FormLabel>
-            <FormControl>
-              <Input placeholder="Ej: 3° Básico" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
       <FormField
         control={form.control}
         name="data.relevantClinicalInfo"
@@ -124,30 +124,80 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
       />
 
       <h3 className="text-lg font-semibold mt-8">III. METODOLOGÍA A UTILIZAR</h3>
-      <FormField
-        control={form.control}
-        name="data.mainMethodology"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Metodología Principal</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona una metodología" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {["Terapia Auditiva Verbal", "Enfoque Bilingüe Bicultural", "Comunicación Total"].map((methodology) => (
-                  <SelectItem key={methodology} value={methodology}>
-                    {methodology}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="data.mainMethodology"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Metodología Principal</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona una metodología" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {["Terapia Auditiva Verbal", "Enfoque Bilingüe Bicultural", "Comunicación Total"].map((methodology) => (
+                    <SelectItem key={methodology} value={methodology}>
+                      {methodology}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="data.interventionFocus"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Foco de Intervención</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona un foco" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {["Directo", "Indirecto", "Mixto"].map((focus) => (
+                    <SelectItem key={focus} value={focus}>
+                      {focus}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="data.modality"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Modalidad</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona una modalidad" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {["Individual", "Grupal", "Familiar"].map((modality) => (
+                    <SelectItem key={modality} value={modality}>
+                      {modality}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
       <FormField
         control={form.control}
         name="data.specificStrategies"
@@ -157,54 +207,6 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
             <FormControl>
               <Textarea placeholder="Describe las estrategias específicas a utilizar..." {...field} />
             </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="data.interventionFocus"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Foco de Intervención</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un foco" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {["Directo", "Indirecto", "Mixto"].map((focus) => (
-                  <SelectItem key={focus} value={focus}>
-                    {focus}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="data.modality"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Modalidad</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona una modalidad" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {["Individual", "Grupal", "Familiar"].map((modality) => (
-                  <SelectItem key={modality} value={modality}>
-                    {modality}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             <FormMessage />
           </FormItem>
         )}
@@ -321,32 +323,34 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
       />
 
       <h3 className="text-lg font-semibold mt-8">VII. OBSERVACIONES Y SEGUIMIENTO</h3>
-      <FormField
-        control={form.control}
-        name="data.estimatedPlanDurationSessions"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Duración Estimada del Plan (sesiones)</FormLabel>
-            <FormControl>
-              <Input type="number" placeholder="Ej: 12" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="data.sessionFrequency"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Frecuencia de Sesiones</FormLabel>
-            <FormControl>
-              <Input placeholder="Ej: 1 vez por semana" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="data.estimatedPlanDurationSessions"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Duración Estimada del Plan (sesiones)</FormLabel>
+              <FormControl>
+                <Input type="number" placeholder="Ej: 12" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="data.sessionFrequency"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Frecuencia de Sesiones</FormLabel>
+              <FormControl>
+                <Input placeholder="Ej: 1 vez por semana" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
       <FormField
         control={form.control}
         name="data.additionalObservations"

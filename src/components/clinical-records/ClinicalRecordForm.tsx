@@ -276,70 +276,72 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto"> {/* Increased max-width */}
           <DialogHeader>
             <DialogTitle>{initialData ? "Editar Registro Clínico" : "Nuevo Registro Clínico"}</DialogTitle>
           </DialogHeader>
           <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-4 py-4">
-              <FormField
-                control={form.control}
-                name="recordType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tipo de Registro</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecciona un tipo de registro" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Evaluación">Evaluación</SelectItem>
-                        <SelectItem value="Plan de Intervención">Plan de Intervención</SelectItem>
-                        <SelectItem value="Registro de Sesión">Registro de Sesión</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex items-end gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="patientId"
+                  name="recordType"
                   render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>Paciente</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                    <FormItem>
+                      <FormLabel>Tipo de Registro</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecciona un paciente" />
+                            <SelectValue placeholder="Selecciona un tipo de registro" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {availablePatients.map((patient) => (
-                            <SelectItem key={patient.id} value={patient.id}>
-                              {patient.name} (RUT: {patient.rut})
-                            </SelectItem>
-                          ))}
+                          <SelectItem value="Evaluación">Evaluación</SelectItem>
+                          <SelectItem value="Plan de Intervención">Plan de Intervención</SelectItem>
+                          <SelectItem value="Registro de Sesión">Registro de Sesión</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setIsPatientFormOpen(true)}
-                  className="mb-1"
-                >
-                  <PlusCircle className="h-4 w-4" />
-                  <span className="sr-only">Añadir nuevo paciente</span>
-                </Button>
+
+                <div className="flex items-end gap-2">
+                  <FormField
+                    control={form.control}
+                    name="patientId"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormLabel>Paciente</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona un paciente" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {availablePatients.map((patient) => (
+                              <SelectItem key={patient.id} value={patient.id}>
+                                {patient.name} (RUT: {patient.rut})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setIsPatientFormOpen(true)}
+                    className="mb-1"
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                    <span className="sr-only">Añadir nuevo paciente</span>
+                  </Button>
+                </div>
               </div>
 
               {selectedRecordType === "Registro de Sesión" && (
@@ -375,59 +377,61 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                 />
               )}
 
-              <FormField
-                control={form.control}
-                name="recordDate"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Fecha del Registro</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(new Date(field.value), "PPP", { locale: es })
-                            ) : (
-                              <span>Selecciona una fecha</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value ? new Date(field.value) : undefined}
-                          onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
-                          initialFocus
-                          locale={es}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="recordDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Fecha del Registro</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(new Date(field.value), "PPP", { locale: es })
+                              ) : (
+                                <span>Selecciona una fecha</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value ? new Date(field.value) : undefined}
+                            onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                            initialFocus
+                            locale={es}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Título del Registro</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ej: Primera Evaluación Fonoaudiológica" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Título del Registro</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej: Primera Evaluación Fonoaudiológica" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               {renderConditionalFields()}
 

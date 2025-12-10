@@ -146,153 +146,161 @@ const PatientForm: React.FC<PatientFormProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto"> {/* Increased max-width */}
         <DialogHeader>
           <DialogTitle>{initialData ? "Editar Paciente" : "Añadir Paciente"}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-4 py-4">
-            <FormField
-              control={form.control}
-              name="rut"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>RUT</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ej: 12.345.678-9" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nombre Completo</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ej: Juan Pérez" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Teléfono</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ej: +56912345678" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="age"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Edad</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="Ej: 30" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="preferredRoom"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Sala de Preferencia</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="rut"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>RUT</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecciona una sala" />
-                      </SelectTrigger>
+                      <Input placeholder="Ej: 12.345.678-9" {...field} />
                     </FormControl>
-                    <SelectContent>
-                      {availableRooms.map((room) => (
-                        <SelectItem key={room} value={room}>{room}</SelectItem>
-                      ))}
-                      <SelectItem value="Sin preferencia">Sin preferencia</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="serviceType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo de Prestación</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nombre Completo</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecciona un tipo" />
-                      </SelectTrigger>
+                      <Input placeholder="Ej: Juan Pérez" {...field} />
                     </FormControl>
-                    <SelectContent>
-                      {getServiceTypeOptions(selectedRoom).map((type) => (
-                        <SelectItem key={type} value={type}>{type}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="preferredDay"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Día de Atención Preferido</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={!selectedRoom || selectedRoom === "Sin preferencia"}
-                  >
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Teléfono</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecciona un día" />
-                      </SelectTrigger>
+                      <Input placeholder="Ej: +56912345678" {...field} />
                     </FormControl>
-                    <SelectContent>
-                      {availableDays.map((day) => (
-                        <SelectItem key={day} value={day}>{day}</SelectItem>
-                      ))}
-                      <SelectItem value="Sin preferencia">Sin preferencia</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="preferredTime"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Hora de Atención Preferida</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="time"
-                      {...field}
-                      disabled={!selectedRoom || selectedRoom === "Sin preferencia" || !selectedDay || selectedDay === "Sin preferencia"}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="age"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Edad</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="Ej: 30" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <h3 className="text-lg font-semibold mt-4">Preferencias de Atención</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="preferredRoom"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Sala de Preferencia</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona una sala" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {availableRooms.map((room) => (
+                          <SelectItem key={room} value={room}>{room}</SelectItem>
+                        ))}
+                        <SelectItem value="Sin preferencia">Sin preferencia</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="serviceType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Prestación</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona un tipo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {getServiceTypeOptions(selectedRoom).map((type) => (
+                          <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="preferredDay"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Día de Atención Preferido</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      disabled={!selectedRoom || selectedRoom === "Sin preferencia"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona un día" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {availableDays.map((day) => (
+                          <SelectItem key={day} value={day}>{day}</SelectItem>
+                        ))}
+                        <SelectItem value="Sin preferencia">Sin preferencia</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="preferredTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Hora de Atención Preferida</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="time"
+                        {...field}
+                        disabled={!selectedRoom || selectedRoom === "Sin preferencia" || !selectedDay || selectedDay === "Sin preferencia"}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <h3 className="text-lg font-semibold mt-4">Observaciones</h3>
             <FormField
               control={form.control}
               name="observations"
