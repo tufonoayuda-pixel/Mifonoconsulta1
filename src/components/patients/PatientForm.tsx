@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Patient } from "@/types/patient";
+import { showSuccess, showError } from "@/utils/toast"; // Import toast utilities
 
 const patientFormSchema = z.object({
   id: z.string().optional(),
@@ -52,6 +53,7 @@ interface PatientFormProps {
   onClose: () => void;
   onSubmit: (patient: Patient) => void;
   initialData?: Patient | null;
+  existingRuts?: string[]; // To check for duplicates
 }
 
 const PatientForm: React.FC<PatientFormProps> = ({
@@ -59,6 +61,7 @@ const PatientForm: React.FC<PatientFormProps> = ({
   onClose,
   onSubmit,
   initialData,
+  existingRuts = [],
 }) => {
   const form = useForm<PatientFormValues>({
     resolver: zodResolver(patientFormSchema),
@@ -93,7 +96,25 @@ const PatientForm: React.FC<PatientFormProps> = ({
     }
   }, [initialData, form]);
 
+  const selectedRoom = form.watch("preferredRoom");
+  const selectedDay = form.watch("preferredDay");
+
+  const getServiceTypeOptions = (room?: string) => {
+    switch (room) {
+      case "UAPORRINO":
+        return ["Evaluación Nueva", "Fonoaudiología Ingreso", "Rehabilitación Auditiva Individual"];
+      case "RBC":
+        return ["Control Fonoaudiólogo", "Evaluación Ingreso Neurológico Preferente", "Ingreso Fonoaudiología"];
+      default:
+        return ["Sin preferencia"];
+    }
+  };
+
   const handleSubmit = (values: PatientFormValues) => {
+    if (!initialData && existingRuts.includes(values.rut)) {
+      showError("El RUT ingresado ya existe para otro paciente.");
+      return;
+    }
     onSubmit(values as Patient);
     form.reset();
     onClose();
@@ -172,46 +193,11 @@ const PatientForm: React.FC<PatientFormProps> = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Sala 1">Sala 1</SelectItem>
-                      <SelectItem value="Sala 2">Sala 2</SelectItem>
-                      <SelectItem value="Online">Online</SelectItem>
+                      <SelectItem value="UAPORRINO">UAPORRINO</SelectItem>
+                      <SelectItem value="RBC">RBC</SelectItem>
+                      <SelectItem value="Sin preferencia">Sin preferencia</SelectItem>
                     </SelectContent>
                   </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="preferredDay"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Día de Atención Preferido</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecciona un día" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Lunes">Lunes</SelectItem>
-                      <SelectItem value="Martes">Martes</SelectItem>
-                      <SelectItem value="Miércoles">Miércoles</SelectItem>
-                      <SelectItem value="Jueves">Jueves</SelectItem>
-                      <SelectItem value="Viernes">Viernes</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="preferredTime"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Hora de Atención Preferida</FormLabel>
-                  <Input type="time" {...field} />
                   <FormMessage />
                 </FormItem>
               )}
@@ -229,11 +215,54 @@ const PatientForm: React.FC<PatientFormProps> = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Evaluación">Evaluación</SelectItem>
-                      <SelectItem value="Intervención">Intervención</SelectItem>
-                      <SelectItem value="Seguimiento">Seguimiento</SelectItem>
+                      {getServiceTypeOptions(selectedRoom).map((type) => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="preferredDay"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Día de Atención Preferido</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    disabled={!selectedRoom || selectedRoom === "Sin preferencia"}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona un día" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Sin preferencia"].map((day) => (
+                        <SelectItem key={day} value={day}>{day}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="preferredTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Hora de Atención Preferida</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="time"
+                      {...field}
+                      disabled={!selectedRoom || selectedRoom === "Sin preferencia" || !selectedDay || selectedDay === "Sin preferencia"}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -243,9 +272,9 @@ const PatientForm: React.FC<PatientFormProps> = ({
               name="observations"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Observaciones</FormLabel>
+                  <FormLabel>Observaciones Adicionales</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Notas adicionales..." {...field} />
+                    <Textarea placeholder="Añade cualquier observación relevante..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

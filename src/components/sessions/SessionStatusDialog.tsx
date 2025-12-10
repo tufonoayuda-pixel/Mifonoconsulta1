@@ -4,6 +4,8 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,8 +29,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Session } from "@/types/session";
 
 const statusFormSchema = z.object({
-  observations: z.string().optional(),
-  continueSessions: z.boolean().optional(),
+  justification: z.string().optional(), // For 'No Atendida'
+  observations: z.string().optional(), // For 'Atendida'
+  continueSessions: z.boolean().optional(), // For 'Atendida'
 });
 
 type StatusFormValues = z.infer<typeof statusFormSchema>;
@@ -51,16 +54,18 @@ const SessionStatusDialog: React.FC<SessionStatusDialogProps> = ({
   const form = useForm<StatusFormValues>({
     resolver: zodResolver(statusFormSchema),
     defaultValues: {
-      observations: session?.observations || "",
-      continueSessions: true, // Default to true for attended, can be adjusted
+      justification: "",
+      observations: "",
+      continueSessions: true,
     },
   });
 
   React.useEffect(() => {
     if (session) {
       form.reset({
-        observations: session.observations || "",
-        continueSessions: statusType === "Atendida" ? true : false, // Sensible default
+        justification: statusType === "No Atendida" ? session.observations || "" : "",
+        observations: statusType === "Atendida" ? session.observations || "" : "",
+        continueSessions: statusType === "Atendida" ? true : false,
       });
     }
   }, [session, statusType, form]);
@@ -86,39 +91,56 @@ const SessionStatusDialog: React.FC<SessionStatusDialogProps> = ({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-4 py-4">
-            <FormField
-              control={form.control}
-              name="observations"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Observaciones</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Notas adicionales sobre la sesión..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {statusType === "Atendida" && (
+            {statusType === "No Atendida" && (
               <FormField
                 control={form.control}
-                name="continueSessions"
+                name="justification"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormItem>
+                    <FormLabel>Justificación de Inasistencia</FormLabel>
                     <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                      <Textarea placeholder="Motivo por el cual el paciente no asistió a la sesión." {...field} />
                     </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>
-                        ¿El paciente continuará con sesiones?
-                      </FormLabel>
-                    </div>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
+            )}
+            {(statusType === "Atendida") && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="observations"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Observaciones de la Sesión</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Anotaciones relevantes sobre la sesión atendida." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="continueSessions"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          ¿El paciente continuará con sesiones?
+                        </FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </>
             )}
             <DialogFooter>
               <Button type="submit">Confirmar</Button>

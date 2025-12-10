@@ -41,6 +41,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Session } from "@/types/session";
+import { Patient } from "@/types/patient"; // Import Patient type
 
 const sessionFormSchema = z.object({
   id: z.string().optional(),
@@ -48,11 +49,11 @@ const sessionFormSchema = z.object({
   room: z.string().min(1, { message: "Sala es obligatoria." }),
   date: z.string().min(1, { message: "Fecha es obligatoria." }),
   time: z.string().min(1, { message: "Hora es obligatoria." }),
-  duration: z.coerce.number().int().positive().min(1, { message: "Duración debe ser al menos 1 minuto." }),
+  duration: z.coerce.number().int().positive().min(1, { message: "Duración debe ser al menos 1 minuto." }).default(40),
   type: z.enum(["Evaluación", "Intervención", "Seguimiento", "Alta"], {
     message: "Tipo de sesión es obligatorio.",
   }),
-  status: z.enum(["Programada", "Atendida", "No Atendida"]).default("Programada"),
+  // Justification field is handled by SessionStatusDialog, not directly in this form
   observations: z.string().optional(),
 });
 
@@ -63,6 +64,7 @@ interface SessionFormProps {
   onClose: () => void;
   onSubmit: (session: Session) => void;
   initialData?: Session | null;
+  availablePatients: Patient[]; // List of patients to select from
 }
 
 const SessionForm: React.FC<SessionFormProps> = ({
@@ -70,17 +72,17 @@ const SessionForm: React.FC<SessionFormProps> = ({
   onClose,
   onSubmit,
   initialData,
+  availablePatients,
 }) => {
   const form = useForm<SessionFormValues>({
     resolver: zodResolver(sessionFormSchema),
     defaultValues: initialData || {
       patientName: "",
-      room: "",
+      room: "UAPORRINO", // Default room
       date: "",
       time: "",
-      duration: 60,
+      duration: 40, // Default duration
       type: "Intervención",
-      status: "Programada",
       observations: "",
     },
   });
@@ -91,12 +93,11 @@ const SessionForm: React.FC<SessionFormProps> = ({
     } else {
       form.reset({
         patientName: "",
-        room: "",
+        room: "UAPORRINO",
         date: "",
         time: "",
-        duration: 60,
+        duration: 40,
         type: "Intervención",
-        status: "Programada",
         observations: "",
       });
     }
@@ -121,10 +122,21 @@ const SessionForm: React.FC<SessionFormProps> = ({
               name="patientName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nombre del Paciente</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ej: Juan Pérez" {...field} />
-                  </FormControl>
+                  <FormLabel>Paciente</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona un paciente" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {availablePatients.map((patient) => (
+                        <SelectItem key={patient.id} value={patient.name}>
+                          {patient.name} (RUT: {patient.rut})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -142,9 +154,8 @@ const SessionForm: React.FC<SessionFormProps> = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Sala 1">Sala 1</SelectItem>
-                      <SelectItem value="Sala 2">Sala 2</SelectItem>
-                      <SelectItem value="Online">Online</SelectItem>
+                      <SelectItem value="UAPORRINO">UAPORRINO</SelectItem>
+                      <SelectItem value="RBC">RBC</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -210,7 +221,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
                 <FormItem>
                   <FormLabel>Duración (minutos)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="Ej: 60" {...field} />
+                    <Input type="number" placeholder="Ej: 40" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

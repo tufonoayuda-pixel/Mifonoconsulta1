@@ -54,6 +54,8 @@ const Patients = () => {
     onDelete: handleDeletePatient,
   });
 
+  const existingRuts = patients.map(p => p.rut);
+
   return (
     <div className="flex flex-col gap-6 p-4 lg:p-6">
       <div className="flex items-center justify-between">
@@ -76,6 +78,7 @@ const Patients = () => {
         onClose={closeForm}
         onSubmit={editingPatient ? handleEditPatient : handleAddPatient}
         initialData={editingPatient}
+        existingRuts={existingRuts}
       />
     </div>
   );

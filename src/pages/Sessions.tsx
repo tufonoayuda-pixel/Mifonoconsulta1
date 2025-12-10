@@ -8,6 +8,7 @@ import { createSessionColumns } from "@/components/sessions/columns";
 import SessionForm from "@/components/sessions/SessionForm";
 import SessionStatusDialog from "@/components/sessions/SessionStatusDialog";
 import { Session } from "@/types/session";
+import { Patient } from "@/types/patient"; // Import Patient type
 import { showSuccess, showError } from "@/utils/toast";
 
 const Sessions = () => {
@@ -17,6 +18,13 @@ const Sessions = () => {
   const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [sessionToUpdateStatus, setSessionToUpdateStatus] = useState<Session | null>(null);
   const [statusType, setStatusType] = useState<"Atendida" | "No Atendida">("Atendida");
+
+  // Mock patient data for session form, replace with actual patient list later
+  const [availablePatients] = useState<Patient[]>([
+    { id: "p1", rut: "11.111.111-1", name: "Juan Pérez" },
+    { id: "p2", rut: "22.222.222-2", name: "María García" },
+    { id: "p3", rut: "33.333.333-3", name: "Carlos López" },
+  ]);
 
   const handleAddSession = (newSession: Session) => {
     setSessions((prevSessions) => {
@@ -38,11 +46,15 @@ const Sessions = () => {
     showSuccess("Sesión eliminada exitosamente.");
   };
 
-  const handleUpdateSessionStatus = (session: Session, values: { observations?: string; continueSessions?: boolean }) => {
+  const handleUpdateSessionStatus = (session: Session, values: { observations?: string; justification?: string; continueSessions?: boolean }) => {
     setSessions((prevSessions) =>
       prevSessions.map((s) =>
         s.id === session.id
-          ? { ...s, status: statusType, observations: values.observations || s.observations }
+          ? {
+              ...s,
+              status: statusType,
+              observations: values.observations || values.justification || s.observations,
+            }
           : s
       )
     );
@@ -116,6 +128,7 @@ const Sessions = () => {
         onClose={closeForm}
         onSubmit={editingSession ? handleEditSession : handleAddSession}
         initialData={editingSession}
+        availablePatients={availablePatients}
       />
 
       <SessionStatusDialog
