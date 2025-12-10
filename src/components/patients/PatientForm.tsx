@@ -32,6 +32,12 @@ import {
 } from "@/components/ui/select";
 import { Patient } from "@/types/patient";
 import { showSuccess, showError } from "@/utils/toast"; // Import toast utilities
+import {
+  getAvailableRooms,
+  getAvailableDaysForRoom,
+  getWorkingHoursForDayAndRoom,
+  isTimeWithinRange,
+} from "@/utils/schedule"; // Import schedule utilities
 
 const patientFormSchema = z.object({
   id: z.string().optional(),
@@ -44,6 +50,21 @@ const patientFormSchema = z.object({
   preferredTime: z.string().optional(),
   serviceType: z.string().optional(),
   observations: z.string().optional(),
+}).refine((data) => {
+  // Custom validation for preferredTime based on selected room and day
+  if (data.preferredRoom && data.preferredRoom !== "Sin preferencia" &&
+      data.preferredDay && data.preferredDay !== "Sin preferencia" &&
+      data.preferredTime) {
+    const workingHours = getWorkingHoursForDayAndRoom(data.preferredDay, data.preferredRoom);
+    const isTimeValid = workingHours.some(detail => isTimeWithinRange(data.preferredTime!, detail.time));
+    if (!isTimeValid) {
+      return false;
+    }
+  }
+  return true;
+}, {
+  message: "La hora preferida debe estar dentro del horario de atención para la sala y día seleccionados.",
+  path: ["preferredTime"],
 });
 
 type PatientFormValues = z.infer<typeof patientFormSchema>;
@@ -70,10 +91,10 @@ const PatientForm: React.FC<PatientFormProps> = ({
       name: "",
       phone: "",
       age: undefined,
-      preferredRoom: "",
-      preferredDay: "",
+      preferredRoom: "Sin preferencia", // Default to 'Sin preferencia'
+      preferredDay: "Sin preferencia", // Default to 'Sin preferencia'
       preferredTime: "",
-      serviceType: "",
+      serviceType: "Sin preferencia", // Default to 'Sin preferencia'
       observations: "",
     },
   });
@@ -87,10 +108,10 @@ const PatientForm: React.FC<PatientFormProps> = ({
         name: "",
         phone: "",
         age: undefined,
-        preferredRoom: "",
-        preferredDay: "",
+        preferredRoom: "Sin preferencia",
+        preferredDay: "Sin preferencia",
         preferredTime: "",
-        serviceType: "",
+        serviceType: "Sin preferencia",
         observations: "",
       });
     }
@@ -98,6 +119,9 @@ const PatientForm: React.FC<PatientFormProps> = ({
 
   const selectedRoom = form.watch("preferredRoom");
   const selectedDay = form.watch("preferredDay");
+
+  const availableRooms = getAvailableRooms();
+  const availableDays = getAvailableDaysForRoom(selectedRoom || "");
 
   const getServiceTypeOptions = (room?: string) => {
     switch (room) {
@@ -193,8 +217,9 @@ const PatientForm: React.FC<PatientFormProps> = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="UAPORRINO">UAPORRINO</SelectItem>
-                      <SelectItem value="RBC">RBC</SelectItem>
+                      {availableRooms.map((room) => (
+                        <SelectItem key={room} value={room}>{room}</SelectItem>
+                      ))}
                       <SelectItem value="Sin preferencia">Sin preferencia</SelectItem>
                     </SelectContent>
                   </Select>
@@ -241,9 +266,10 @@ const PatientForm: React.FC<PatientFormProps> = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Sin preferencia"].map((day) => (
+                      {availableDays.map((day) => (
                         <SelectItem key={day} value={day}>{day}</SelectItem>
                       ))}
+                      <SelectItem value="Sin preferencia">Sin preferencia</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

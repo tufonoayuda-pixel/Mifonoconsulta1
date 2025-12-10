@@ -3,6 +3,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, MapPin } from "lucide-react";
+import { mySchedule } from "@/utils/schedule"; // Import mySchedule from utility
 
 interface ScheduleDetail {
   location: string;
@@ -14,32 +15,6 @@ interface ScheduleEntry {
   day: string;
   details: ScheduleDetail[];
 }
-
-const mySchedule: ScheduleEntry[] = [
-  {
-    day: "Lunes",
-    details: [{ location: "UAPORRINO", time: "14:00 - 20:00" }],
-  },
-  {
-    day: "Martes",
-    details: [{ location: "UAPORRINO", time: "08:00 - 17:00", note: "Colación a las 13:00" }],
-  },
-  {
-    day: "Miércoles",
-    details: [{ location: "No trabajo", time: "" }],
-  },
-  {
-    day: "Jueves",
-    details: [
-      { location: "UAPORRINO", time: "08:00 - 13:00" },
-      { location: "RBC", time: "14:00 - 17:00", note: "Colación a las 13:00" },
-    ],
-  },
-  {
-    day: "Viernes",
-    details: [{ location: "RBC", time: "08:00 - 17:00", note: "Colación a las 13:00" }],
-  },
-];
 
 const MyScheduleCard: React.FC = () => {
   return (
