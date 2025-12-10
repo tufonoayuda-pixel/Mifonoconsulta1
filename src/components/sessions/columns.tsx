@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Session } from "@/types/session";
+import { Badge } from "@/components/ui/badge"; // Import Badge
 
 interface SessionColumnsProps {
   onEdit: (session: Session) => void;
@@ -22,6 +23,19 @@ interface SessionColumnsProps {
   onMarkNotAttended: (session: Session) => void;
   onDelete: (id: string) => void;
 }
+
+const getSessionBadgeVariant = (status: Session["status"]) => {
+  switch (status) {
+    case "Programada":
+      return "default";
+    case "Atendida":
+      return "success"; // Assuming you have a 'success' variant for Badge
+    case "No Atendida":
+      return "destructive";
+    default:
+      return "secondary";
+  }
+};
 
 export const createSessionColumns = ({
   onEdit,
@@ -60,6 +74,28 @@ export const createSessionColumns = ({
   {
     accessorKey: "status",
     header: "Estado",
+    cell: ({ row }) => {
+      const session = row.original;
+      return (
+        <Badge variant={getSessionBadgeVariant(session.status)}>
+          {session.status}
+        </Badge>
+      );
+    },
+  },
+  {
+    id: "details",
+    header: "Detalles",
+    cell: ({ row }) => {
+      const session = row.original;
+      if (session.status === "Atendida" && session.observationsAttended) {
+        return <span className="text-sm text-muted-foreground truncate max-w-[150px] block">{session.observationsAttended}</span>;
+      }
+      if (session.status === "No Atendida" && session.justificationNotAttended) {
+        return <span className="text-sm text-muted-foreground truncate max-w-[150px] block">{session.justificationNotAttended}</span>;
+      }
+      return <span className="text-sm text-muted-foreground">N/A</span>;
+    },
   },
   {
     id: "actions",

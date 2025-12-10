@@ -7,7 +7,10 @@ export interface Session {
   duration: number; // in minutes
   type: "Evaluación" | "Intervención" | "Seguimiento" | "Alta";
   status: "Programada" | "Atendida" | "No Atendida";
-  observations?: string;
+  observationsAttended?: string; // Renamed from 'observations' for clarity when session is 'Atendida'
+  continueSessions?: boolean; // For 'Atendida' sessions
+  justificationNotAttended?: string; // New field for 'No Atendida' sessions
+  isJustifiedNotAttended?: boolean; // New field for 'No Atendida' sessions
   // New fields for recurrence
   isRecurring?: boolean;
   recurrencePattern?: "daily" | "weekly" | "monthly" | "yearly"; // Example patterns

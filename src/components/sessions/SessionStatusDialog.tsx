@@ -29,8 +29,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Session } from "@/types/session";
 
 const statusFormSchema = z.object({
-  justification: z.string().optional(), // For 'No Atendida'
-  observations: z.string().optional(), // For 'Atendida'
+  justificationNotAttended: z.string().optional(), // For 'No Atendida'
+  isJustifiedNotAttended: z.boolean().optional(), // For 'No Atendida'
+  observationsAttended: z.string().optional(), // For 'Atendida'
   continueSessions: z.boolean().optional(), // For 'Atendida'
 });
 
@@ -54,8 +55,9 @@ const SessionStatusDialog: React.FC<SessionStatusDialogProps> = ({
   const form = useForm<StatusFormValues>({
     resolver: zodResolver(statusFormSchema),
     defaultValues: {
-      justification: "",
-      observations: "",
+      justificationNotAttended: "",
+      isJustifiedNotAttended: false,
+      observationsAttended: "",
       continueSessions: true,
     },
   });
@@ -63,9 +65,10 @@ const SessionStatusDialog: React.FC<SessionStatusDialogProps> = ({
   React.useEffect(() => {
     if (session) {
       form.reset({
-        justification: statusType === "No Atendida" ? session.observations || "" : "",
-        observations: statusType === "Atendida" ? session.observations || "" : "",
-        continueSessions: statusType === "Atendida" ? true : false,
+        justificationNotAttended: statusType === "No Atendida" ? session.justificationNotAttended || "" : "",
+        isJustifiedNotAttended: statusType === "No Atendida" ? session.isJustifiedNotAttended || false : false,
+        observationsAttended: statusType === "Atendida" ? session.observationsAttended || "" : "",
+        continueSessions: statusType === "Atendida" ? session.continueSessions || true : false,
       });
     }
   }, [session, statusType, form]);
@@ -92,25 +95,46 @@ const SessionStatusDialog: React.FC<SessionStatusDialogProps> = ({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-4 py-4">
             {statusType === "No Atendida" && (
-              <FormField
-                control={form.control}
-                name="justification"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Justificación de Inasistencia</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Motivo por el cual el paciente no asistió a la sesión." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <>
+                <FormField
+                  control={form.control}
+                  name="justificationNotAttended"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Justificación de Inasistencia</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Motivo por el cual el paciente no asistió a la sesión." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="isJustifiedNotAttended"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          ¿La inasistencia fue justificada?
+                        </FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </>
             )}
             {(statusType === "Atendida") && (
               <>
                 <FormField
                   control={form.control}
-                  name="observations"
+                  name="observationsAttended"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Observaciones de la Sesión</FormLabel>

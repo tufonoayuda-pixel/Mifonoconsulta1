@@ -16,11 +16,11 @@ import { showSuccess, showError } from "@/utils/toast";
 import { format, parse, isBefore, addMinutes } from "date-fns";
 import { supabase } from "@/integrations/supabase/client"; // Import supabase client
 import { toast } from "sonner"; // Import sonner toast
-import { useQuery } from "@tanstack/react-query"; // Import useQuery
+import { useQuery, useQueryClient } from "@tanstack/react-query"; // Import useQuery and useQueryClient
 import { es } from "date-fns/locale"; // Import es locale for date-fns
 
 const Sessions = () => {
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const queryClient = useQueryClient();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
@@ -37,6 +37,34 @@ const Sessions = () => {
       if (error) throw error;
       return data as Patient[];
     },
+  });
+
+  // Fetch sessions from Supabase
+  const { data: sessions, isLoading: isLoadingSessions, isError: isErrorSessions, error: errorSessions } = useQuery<Session[], Error>({
+    queryKey: ["sessions"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("sessions").select("*");
+      if (error) throw error;
+      return data.map(s => ({
+        id: s.id,
+        patientName: availablePatients?.find(p => p.id === s.patient_id)?.name || "Desconocido", // Map patient_id to patientName
+        room: s.room,
+        date: s.date,
+        time: s.time,
+        duration: s.duration,
+        type: s.type,
+        status: s.status,
+        observationsAttended: s.observations_attended,
+        continueSessions: s.continue_sessions,
+        justificationNotAttended: s.justification_not_attended,
+        isJustifiedNotAttended: s.is_justified_not_attended,
+        // Recurrence fields are not in DB yet, so keep them optional or default
+        isRecurring: false,
+        recurrencePattern: undefined,
+        recurrenceEndDate: undefined,
+      })) as Session[];
+    },
+    enabled: !!availablePatients, // Only run if patients data is available
   });
 
   const notifiedSessions = useRef(new Set<string>());
@@ -66,6 +94,8 @@ const Sessions = () => {
   }, []);
 
   useEffect(() => {
+    if (!sessions) return; // Ensure sessions are loaded
+
     const interval = setInterval(() => {
       const now = new Date();
       sessions.forEach(session => {
@@ -97,80 +127,160 @@ const Sessions = () => {
   }, [sessions, createNotification]);
 
 
-  const handleAddSession = (newSession: Session) => {
-    setSessions((prevSessions) => {
-      const sessionsToAdd: Session[] = [];
-      if (newSession.isRecurring && newSession.recurrencePattern && newSession.recurrenceEndDate) {
-        let currentDate = parse(newSession.date, "yyyy-MM-dd", new Date());
-        const endDate = parse(newSession.recurrenceEndDate, "yyyy-MM-dd", new Date());
+  const addSessionMutation = async (newSession: Session) => {
+    const patient = availablePatients?.find(p => p.name === newSession.patientName);
+    if (!patient) {
+      throw new Error("Paciente no encontrado.");
+    }
 
-        while (currentDate <= endDate) {
-          sessionsToAdd.push({
-            ...newSession,
-            id: uuidv4(),
-            date: format(currentDate, "yyyy-MM-dd"),
-            status: "Programada",
-            isRecurring: true,
-            recurrencePattern: newSession.recurrencePattern,
-            recurrenceEndDate: newSession.recurrenceEndDate,
-          });
+    const sessionsToInsert: Omit<Session, 'patientName'>[] = [];
+    if (newSession.isRecurring && newSession.recurrencePattern && newSession.recurrenceEndDate) {
+      let currentDate = parse(newSession.date, "yyyy-MM-dd", new Date());
+      const endDate = parse(newSession.recurrenceEndDate, "yyyy-MM-dd", new Date());
 
-          switch (newSession.recurrencePattern) {
-            case "daily":
-              currentDate.setDate(currentDate.getDate() + 1);
-              break;
-            case "weekly":
-              currentDate.setDate(currentDate.getDate() + 7);
-              break;
-            case "monthly":
-              currentDate.setMonth(currentDate.getMonth() + 1);
-              break;
-            case "yearly":
-              currentDate.setFullYear(currentDate.getFullYear() + 1);
-              break;
-            default:
-              break;
-          }
+      while (currentDate <= endDate) {
+        sessionsToInsert.push({
+          ...newSession,
+          patientId: patient.id, // Link to patient ID
+          date: format(currentDate, "yyyy-MM-dd"),
+          status: "Programada",
+          isRecurring: true,
+          recurrencePattern: newSession.recurrencePattern,
+          recurrenceEndDate: newSession.recurrenceEndDate,
+        });
+
+        switch (newSession.recurrencePattern) {
+          case "daily":
+            currentDate.setDate(currentDate.getDate() + 1);
+            break;
+          case "weekly":
+            currentDate.setDate(currentDate.getDate() + 7);
+            break;
+          case "monthly":
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            break;
+          case "yearly":
+            currentDate.setFullYear(currentDate.getFullYear() + 1);
+            break;
+          default:
+            break;
         }
-        showSuccess(`${sessionsToAdd.length} sesiones recurrentes programadas exitosamente.`);
-      } else {
-        sessionsToAdd.push({ ...newSession, id: uuidv4(), status: "Programada" });
-        showSuccess("Sesión programada exitosamente.");
       }
-      return [...prevSessions, ...sessionsToAdd];
-    });
+    } else {
+      sessionsToInsert.push({ ...newSession, patientId: patient.id, status: "Programada" });
+    }
+
+    const { error } = await supabase.from("sessions").insert(sessionsToInsert.map(s => ({
+      patient_id: s.patientId,
+      room: s.room,
+      date: s.date,
+      time: s.time,
+      duration: s.duration,
+      type: s.type,
+      status: s.status,
+      observations_attended: s.observationsAttended,
+      continue_sessions: s.continueSessions,
+      justification_not_attended: s.justificationNotAttended,
+      is_justified_not_attended: s.isJustifiedNotAttended,
+    })));
+
+    if (error) throw error;
+    return sessionsToInsert.length > 1 ? `${sessionsToInsert.length} sesiones recurrentes programadas exitosamente.` : "Sesión programada exitosamente.";
+  };
+
+  const updateSessionMutation = async (updatedSession: Session) => {
+    const patient = availablePatients?.find(p => p.name === updatedSession.patientName);
+    if (!patient) {
+      throw new Error("Paciente no encontrado.");
+    }
+
+    const { error } = await supabase.from("sessions").update({
+      patient_id: patient.id,
+      room: updatedSession.room,
+      date: updatedSession.date,
+      time: updatedSession.time,
+      duration: updatedSession.duration,
+      type: updatedSession.type,
+      status: updatedSession.status,
+      observations_attended: updatedSession.observationsAttended,
+      continue_sessions: updatedSession.continueSessions,
+      justification_not_attended: updatedSession.justificationNotAttended,
+      is_justified_not_attended: updatedSession.isJustifiedNotAttended,
+    }).eq("id", updatedSession.id);
+
+    if (error) throw error;
+    return "Sesión actualizada exitosamente.";
+  };
+
+  const deleteSessionMutation = async (id: string) => {
+    const { error } = await supabase.from("sessions").delete().eq("id", id);
+    if (error) throw error;
+    return "Sesión eliminada exitosamente.";
+  };
+
+  const { mutate: addSession } = useMutation({
+    mutationFn: addSessionMutation,
+    onSuccess: (message) => {
+      queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      showSuccess(message);
+    },
+    onError: (err: Error) => showError("Error al programar sesión: " + err.message),
+  });
+
+  const { mutate: updateSession } = useMutation({
+    mutationFn: updateSessionMutation,
+    onSuccess: (message) => {
+      queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      showSuccess(message);
+    },
+    onError: (err: Error) => showError("Error al actualizar sesión: " + err.message),
+  });
+
+  const { mutate: deleteSession } = useMutation({
+    mutationFn: deleteSessionMutation,
+    onSuccess: (message) => {
+      queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      showSuccess(message);
+    },
+    onError: (err: Error) => showError("Error al eliminar sesión: " + err.message),
+  });
+
+
+  const handleAddSession = (newSession: Session) => {
+    addSession(newSession);
   };
 
   const handleEditSession = (updatedSession: Session) => {
-    setSessions((prevSessions) =>
-      prevSessions.map((s) => (s.id === updatedSession.id ? updatedSession : s))
-    );
-    showSuccess("Sesión actualizada exitosamente.");
+    updateSession(updatedSession);
   };
 
   const handleDeleteSession = (id: string) => {
-    setSessions((prevSessions) => prevSessions.filter((s) => s.id !== id));
-    showSuccess("Sesión eliminada exitosamente.");
+    deleteSession(id);
   };
 
-  const handleUpdateSessionStatus = (session: Session, values: { observations?: string; justification?: string; continueSessions?: boolean }) => {
-    setSessions((prevSessions) =>
-      prevSessions.map((s) =>
-        s.id === session.id
-          ? {
-              ...s,
-              status: statusType,
-              observations: values.observations || values.justification || s.observations,
-            }
-          : s
-      )
-    );
-    showSuccess(`Sesión marcada como ${statusType}.`);
+  const handleUpdateSessionStatus = (session: Session, values: { observationsAttended?: string; justificationNotAttended?: string; isJustifiedNotAttended?: boolean; continueSessions?: boolean }) => {
+    const updatedSession: Session = {
+      ...session,
+      status: statusType,
+      observationsAttended: values.observationsAttended,
+      continueSessions: values.continueSessions,
+      justificationNotAttended: values.justificationNotAttended,
+      isJustifiedNotAttended: values.isJustifiedNotAttended,
+    };
+    updateSession(updatedSession);
+
     // Create a notification for the status change
+    let notificationMessage = "";
+    if (statusType === "Atendida") {
+      notificationMessage = `La sesión del paciente ${session.patientName} el ${format(new Date(session.date), "PPP", { locale: es })} a las ${session.time} ha sido marcada como Atendida. Observaciones: ${values.observationsAttended || "N/A"}.`;
+    } else {
+      notificationMessage = `La sesión del paciente ${session.patientName} el ${format(new Date(session.date), "PPP", { locale: es })} a las ${session.time} ha sido marcada como No Atendida. Justificación: ${values.justificationNotAttended || "N/A"}. Justificada: ${values.isJustifiedNotAttended ? "Sí" : "No"}.`;
+    }
+
     createNotification(
       "session_status_update",
       `Sesión de ${session.patientName} ${statusType}`,
-      `La sesión del paciente ${session.patientName} el ${format(new Date(session.date), "PPP", { locale: es })} a las ${session.time} ha sido marcada como ${statusType}.`
+      notificationMessage
     );
   };
 
@@ -213,8 +323,9 @@ const Sessions = () => {
     onDelete: handleDeleteSession,
   });
 
-  if (isLoadingPatients) return <div className="p-4 text-center">Cargando pacientes para sesiones...</div>;
+  if (isLoadingPatients || isLoadingSessions) return <div className="p-4 text-center">Cargando datos para sesiones...</div>;
   if (isErrorPatients) return <div className="p-4 text-center text-red-500">Error al cargar pacientes: {errorPatients?.message}</div>;
+  if (isErrorSessions) return <div className="p-4 text-center text-red-500">Error al cargar sesiones: {errorSessions?.message}</div>;
 
   return (
     <div className="flex flex-col gap-6 p-4 lg:p-6">
@@ -229,25 +340,25 @@ const Sessions = () => {
       </p>
 
       <Tabs value={currentView} onValueChange={setCurrentView} className="w-full">
-        <TabsList className="grid w-full grid-cols-3"> {/* Changed to 3 columns */}
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="table">Vista de Tabla</TabsTrigger>
           <TabsTrigger value="calendar">Vista de Calendario</TabsTrigger>
-          <TabsTrigger value="daily-agenda">Agenda Diaria</TabsTrigger> {/* New tab */}
+          <TabsTrigger value="daily-agenda">Agenda Diaria</TabsTrigger>
         </TabsList>
         <TabsContent value="table">
           <DataTable
             columns={columns}
-            data={sessions}
+            data={sessions || []}
             searchPlaceholder="Buscar sesiones por paciente, sala o estado..."
             searchColumn="patientName"
           />
         </TabsContent>
         <TabsContent value="calendar">
-          <SessionCalendar sessions={sessions} onSelectSession={openEditForm} />
+          <SessionCalendar sessions={sessions || []} onSelectSession={openEditForm} />
         </TabsContent>
-        <TabsContent value="daily-agenda"> {/* New tab content */}
+        <TabsContent value="daily-agenda">
           <DailyAgenda
-            sessions={sessions}
+            sessions={sessions || []}
             availablePatients={availablePatients || []}
             selectedDate={selectedDayForAgenda}
             onDateChange={setSelectedDayForAgenda}
@@ -261,7 +372,7 @@ const Sessions = () => {
         onClose={closeForm}
         onSubmit={editingSession ? handleEditSession : handleAddSession}
         initialData={editingSession}
-        availablePatients={availablePatients || []} // Pass fetched patients
+        availablePatients={availablePatients || []}
       />
 
       <SessionStatusDialog
