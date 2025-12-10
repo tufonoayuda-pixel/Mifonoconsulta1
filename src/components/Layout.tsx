@@ -64,7 +64,6 @@ const Layout: React.FC = () => {
         month: "long", // "octubre"
         hour: "2-digit",
         minute: "2-digit",
-        // second: "2-digit", // Removed seconds for a cleaner look
         timeZone: "America/Santiago",
       });
       setCurrentDateTime(formatter.format(now));
@@ -97,6 +96,8 @@ const Layout: React.FC = () => {
               <span className="sr-only">Toggle navigation menu</span>
             </Button>
           )}
+          {/* Logo fonoaudiológico */}
+          <img src="/placeholder.svg" alt="Logo Fonoaudiológico" className="h-8 w-8 mr-2" />
           <h1 className="text-xl font-semibold">MiFonoConsulta</h1>
           <div className="ml-auto flex items-center gap-4">
             {/* Display current date and time */}
