@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { ClinicalRecord, ClinicalRecordType } from "@/types/clinical-record";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"; // Importación añadida
 
 interface ClinicalRecordColumnsProps {
   onEdit: (record: ClinicalRecord) => void;
