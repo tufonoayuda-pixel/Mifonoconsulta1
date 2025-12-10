@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { format, isSameDay, parseISO } from "date-fns";
+import { format, isSameDay, parseISO, startOfDay } from "date-fns"; // Importar startOfDay
 import { es } from "date-fns/locale";
 import { Calendar as CalendarIcon, Clock, MapPin, User, Tag } from "lucide-react";
 
@@ -31,7 +31,7 @@ const DailyAgenda: React.FC<DailyAgendaProps> = ({
   onSelectSession,
 }) => {
   const filteredSessions = sessions
-    .filter((session) => isSameDay(parseISO(session.date), selectedDate))
+    .filter((session) => isSameDay(startOfDay(parseISO(session.date)), startOfDay(selectedDate))) // Usar startOfDay en ambas fechas
     .sort((a, b) => a.time.localeCompare(b.time)); // Sort by time
 
   const getSessionBadgeVariant = (status: Session["status"]) => {
