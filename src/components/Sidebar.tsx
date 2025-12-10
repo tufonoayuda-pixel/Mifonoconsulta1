@@ -8,7 +8,7 @@ import {
   Calendar,
   FileText,
   Bell,
-  Book,
+  Book, // Changed from Book to List for protocols, but Book is fine for "Protocolos"
   Settings,
   Menu,
   X,
@@ -51,7 +51,7 @@ const navItems = [
   },
   {
     name: "Protocolos",
-    icon: Book,
+    icon: Book, // Using Book icon as requested for "Protocolos"
     path: "/protocols",
   },
   {
