@@ -9,4 +9,6 @@ export interface Patient {
   preferredTime?: string;
   serviceType?: string;
   observations?: string;
+  createdAt?: string; // ISO string
+  updatedAt?: string; // ISO string
 }
