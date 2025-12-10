@@ -1,18 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/patients/data-table"; // Reusing generic DataTable
 import { createSessionColumns } from "@/components/sessions/columns";
 import SessionForm from "@/components/sessions/SessionForm";
 import SessionStatusDialog from "@/components/sessions/SessionStatusDialog";
-import SessionCalendar from "@/components/sessions/SessionCalendar"; // New import
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // New import
+import SessionCalendar from "@/components/sessions/SessionCalendar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Session } from "@/types/session";
-import { Patient } from "@/types/patient"; // Import Patient type
+import { Patient } from "@/types/patient";
 import { showSuccess, showError } from "@/utils/toast";
-import { format, parse } from "date-fns";
+import { format, parse, isBefore, addMinutes } from "date-fns";
+import { supabase } from "@/integrations/supabase/client"; // Import supabase client
+import { toast } from "sonner"; // Import sonner toast
 
 const Sessions = () => {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -21,7 +23,7 @@ const Sessions = () => {
   const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [sessionToUpdateStatus, setSessionToUpdateStatus] = useState<Session | null>(null);
   const [statusType, setStatusType] = useState<"Atendida" | "No Atendida">("Atendida");
-  const [currentView, setCurrentView] = useState<string>("table"); // New state for view
+  const [currentView, setCurrentView] = useState<string>("table");
 
   // Mock patient data for session form, replace with actual patient list later
   const [availablePatients] = useState<Patient[]>([
@@ -30,10 +32,65 @@ const Sessions = () => {
     { id: "p3", rut: "33.333.333-3", name: "Carlos López" },
   ]);
 
+  const notifiedSessions = useRef(new Set<string>());
+  const notificationSound = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    notificationSound.current = new Audio("/notification.mp3");
+  }, []);
+
+  const playNotificationSound = () => {
+    if (notificationSound.current) {
+      notificationSound.current.play().catch(e => console.error("Error playing sound:", e));
+    }
+  };
+
+  const createNotification = useCallback(async (type: string, title: string, message: string) => {
+    const { error } = await supabase.from("notifications").insert({
+      type,
+      title,
+      message,
+      read: false,
+    });
+    if (error) {
+      console.error("Error creating notification:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      sessions.forEach(session => {
+        if (session.status === "Programada" && !notifiedSessions.current.has(session.id)) {
+          const sessionDateTime = parse(`${session.date} ${session.time}`, "yyyy-MM-dd HH:mm", new Date());
+          const tenMinutesBefore = addMinutes(sessionDateTime, -10);
+
+          if (isBefore(tenMinutesBefore, now) && isBefore(now, sessionDateTime)) {
+            toast.info(`Recordatorio: La sesión de ${session.patientName} en la sala ${session.room} comienza en menos de 10 minutos.`, {
+              duration: 10000,
+              action: {
+                label: "Ver Sesiones",
+                onClick: () => setCurrentView("table"),
+              },
+            });
+            playNotificationSound();
+            createNotification(
+              "session_reminder",
+              "Recordatorio de Sesión Próxima",
+              `La sesión de ${session.patientName} en la sala ${session.room} a las ${session.time} comienza pronto.`
+            );
+            notifiedSessions.current.add(session.id);
+          }
+        }
+      });
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, [sessions, createNotification]);
+
+
   const handleAddSession = (newSession: Session) => {
     setSessions((prevSessions) => {
-      // For recurring sessions, generate multiple instances.
-      // This is a simplified example; a more robust solution would handle complex recurrence rules.
       const sessionsToAdd: Session[] = [];
       if (newSession.isRecurring && newSession.recurrencePattern && newSession.recurrenceEndDate) {
         let currentDate = parse(newSession.date, "yyyy-MM-dd", new Date());
@@ -45,12 +102,11 @@ const Sessions = () => {
             id: uuidv4(),
             date: format(currentDate, "yyyy-MM-dd"),
             status: "Programada",
-            isRecurring: true, // Mark generated sessions as recurring instances
+            isRecurring: true,
             recurrencePattern: newSession.recurrencePattern,
             recurrenceEndDate: newSession.recurrenceEndDate,
           });
 
-          // Increment date based on recurrence pattern
           switch (newSession.recurrencePattern) {
             case "daily":
               currentDate.setDate(currentDate.getDate() + 1);
@@ -102,7 +158,12 @@ const Sessions = () => {
       )
     );
     showSuccess(`Sesión marcada como ${statusType}.`);
-    // Here you might add logic based on continueSessions for "Atendida" status
+    // Create a notification for the status change
+    createNotification(
+      "session_status_update",
+      `Sesión de ${session.patientName} ${statusType}`,
+      `La sesión del paciente ${session.patientName} el ${format(new Date(session.date), "PPP", { locale: es })} a las ${session.time} ha sido marcada como ${statusType}.`
+    );
   };
 
   const openAddForm = () => {

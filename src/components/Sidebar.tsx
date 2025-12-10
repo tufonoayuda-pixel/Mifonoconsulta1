@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -8,15 +8,16 @@ import {
   Calendar,
   FileText,
   Bell,
-  Book, // Changed from Book to List for protocols, but Book is fine for "Protocolos"
+  Book,
   Settings,
-  Menu,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from "@/integrations/supabase/client"; // Import supabase client
+import { Badge } from "@/components/ui/badge"; // Import Badge component
 
 interface SidebarProps {
   isOpen: boolean;
@@ -51,7 +52,7 @@ const navItems = [
   },
   {
     name: "Protocolos",
-    icon: Book, // Using Book icon as requested for "Protocolos"
+    icon: Book,
     path: "/protocols",
   },
   {
@@ -63,6 +64,40 @@ const navItems = [
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const isMobile = useIsMobile();
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+
+  const fetchUnreadNotificationsCount = useCallback(async () => {
+    const { count, error } = await supabase
+      .from("notifications")
+      .select("id", { count: "exact" })
+      .eq("read", false);
+
+    if (error) {
+      console.error("Error fetching unread notifications count:", error);
+    } else {
+      setUnreadNotificationsCount(count || 0);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUnreadNotificationsCount();
+
+    const channel = supabase
+      .channel("sidebar_notifications_count")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications" },
+        (payload) => {
+          console.log("Notification change in sidebar!", payload);
+          fetchUnreadNotificationsCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchUnreadNotificationsCount]);
 
   return (
     <>
@@ -106,6 +141,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               >
                 <item.icon className="h-5 w-5" />
                 {item.name}
+                {item.name === "Notificaciones" && unreadNotificationsCount > 0 && (
+                  <Badge
+                    variant="destructive"
+                    className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full animate-bounce"
+                  >
+                    {unreadNotificationsCount}
+                  </Badge>
+                )}
               </NavLink>
             ))}
           </nav>

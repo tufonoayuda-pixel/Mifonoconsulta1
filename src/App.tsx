@@ -8,7 +8,8 @@ import Index from "./pages/Index";
 import Patients from "./pages/Patients";
 import Sessions from "./pages/Sessions";
 import ClinicalRecords from "./pages/ClinicalRecords";
-import ProtocolsPage from "./pages/ProtocolsPage"; // Import the new ProtocolsPage
+import ProtocolsPage from "./pages/ProtocolsPage";
+import NotificationsPage from "./pages/NotificationsPage"; // Import the new NotificationsPage
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,8 +27,8 @@ const App = () => (
             <Route path="patients" element={<Patients />} />
             <Route path="sessions" element={<Sessions />} />
             <Route path="records" element={<ClinicalRecords />} />
-            <Route path="protocols" element={<ProtocolsPage />} /> {/* New route for ProtocolsPage */}
-            <Route path="notifications" element={<div>Notifications Page</div>} /> {/* Placeholder */}
+            <Route path="protocols" element={<ProtocolsPage />} />
+            <Route path="notifications" element={<NotificationsPage />} /> {/* New route for NotificationsPage */}
             <Route path="settings" element={<div>Settings Page</div>} /> {/* Placeholder */}
             <Route path="*" element={<NotFound />} />
           </Route>
