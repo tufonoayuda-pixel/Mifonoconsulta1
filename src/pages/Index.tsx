@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, CalendarDays, FileText, Bell, Circle } from "lucide-react";
+import MyScheduleCard from "@/components/MyScheduleCard"; // Import the new component
 
 const Index = () => {
   return (
@@ -59,6 +60,8 @@ const Index = () => {
           </CardContent>
         </Card>
       </div>
+      {/* Add the MyScheduleCard here */}
+      <MyScheduleCard />
       {/* Future: Add more dashboard content here */}
     </div>
   );
