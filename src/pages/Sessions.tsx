@@ -15,6 +15,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import { format, parse, isBefore, addMinutes } from "date-fns";
 import { supabase } from "@/integrations/supabase/client"; // Import supabase client
 import { toast } from "sonner"; // Import sonner toast
+import { useQuery } from "@tanstack/react-query"; // Import useQuery
 
 const Sessions = () => {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -25,12 +26,15 @@ const Sessions = () => {
   const [statusType, setStatusType] = useState<"Atendida" | "No Atendida">("Atendida");
   const [currentView, setCurrentView] = useState<string>("table");
 
-  // Mock patient data for session form, replace with actual patient list later
-  const [availablePatients] = useState<Patient[]>([
-    { id: "p1", rut: "11.111.111-1", name: "Juan Pérez" },
-    { id: "p2", rut: "22.222.222-2", name: "María García" },
-    { id: "p3", rut: "33.333.333-3", name: "Carlos López" },
-  ]);
+  // Fetch patients from Supabase
+  const { data: availablePatients, isLoading: isLoadingPatients, isError: isErrorPatients, error: errorPatients } = useQuery<Patient[], Error>({
+    queryKey: ["patients"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("patients").select("*");
+      if (error) throw error;
+      return data as Patient[];
+    },
+  });
 
   const notifiedSessions = useRef(new Set<string>());
   const notificationSound = useRef<HTMLAudioElement | null>(null);
@@ -205,6 +209,9 @@ const Sessions = () => {
     onDelete: handleDeleteSession,
   });
 
+  if (isLoadingPatients) return <div className="p-4 text-center">Cargando pacientes para sesiones...</div>;
+  if (isErrorPatients) return <div className="p-4 text-center text-red-500">Error al cargar pacientes: {errorPatients?.message}</div>;
+
   return (
     <div className="flex flex-col gap-6 p-4 lg:p-6">
       <div className="flex items-center justify-between">
@@ -240,7 +247,7 @@ const Sessions = () => {
         onClose={closeForm}
         onSubmit={editingSession ? handleEditSession : handleAddSession}
         initialData={editingSession}
-        availablePatients={availablePatients}
+        availablePatients={availablePatients || []} // Pass fetched patients
       />
 
       <SessionStatusDialog

@@ -1,37 +1,87 @@
 "use client";
 
 import React, { useState } from "react";
-import { v4 as uuidv4 } from "uuid";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/patients/data-table";
 import { createPatientColumns } from "@/components/patients/columns";
 import PatientForm from "@/components/patients/PatientForm";
 import { Patient } from "@/types/patient";
-import { showSuccess, showError } from "@/utils/toast"; // Assuming you have these toast utilities
+import { showSuccess, showError } from "@/utils/toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const Patients = () => {
-  const [patients, setPatients] = useState<Patient[]>([]);
+  const queryClient = useQueryClient();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
 
-  const handleAddPatient = (newPatient: Patient) => {
-    setPatients((prevPatients) => {
-      const patientWithId = { ...newPatient, id: uuidv4() };
+  // Fetch patients from Supabase
+  const { data: patients, isLoading, isError, error } = useQuery<Patient[], Error>({
+    queryKey: ["patients"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("patients").select("*");
+      if (error) throw error;
+      return data as Patient[];
+    },
+  });
+
+  // Mutation for adding a patient
+  const addPatientMutation = useMutation<Patient, Error, Patient>({
+    mutationFn: async (newPatient) => {
+      const { data, error } = await supabase.from("patients").insert(newPatient).select().single();
+      if (error) throw error;
+      return data as Patient;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
       showSuccess("Paciente añadido exitosamente.");
-      return [...prevPatients, patientWithId];
-    });
+    },
+    onError: (err) => {
+      showError("Error al añadir paciente: " + err.message);
+    },
+  });
+
+  // Mutation for updating a patient
+  const updatePatientMutation = useMutation<Patient, Error, Patient>({
+    mutationFn: async (updatedPatient) => {
+      const { data, error } = await supabase.from("patients").update(updatedPatient).eq("id", updatedPatient.id).select().single();
+      if (error) throw error;
+      return data as Patient;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
+      showSuccess("Paciente actualizado exitosamente.");
+    },
+    onError: (err) => {
+      showError("Error al actualizar paciente: " + err.message);
+    },
+  });
+
+  // Mutation for deleting a patient
+  const deletePatientMutation = useMutation<void, Error, string>({
+    mutationFn: async (id) => {
+      const { error } = await supabase.from("patients").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
+      showSuccess("Paciente eliminado exitosamente.");
+    },
+    onError: (err) => {
+      showError("Error al eliminar paciente: " + err.message);
+    },
+  });
+
+  const handleAddPatient = (newPatient: Patient) => {
+    addPatientMutation.mutate(newPatient);
   };
 
   const handleEditPatient = (updatedPatient: Patient) => {
-    setPatients((prevPatients) =>
-      prevPatients.map((p) => (p.id === updatedPatient.id ? updatedPatient : p))
-    );
-    showSuccess("Paciente actualizado exitosamente.");
+    updatePatientMutation.mutate(updatedPatient);
   };
 
   const handleDeletePatient = (id: string) => {
-    setPatients((prevPatients) => prevPatients.filter((p) => p.id !== id));
-    showSuccess("Paciente eliminado exitosamente.");
+    deletePatientMutation.mutate(id);
   };
 
   const openAddForm = () => {
@@ -54,7 +104,10 @@ const Patients = () => {
     onDelete: handleDeletePatient,
   });
 
-  const existingRuts = patients.map(p => p.rut);
+  const existingRuts = patients?.map(p => p.rut) || [];
+
+  if (isLoading) return <div className="p-4 text-center">Cargando pacientes...</div>;
+  if (isError) return <div className="p-4 text-center text-red-500">Error al cargar pacientes: {error?.message}</div>;
 
   return (
     <div className="flex flex-col gap-6 p-4 lg:p-6">
@@ -68,9 +121,9 @@ const Patients = () => {
 
       <DataTable
         columns={columns}
-        data={patients}
+        data={patients || []}
         searchPlaceholder="Buscar pacientes por nombre o RUT..."
-        searchColumn="name" // You can change this to 'rut' or implement multi-column search
+        searchColumn="name"
       />
 
       <PatientForm

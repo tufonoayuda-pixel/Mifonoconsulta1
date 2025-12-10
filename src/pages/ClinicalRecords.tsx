@@ -21,6 +21,8 @@ import { ClinicalRecord, ClinicalRecordType } from "@/types/clinical-record";
 import { Patient } from "@/types/patient";
 import { Session } from "@/types/session";
 import { showSuccess, showError } from "@/utils/toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface Attachment {
   name: string;
@@ -29,7 +31,8 @@ interface Attachment {
 }
 
 const ClinicalRecords = () => {
-  const [records, setRecords] = useState<ClinicalRecord[]>([]);
+  const queryClient = useQueryClient();
+  const [records, setRecords] = useState<ClinicalRecord[]>([]); // Still using local state for records for now
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<ClinicalRecord | null>(null);
   const [initialRecordType, setInitialRecordType] = useState<ClinicalRecordType>("Evaluación");
@@ -38,13 +41,17 @@ const ClinicalRecords = () => {
   const [isAttachmentsDialogOpen, setIsAttachmentsDialogOpen] = useState(false);
   const [attachmentsToView, setAttachmentsToView] = useState<Attachment[]>([]);
 
-  // Mock data for patients and sessions (replace with actual data fetching)
-  const [patients, setPatients] = useState<Patient[]>([
-    { id: "p1", rut: "11.111.111-1", name: "Juan Pérez", age: 30, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    { id: "p2", rut: "22.222.222-2", name: "María García", age: 5, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    { id: "p3", rut: "33.333.333-3", name: "Carlos López", age: 65, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-  ]);
+  // Fetch patients from Supabase
+  const { data: patients, isLoading: isLoadingPatients, isError: isErrorPatients, error: errorPatients } = useQuery<Patient[], Error>({
+    queryKey: ["patients"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("patients").select("*");
+      if (error) throw error;
+      return data as Patient[];
+    },
+  });
 
+  // Mock data for sessions (replace with actual data fetching if needed)
   const [sessions] = useState<Session[]>([
     { id: "s1", patientName: "Juan Pérez", room: "UAPORRINO", date: "2023-10-26", time: "10:00", duration: 40, type: "Intervención", status: "Programada" },
     { id: "s2", patientName: "María García", room: "RBC", date: "2023-10-27", time: "11:00", duration: 60, type: "Evaluación", status: "Atendida" },
@@ -90,10 +97,8 @@ const ClinicalRecords = () => {
   };
 
   const handleAddPatient = (newPatient: Patient) => {
-    setPatients((prevPatients) => {
-      const now = new Date().toISOString();
-      return [...prevPatients, { ...newPatient, id: uuidv4(), createdAt: now, updatedAt: now }];
-    });
+    // This will trigger a re-fetch of patients in the useQuery hook
+    queryClient.invalidateQueries({ queryKey: ["patients"] });
   };
 
   const handleViewAttachments = (attachments: Attachment[]) => {
@@ -126,7 +131,10 @@ const ClinicalRecords = () => {
     onViewAttachments: handleViewAttachments,
   });
 
-  const existingRuts = patients.map(p => p.rut);
+  const existingRuts = patients?.map(p => p.rut) || [];
+
+  if (isLoadingPatients) return <div className="p-4 text-center">Cargando pacientes para registros clínicos...</div>;
+  if (isErrorPatients) return <div className="p-4 text-center text-red-500">Error al cargar pacientes: {errorPatients?.message}</div>;
 
   return (
     <div className="flex flex-col gap-6 p-4 lg:p-6">
@@ -179,7 +187,7 @@ const ClinicalRecords = () => {
         onClose={closeForm}
         onSubmit={editingRecord ? handleEditRecord : handleAddRecord}
         initialData={editingRecord}
-        availablePatients={patients}
+        availablePatients={patients || []} // Pass fetched patients
         availableSessions={sessions}
         onAddPatient={handleAddPatient}
         existingRuts={existingRuts}
