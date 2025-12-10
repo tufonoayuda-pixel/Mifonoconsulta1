@@ -102,7 +102,7 @@ const interventionPlanDataSchema = z.object({
   materialsAndResources: z.string().optional(),
   generalObjective: z.string().optional(),
   specificAndOperationalObjectives: z.string().optional(),
-  estimatedPlanDurationSessions: z.coerce.number().int().positive().optional(),
+  estimatedPlanDurationSessions: z.coerce.number().int().min(0).optional(), // Changed from positive() to min(0)
   sessionFrequency: z.string().optional(),
   additionalObservations: z.string().optional(),
 });

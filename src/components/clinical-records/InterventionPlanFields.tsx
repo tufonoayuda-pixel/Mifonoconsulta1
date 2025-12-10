@@ -205,7 +205,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
           <FormItem>
             <FormLabel>Estrategias Específicas</FormLabel>
             <FormControl>
-              <Textarea placeholder="Describe las estrategias específicas a utilizar..." {...field} />
+              <Input placeholder="Ej: Realce acústico, Acercamiento auditivo, Condicionamiento auditivo..." {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -220,7 +220,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
           <FormItem>
             <FormLabel>Habilidades Auditivas</FormLabel>
             <FormControl>
-              <Textarea placeholder="Describe las habilidades auditivas a trabajar..." {...field} />
+              <Textarea placeholder="Describe las habilidades auditivas específicas a desarrollar (ej. Detección, Discriminación, Identificación, Reconocimiento, Comprensión)..." {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -233,7 +233,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
           <FormItem>
             <FormLabel>Semántica</FormLabel>
             <FormControl>
-              <Textarea placeholder="Describe los aspectos semánticos a trabajar..." {...field} />
+              <Textarea placeholder="Detallar los aspectos semánticos a abordar (ej. Vocabulario, Categorización, Conceptos)..." {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -246,7 +246,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
           <FormItem>
             <FormLabel>Seguimiento de Instrucciones</FormLabel>
             <FormControl>
-              <Textarea placeholder="Describe el trabajo en seguimiento de instrucciones..." {...field} />
+              <Textarea placeholder="Especificar el trabajo en la capacidad de seguir instrucciones (ej. Instrucciones simples, complejas, de múltiples pasos)..." {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -259,7 +259,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
           <FormItem>
             <FormLabel>Intención Comunicativa</FormLabel>
             <FormControl>
-              <Textarea placeholder="Describe el trabajo en intención comunicativa..." {...field} />
+              <Textarea placeholder="Describir cómo se fomentará la intención comunicativa (ej. Pedir, comentar, saludar, responder)..." {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -272,7 +272,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
           <FormItem>
             <FormLabel>Actividades Específicas</FormLabel>
             <FormControl>
-              <Textarea placeholder="Detalla las actividades específicas a realizar..." {...field} />
+              <Textarea placeholder="Descripción detallada de las actividades planificadas para las sesiones..." {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -285,7 +285,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
           <FormItem>
             <FormLabel>Materiales y Recursos</FormLabel>
             <FormControl>
-              <Textarea placeholder="Lista de materiales y recursos necesarios..." {...field} />
+              <Textarea placeholder="Lista de materiales didácticos, juguetes, software o recursos necesarios para la intervención..." {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -300,7 +300,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
           <FormItem>
             <FormLabel>Objetivo General del Plan</FormLabel>
             <FormControl>
-              <Textarea placeholder="Define el objetivo general del plan de intervención..." {...field} />
+              <Textarea placeholder="Enunciar el objetivo global que se busca alcanzar con la intervención (ej. Desarrollar la percepción auditiva y el lenguaje oral en el paciente...)" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -315,7 +315,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
           <FormItem>
             <FormLabel>Objetivos Específicos y Operacionales</FormLabel>
             <FormControl>
-              <Textarea placeholder="Detalla los objetivos específicos y operacionales..." {...field} />
+              <Textarea placeholder="Describir los objetivos específicos y operacionales, incluyendo criterios de logro y temporalidad..." {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
