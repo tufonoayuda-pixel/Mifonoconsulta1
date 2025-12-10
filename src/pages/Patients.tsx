@@ -28,7 +28,17 @@ const Patients = () => {
   // Mutation for adding a patient
   const addPatientMutation = useMutation<Patient, Error, Patient>({
     mutationFn: async (newPatient) => {
-      const { data, error } = await supabase.from("patients").insert(newPatient).select().single();
+      const { data, error } = await supabase.from("patients").insert({
+        rut: newPatient.rut,
+        name: newPatient.name,
+        phone: newPatient.phone,
+        age: newPatient.age,
+        preferred_room: newPatient.preferredRoom, // Mapeo explícito
+        preferred_day: newPatient.preferredDay,   // Mapeo explícito
+        preferred_time: newPatient.preferredTime, // Mapeo explícito
+        service_type: newPatient.serviceType,     // Mapeo explícito
+        observations: newPatient.observations,
+      }).select().single();
       if (error) throw error;
       return data as Patient;
     },
@@ -44,7 +54,17 @@ const Patients = () => {
   // Mutation for updating a patient
   const updatePatientMutation = useMutation<Patient, Error, Patient>({
     mutationFn: async (updatedPatient) => {
-      const { data, error } = await supabase.from("patients").update(updatedPatient).eq("id", updatedPatient.id).select().single();
+      const { data, error } = await supabase.from("patients").update({
+        rut: updatedPatient.rut,
+        name: updatedPatient.name,
+        phone: updatedPatient.phone,
+        age: updatedPatient.age,
+        preferred_room: updatedPatient.preferredRoom, // Mapeo explícito
+        preferred_day: updatedPatient.preferredDay,   // Mapeo explícito
+        preferred_time: updatedPatient.preferredTime, // Mapeo explícito
+        service_type: updatedPatient.serviceType,     // Mapeo explícito
+        observations: updatedPatient.observations,
+      }).eq("id", updatedPatient.id).select().single();
       if (error) throw error;
       return data as Patient;
     },
