@@ -8,6 +8,7 @@ import { createSessionColumns } from "@/components/sessions/columns";
 import SessionForm from "@/components/sessions/SessionForm";
 import SessionStatusDialog from "@/components/sessions/SessionStatusDialog";
 import SessionCalendar from "@/components/sessions/SessionCalendar";
+import DailyAgenda from "@/components/sessions/DailyAgenda"; // Import the new DailyAgenda component
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Session } from "@/types/session";
 import { Patient } from "@/types/patient";
@@ -26,6 +27,7 @@ const Sessions = () => {
   const [sessionToUpdateStatus, setSessionToUpdateStatus] = useState<Session | null>(null);
   const [statusType, setStatusType] = useState<"Atendida" | "No Atendida">("Atendida");
   const [currentView, setCurrentView] = useState<string>("table");
+  const [selectedDayForAgenda, setSelectedDayForAgenda] = useState<Date>(new Date()); // New state for DailyAgenda
 
   // Fetch patients from Supabase
   const { data: availablePatients, isLoading: isLoadingPatients, isError: isErrorPatients, error: errorPatients } = useQuery<Patient[], Error>({
@@ -227,9 +229,10 @@ const Sessions = () => {
       </p>
 
       <Tabs value={currentView} onValueChange={setCurrentView} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3"> {/* Changed to 3 columns */}
           <TabsTrigger value="table">Vista de Tabla</TabsTrigger>
           <TabsTrigger value="calendar">Vista de Calendario</TabsTrigger>
+          <TabsTrigger value="daily-agenda">Agenda Diaria</TabsTrigger> {/* New tab */}
         </TabsList>
         <TabsContent value="table">
           <DataTable
@@ -241,6 +244,15 @@ const Sessions = () => {
         </TabsContent>
         <TabsContent value="calendar">
           <SessionCalendar sessions={sessions} onSelectSession={openEditForm} />
+        </TabsContent>
+        <TabsContent value="daily-agenda"> {/* New tab content */}
+          <DailyAgenda
+            sessions={sessions}
+            availablePatients={availablePatients || []}
+            selectedDate={selectedDayForAgenda}
+            onDateChange={setSelectedDayForAgenda}
+            onSelectSession={openEditForm}
+          />
         </TabsContent>
       </Tabs>
 

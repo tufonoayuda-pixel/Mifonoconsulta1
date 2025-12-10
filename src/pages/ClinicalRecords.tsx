@@ -230,7 +230,7 @@ const ClinicalRecords = () => {
 
   const openAddForm = (type: ClinicalRecordType) => {
     setEditingRecord(null);
-    setInitialRecordType(type);
+    setInitialRecordType(type); // Set the initial type
     setIsFormOpen(true);
   };
 
@@ -342,6 +342,7 @@ const ClinicalRecords = () => {
         onAddPatient={handleAddPatient}
         existingRuts={existingRuts}
         isSubmitting={addClinicalRecordMutation.isPending || updateClinicalRecordMutation.isPending}
+        initialRecordType={initialRecordType} // Pass the initial type here
       />
 
       {/* Dialog for viewing attachments */}

@@ -130,6 +130,7 @@ interface ClinicalRecordFormProps {
   onAddPatient: (patient: Patient) => void; // Callback to add a new patient
   existingRuts: string[]; // For PatientForm
   isSubmitting: boolean; // New prop for submission state
+  initialRecordType: ClinicalRecordType; // Added prop to set initial type for new records
 }
 
 const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
@@ -142,6 +143,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
   onAddPatient,
   existingRuts,
   isSubmitting,
+  initialRecordType, // Destructure the new prop
 }) => {
   const form = useForm<ClinicalRecordFormValues>({
     resolver: zodResolver(clinicalRecordFormSchema),
@@ -200,7 +202,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         }
       : {
           patientId: "",
-          type: "Evaluación",
+          type: initialRecordType, // Use initialRecordType for new records
           date: format(new Date(), "yyyy-MM-dd"),
           title: "",
           attachments: [],
@@ -294,13 +296,14 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         next_session: initialData.next_session || "",
       });
     } else {
+      // When creating a new record, set the type based on initialRecordType prop
       form.reset({
         patientId: "",
-        type: "Evaluación",
+        type: initialRecordType, // Use initialRecordType here
         date: format(new Date(), "yyyy-MM-dd"),
         title: "",
         attachments: [],
-        // Reset all optional fields to empty string or undefined
+        // Initialize all optional fields to empty string or undefined
         school_level: "", reason_for_consultation: "", medical_diagnosis: "", anamnesis_info: "",
         family_context: "", previous_therapies: "", evaluation_conditions: "", hearing_aids_use: "",
         applied_tests: "", clinical_observation_methods: "", speech_anatomical_structures: "",
@@ -321,7 +324,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         next_session: "",
       });
     }
-  }, [initialData, form]);
+  }, [initialData, form, initialRecordType]); // Add initialRecordType to dependency array
 
   // Auto-generate title
   useEffect(() => {
@@ -490,7 +493,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Tipo de Registro</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}> {/* Use value={field.value} */}
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecciona un tipo de registro" />
