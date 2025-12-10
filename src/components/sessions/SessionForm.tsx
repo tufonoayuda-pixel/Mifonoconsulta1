@@ -126,6 +126,17 @@ const SessionForm: React.FC<SessionFormProps> = ({
   }, [initialData, form]);
 
   const isRecurring = form.watch("isRecurring");
+  const selectedRoom = form.watch("room"); // Watch for changes in the room
+
+  // Effect to update duration based on selected room
+  useEffect(() => {
+    if (selectedRoom === "UAPORRINO") {
+      form.setValue("duration", 40);
+    } else if (selectedRoom === "RBC") {
+      form.setValue("duration", 60);
+    }
+  }, [selectedRoom, form]);
+
 
   const handleSubmit = (values: SessionFormValues) => {
     onSubmit(values as Session);
