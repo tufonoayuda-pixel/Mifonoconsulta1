@@ -25,11 +25,11 @@ const mapFrontendStatusToDb = (status: Session["status"]): string => {
     case "Programada":
       return "scheduled";
     case "Atendida":
-      return "attended";
+      return "completed"; // Mapeado a 'completed'
     case "No Atendida":
-      return "not_attended";
+      return "cancelled"; // Mapeado a 'cancelled'
     default:
-      return "scheduled"; // Default to scheduled if unknown
+      return "scheduled"; // Por defecto a 'scheduled'
   }
 };
 
@@ -38,12 +38,13 @@ const mapDbStatusToFrontend = (dbStatus: string): Session["status"] => {
   switch (dbStatus) {
     case "scheduled":
       return "Programada";
-    case "attended":
+    case "completed": // Mapeado a 'Atendida'
       return "Atendida";
-    case "not_attended":
+    case "cancelled": // Mapeado a 'No Atendida'
       return "No Atendida";
+    case "in-progress": // Nuevo estado de DB, mapeado a 'Programada' por ahora
     default:
-      return "Programada"; // Default to Programada if unknown
+      return "Programada"; // Por defecto a 'Programada' si es desconocido
   }
 };
 
