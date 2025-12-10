@@ -9,7 +9,8 @@ import Patients from "./pages/Patients";
 import Sessions from "./pages/Sessions";
 import ClinicalRecords from "./pages/ClinicalRecords";
 import ProtocolsPage from "./pages/ProtocolsPage";
-import NotificationsPage from "./pages/NotificationsPage"; // Import the new NotificationsPage
+import NotificationsPage from "./pages/NotificationsPage";
+import SettingsPage from "./pages/SettingsPage"; // Import the new SettingsPage
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,8 +29,8 @@ const App = () => (
             <Route path="sessions" element={<Sessions />} />
             <Route path="records" element={<ClinicalRecords />} />
             <Route path="protocols" element={<ProtocolsPage />} />
-            <Route path="notifications" element={<NotificationsPage />} /> {/* New route for NotificationsPage */}
-            <Route path="settings" element={<div>Settings Page</div>} /> {/* Placeholder */}
+            <Route path="notifications" element={<NotificationsPage />} />
+            <Route path="settings" element={<SettingsPage />} /> {/* New route for SettingsPage */}
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
