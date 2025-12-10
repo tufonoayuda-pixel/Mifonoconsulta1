@@ -16,7 +16,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import { format, parse, isBefore, addMinutes } from "date-fns";
 import { supabase } from "@/integrations/supabase/client"; // Import supabase client
 import { toast } from "sonner"; // Import sonner toast
-import { useQuery, useQueryClient } from "@tanstack/react-query"; // Import useQuery and useQueryClient
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"; // Import useQuery, useMutation and useQueryClient
 import { es } from "date-fns/locale"; // Import es locale for date-fns
 
 const Sessions = () => {
