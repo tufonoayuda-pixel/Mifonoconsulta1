@@ -15,6 +15,7 @@ const Layout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+  const [currentDateTime, setCurrentDateTime] = useState<string>(""); // State for date and time
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -53,6 +54,28 @@ const Layout: React.FC = () => {
     };
   }, [fetchUnreadNotificationsCount]);
 
+  // Effect for real-time date and time
+  useEffect(() => {
+    const updateDateTime = () => {
+      const now = new Date();
+      const formatter = new Intl.DateTimeFormat("es-CL", {
+        weekday: "long", // "Lunes"
+        day: "numeric", // "26"
+        month: "long", // "octubre"
+        hour: "2-digit",
+        minute: "2-digit",
+        // second: "2-digit", // Removed seconds for a cleaner look
+        timeZone: "America/Santiago",
+      });
+      setCurrentDateTime(formatter.format(now));
+    };
+
+    updateDateTime(); // Set initial time
+    const intervalId = setInterval(updateDateTime, 1000); // Update every second
+
+    return () => clearInterval(intervalId); // Clean up on component unmount
+  }, []);
+
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
@@ -76,6 +99,10 @@ const Layout: React.FC = () => {
           )}
           <h1 className="text-xl font-semibold">MiFonoConsulta</h1>
           <div className="ml-auto flex items-center gap-4">
+            {/* Display current date and time */}
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              {currentDateTime}
+            </span>
             <Link to="/notifications" className="relative">
               <Button variant="ghost" size="icon" className="h-8 w-8">
                 <Bell className="h-5 w-5" />
