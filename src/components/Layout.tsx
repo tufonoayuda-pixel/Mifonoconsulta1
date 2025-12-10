@@ -6,7 +6,7 @@ import { Menu, Bell } from "lucide-react";
 import Sidebar from "./Sidebar";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { MadeWithDyad } from "./made-with-dyad";
+import PersonalFooter from "./PersonalFooter"; // Import the new PersonalFooter component
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client"; // Import supabase client
 import { Badge } from "@/components/ui/badge"; // Import Badge component
@@ -124,7 +124,7 @@ const Layout: React.FC = () => {
         <main className="flex-1 p-4 lg:p-6 overflow-auto">
           <Outlet />
         </main>
-        <MadeWithDyad />
+        <PersonalFooter /> {/* Using the new PersonalFooter component */}
       </div>
     </div>
   );
