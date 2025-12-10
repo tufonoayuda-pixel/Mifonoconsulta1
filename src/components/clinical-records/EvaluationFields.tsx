@@ -39,7 +39,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
         </FormItem>
         <FormField
           control={form.control}
-          name="data.schoolLevel"
+          name="school_level" // Acceso directo
           render={({ field }) => (
             <FormItem>
               <FormLabel>Nivel Escolar</FormLabel>
@@ -53,7 +53,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
       </div>
       <FormField
         control={form.control}
-        name="data.reasonForConsultation"
+        name="reason_for_consultation" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Motivo de Consulta</FormLabel>
@@ -66,7 +66,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
       />
       <FormField
         control={form.control}
-        name="data.medicalDiagnosis"
+        name="medical_diagnosis" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Diagnóstico Médico</FormLabel>
@@ -81,7 +81,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
       <h3 className="text-lg font-semibold mt-8">II. ANTECEDENTES ANAMNÉSICOS RELEVANTES</h3>
       <FormField
         control={form.control}
-        name="data.anamnesisInfo"
+        name="anamnesis_info" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Información Recopilada</FormLabel>
@@ -94,7 +94,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
       />
       <FormField
         control={form.control}
-        name="data.familyContext"
+        name="family_context" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Contexto Familiar</FormLabel>
@@ -107,7 +107,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
       />
       <FormField
         control={form.control}
-        name="data.previousTherapies"
+        name="previous_therapies" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Terapias Previas</FormLabel>
@@ -123,7 +123,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
-          name="data.environmentConditions"
+          name="evaluation_conditions" // Acceso directo
           render={({ field }) => (
             <FormItem>
               <FormLabel>Condiciones del Entorno</FormLabel>
@@ -136,7 +136,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
         />
         <FormField
           control={form.control}
-          name="data.hearingAidUse"
+          name="hearing_aids_use" // Acceso directo
           render={({ field }) => (
             <FormItem>
               <FormLabel>Uso de Dispositivos Auditivos</FormLabel>
@@ -153,7 +153,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
-          name="data.appliedTests"
+          name="applied_tests" // Acceso directo
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tests Aplicados</FormLabel>
@@ -166,7 +166,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
         />
         <FormField
           control={form.control}
-          name="data.clinicalObservationMethods"
+          name="clinical_observation_methods" // Acceso directo
           render={({ field }) => (
             <FormItem>
               <FormLabel>Métodos de Observación Clínica</FormLabel>
@@ -182,7 +182,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
       <h3 className="text-lg font-semibold mt-8">V. HALLAZGOS DE EVALUACIÓN</h3>
       <FormField
         control={form.control}
-        name="data.speechAnatomyStructures"
+        name="speech_anatomical_structures" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Estructuras Anatómicas del Habla</FormLabel>
@@ -197,7 +197,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
-          name="data.acousticPerceptionDetection"
+          name="acoustic_perception_detection" // Acceso directo
           render={({ field }) => (
             <FormItem>
               <FormLabel>Detección</FormLabel>
@@ -210,7 +210,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
         />
         <FormField
           control={form.control}
-          name="data.acousticPerceptionDiscrimination"
+          name="acoustic_perception_discrimination" // Acceso directo
           render={({ field }) => (
             <FormItem>
               <FormLabel>Discriminación</FormLabel>
@@ -223,7 +223,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
         />
         <FormField
           control={form.control}
-          name="data.acousticPerceptionIdentification"
+          name="acoustic_perception_identification" // Acceso directo
           render={({ field }) => (
             <FormItem>
               <FormLabel>Identificación</FormLabel>
@@ -236,7 +236,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
         />
         <FormField
           control={form.control}
-          name="data.acousticPerceptionRecognition"
+          name="acoustic_perception_recognition" // Acceso directo
           render={({ field }) => (
             <FormItem>
               <FormLabel>Reconocimiento</FormLabel>
@@ -249,7 +249,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
         />
         <FormField
           control={form.control}
-          name="data.acousticPerceptionComprehension"
+          name="acoustic_perception_comprehension" // Acceso directo
           render={({ field }) => (
             <FormItem>
               <FormLabel>Comprensión</FormLabel>
@@ -265,7 +265,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
       <h4 className="text-md font-medium mt-4">Habilidades Lingüísticas</h4>
       <FormField
         control={form.control}
-        name="data.linguisticSkillsLanguage"
+        name="linguistic_skills_language" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Lenguaje</FormLabel>
@@ -278,7 +278,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
       />
       <FormField
         control={form.control}
-        name="data.linguisticSkillsSemantics"
+        name="linguistic_skills_semantics" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Semántica</FormLabel>
@@ -291,7 +291,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
       />
       <FormField
         control={form.control}
-        name="data.linguisticSkillsLiteracy"
+        name="linguistic_skills_literacy" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Lectoescritura</FormLabel>
@@ -304,7 +304,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
       />
       <FormField
         control={form.control}
-        name="data.linguisticSkillsPragmatics"
+        name="linguistic_skills_pragmatics" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Pragmática</FormLabel>
@@ -319,7 +319,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
       <h3 className="text-lg font-semibold mt-8">VI. SÍNTESIS DE LA EVALUACIÓN</h3>
       <FormField
         control={form.control}
-        name="data.comprehensiveLevel"
+        name="synthesis_comprehensive_level" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Nivel Comprensivo</FormLabel>
@@ -332,7 +332,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
       />
       <FormField
         control={form.control}
-        name="data.expressiveLevel"
+        name="synthesis_expressive_level" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Nivel Expresivo</FormLabel>
@@ -345,7 +345,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
       />
       <FormField
         control={form.control}
-        name="data.acousticPerceptionSynthesis"
+        name="synthesis_acoustic_perception" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Percepción Acústica</FormLabel>
@@ -360,7 +360,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
       <h3 className="text-lg font-semibold mt-8">VII. HIPÓTESIS DIAGNÓSTICA</h3>
       <FormField
         control={form.control}
-        name="data.fonoaudiologicalDiagnosis"
+        name="phonodiagnosis" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Diagnóstico Fonoaudiológico</FormLabel>
@@ -375,7 +375,7 @@ const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ patientRut, patient
       <h3 className="text-lg font-semibold mt-8">VIII. OBSERVACIONES Y/O SUGERENCIAS</h3>
       <FormField
         control={form.control}
-        name="data.therapeuticRecommendations"
+        name="observations_suggestions" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Recomendaciones Terapéuticas</FormLabel>

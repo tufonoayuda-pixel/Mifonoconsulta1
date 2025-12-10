@@ -20,7 +20,7 @@ const SessionRecordFields: React.FC = () => {
       <h3 className="text-lg font-semibold">Objetivos de la Sesión</h3>
       <FormField
         control={form.control}
-        name="data.sessionObjectives"
+        name="session_objectives" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Objetivos planteados para esta sesión</FormLabel>
@@ -35,7 +35,7 @@ const SessionRecordFields: React.FC = () => {
       <h3 className="text-lg font-semibold mt-8">Desarrollo de la Sesión</h3>
       <FormField
         control={form.control}
-        name="data.activitiesPerformed"
+        name="activities_performed" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Actividades Realizadas</FormLabel>
@@ -48,7 +48,7 @@ const SessionRecordFields: React.FC = () => {
       />
       <FormField
         control={form.control}
-        name="data.observedAchievements"
+        name="clinical_observations" // Acceso directo (reutilizando para 'Logros Observados')
         render={({ field }) => (
           <FormItem>
             <FormLabel>Logros Observados (Progreso)</FormLabel>
@@ -61,7 +61,7 @@ const SessionRecordFields: React.FC = () => {
       />
       <FormField
         control={form.control}
-        name="data.additionalClinicalObservations"
+        name="observations_suggestions" // Acceso directo (reutilizando para 'Observaciones Clínicas Adicionales')
         render={({ field }) => (
           <FormItem>
             <FormLabel>Observaciones Clínicas Adicionales</FormLabel>
@@ -74,7 +74,7 @@ const SessionRecordFields: React.FC = () => {
       />
       <FormField
         control={form.control}
-        name="data.patientResponse"
+        name="response_patient" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Respuesta del Paciente</FormLabel>
@@ -89,7 +89,7 @@ const SessionRecordFields: React.FC = () => {
       <h3 className="text-lg font-semibold mt-8">Planificación Futura</h3>
       <FormField
         control={form.control}
-        name="data.futurePlanning"
+        name="next_session" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Próxima Sesión / Tareas para el hogar</FormLabel>

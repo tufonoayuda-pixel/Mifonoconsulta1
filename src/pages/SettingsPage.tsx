@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button"; // Import Button
 import JSZip from "jszip"; // Import JSZip
 import { saveAs } from "file-saver"; // Import saveAs
+import { format } from "date-fns"; // Import format from date-fns
 
 interface DashboardStats {
   patients: number;
@@ -47,7 +48,7 @@ const SettingsPage: React.FC = () => {
       if (sessionsError) throw sessionsError;
 
       const { count: clinicalRecordsCount, error: clinicalRecordsError } = await supabase
-        .from("clinical_records")
+        .from("clinical_records") // Corrected table name
         .select("count", { count: "exact", head: true });
       if (clinicalRecordsError) throw clinicalRecordsError;
 

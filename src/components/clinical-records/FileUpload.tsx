@@ -12,6 +12,7 @@ interface Attachment {
   name: string;
   url: string; // For display/download, could be a blob URL or actual URL
   type: string; // MIME type
+  path?: string; // Added path for Supabase Storage management
 }
 
 interface FileUploadProps {
@@ -54,10 +55,12 @@ const FileUpload: React.FC<FileUploadProps> = ({
   });
 
   const handleRemoveFile = (fileToRemove: Attachment) => {
-    const updatedFiles = files.filter((file) => file.name !== fileToRemove.name);
+    const updatedFiles = files.filter((file) => file.url !== fileToRemove.url); // Filter by URL to handle blob URLs
     setFiles(updatedFiles);
     onFilesChange(updatedFiles);
-    URL.revokeObjectURL(fileToRemove.url); // Clean up the object URL
+    if (fileToRemove.url.startsWith("blob:")) {
+      URL.revokeObjectURL(fileToRemove.url); // Clean up the object URL if it's a temporary one
+    }
     showSuccess(`Archivo "${fileToRemove.name}" eliminado.`);
   };
 
@@ -90,7 +93,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
           <p className="text-sm font-medium">Archivos Adjuntos:</p>
           {files.map((file, index) => (
             <div
-              key={index}
+              key={file.url} // Use file.url as key for uniqueness
               className="flex items-center justify-between p-2 border rounded-md bg-gray-50 dark:bg-gray-800"
             >
               <a

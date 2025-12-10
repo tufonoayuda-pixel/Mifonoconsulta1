@@ -58,7 +58,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
         </FormItem>
         <FormField
           control={form.control}
-          name="data.schooling"
+          name="school_level" // Acceso directo
           render={({ field }) => (
             <FormItem>
               <FormLabel>Escolaridad</FormLabel>
@@ -72,7 +72,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
       </div>
       <FormField
         control={form.control}
-        name="data.relevantClinicalInfo"
+        name="anamnesis_info" // Acceso directo (reutilizando para 'Información Clínica Relevante')
         render={({ field }) => (
           <FormItem>
             <FormLabel>Información Clínica Relevante</FormLabel>
@@ -87,7 +87,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
       <h3 className="text-lg font-semibold mt-8">II. HIPÓTESIS DE DIAGNÓSTICO FONOAUDIOLÓGICO</h3>
       <FormField
         control={form.control}
-        name="data.mainDiagnosis"
+        name="medical_diagnosis" // Acceso directo (reutilizando para 'Diagnóstico Principal')
         render={({ field }) => (
           <FormItem>
             <FormLabel>Diagnóstico Principal</FormLabel>
@@ -100,11 +100,11 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
       />
       <FormField
         control={form.control}
-        name="data.geersMoogCategory"
+        name="geers_moog_category" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Categoría de Percepción Acústica (Geers y Moog)</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} value={field.value}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona una categoría" />
@@ -127,11 +127,11 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
-          name="data.mainMethodology"
+          name="auditory_verbal_therapy_methodology" // Acceso directo
           render={({ field }) => (
             <FormItem>
               <FormLabel>Metodología Principal</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecciona una metodología" />
@@ -151,11 +151,11 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
         />
         <FormField
           control={form.control}
-          name="data.interventionFocus"
+          name="intervention_focus" // Acceso directo
           render={({ field }) => (
             <FormItem>
               <FormLabel>Foco de Intervención</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecciona un foco" />
@@ -175,11 +175,11 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
         />
         <FormField
           control={form.control}
-          name="data.modality"
+          name="modality" // Acceso directo
           render={({ field }) => (
             <FormItem>
               <FormLabel>Modalidad</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecciona una modalidad" />
@@ -200,7 +200,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
       </div>
       <FormField
         control={form.control}
-        name="data.specificStrategies"
+        name="techniques_strategies" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Estrategias Específicas</FormLabel>
@@ -215,7 +215,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
       <h3 className="text-lg font-semibold mt-8">IV. CONTENIDOS DE INTERVENCIÓN</h3>
       <FormField
         control={form.control}
-        name="data.areasToWorkAuditorySkills"
+        name="auditory_skills" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Habilidades Auditivas</FormLabel>
@@ -228,7 +228,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
       />
       <FormField
         control={form.control}
-        name="data.areasToWorkSemantics"
+        name="semantics_intervention" // Acceso directo (renombrado)
         render={({ field }) => (
           <FormItem>
             <FormLabel>Semántica</FormLabel>
@@ -241,7 +241,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
       />
       <FormField
         control={form.control}
-        name="data.areasToWorkInstructionFollowing"
+        name="instruction_following" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Seguimiento de Instrucciones</FormLabel>
@@ -254,7 +254,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
       />
       <FormField
         control={form.control}
-        name="data.areasToWorkCommunicativeIntention"
+        name="communicative_intent" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Intención Comunicativa</FormLabel>
@@ -267,7 +267,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
       />
       <FormField
         control={form.control}
-        name="data.specificActivities"
+        name="activities_specific" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Actividades Específicas</FormLabel>
@@ -280,7 +280,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
       />
       <FormField
         control={form.control}
-        name="data.materialsAndResources"
+        name="materials_resources" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Materiales y Recursos</FormLabel>
@@ -295,7 +295,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
       <h3 className="text-lg font-semibold mt-8">V. OBJETIVO GENERAL (OG)</h3>
       <FormField
         control={form.control}
-        name="data.generalObjective"
+        name="general_objective" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Objetivo General del Plan</FormLabel>
@@ -310,7 +310,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
       <h3 className="text-lg font-semibold mt-8">VI. OBJETIVOS ESPECÍFICOS Y OPERACIONALES (O.E. y O.O.)</h3>
       <FormField
         control={form.control}
-        name="data.specificAndOperationalObjectives"
+        name="specific_operational_objectives" // Acceso directo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Objetivos Específicos y Operacionales</FormLabel>
@@ -326,7 +326,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
-          name="data.estimatedPlanDurationSessions"
+          name="plan_duration_estimated" // Acceso directo
           render={({ field }) => (
             <FormItem>
               <FormLabel>Duración Estimada del Plan (sesiones)</FormLabel>
@@ -339,7 +339,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
         />
         <FormField
           control={form.control}
-          name="data.sessionFrequency"
+          name="session_frequency" // Acceso directo
           render={({ field }) => (
             <FormItem>
               <FormLabel>Frecuencia de Sesiones</FormLabel>
@@ -353,7 +353,7 @@ const InterventionPlanFields: React.FC<InterventionPlanFieldsProps> = ({
       </div>
       <FormField
         control={form.control}
-        name="data.additionalObservations"
+        name="observations_suggestions" // Acceso directo (reutilizando para 'Observaciones Adicionales')
         render={({ field }) => (
           <FormItem>
             <FormLabel>Observaciones Adicionales</FormLabel>

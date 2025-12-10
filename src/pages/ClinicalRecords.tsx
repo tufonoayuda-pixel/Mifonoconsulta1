@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { v4 as uuidv4 } from "uuid";
-import { PlusCircle, FileText } from "lucide-react";
+import { PlusCircle, FileText, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 import { DataTable } from "@/components/clinical-records/data-table";
 import { createClinicalRecordColumns } from "@/components/clinical-records/columns";
@@ -23,16 +23,19 @@ import { Session } from "@/types/session";
 import { showSuccess, showError } from "@/utils/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
+import { format } from "date-fns";
 
 interface Attachment {
   name: string;
   url: string;
   type: string;
+  path?: string; // Added path for Supabase Storage management
 }
 
 const ClinicalRecords = () => {
   const queryClient = useQueryClient();
-  const [records, setRecords] = useState<ClinicalRecord[]>([]); // Still using local state for records for now
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<ClinicalRecord | null>(null);
   const [initialRecordType, setInitialRecordType] = useState<ClinicalRecordType>("Evaluación");
@@ -51,32 +54,178 @@ const ClinicalRecords = () => {
     },
   });
 
-  // Mock data for sessions (replace with actual data fetching if needed)
-  const [sessions] = useState<Session[]>([
-    { id: "s1", patientName: "Juan Pérez", room: "UAPORRINO", date: "2023-10-26", time: "10:00", duration: 40, type: "Intervención", status: "Programada" },
-    { id: "s2", patientName: "María García", room: "RBC", date: "2023-10-27", time: "11:00", duration: 60, type: "Evaluación", status: "Atendida" },
-  ]);
+  // Fetch sessions from Supabase (assuming sessions are linked to patients)
+  const { data: sessions, isLoading: isLoadingSessions, isError: isErrorSessions, error: errorSessions } = useQuery<Session[], Error>({
+    queryKey: ["sessions"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("sessions").select("*");
+      if (error) throw error;
+      return data as Session[];
+    },
+  });
 
-  const handleAddRecord = (newRecord: ClinicalRecord) => {
-    setRecords((prevRecords) => {
-      const now = new Date().toISOString();
-      const recordWithId = { ...newRecord, id: uuidv4(), createdAt: now, updatedAt: now };
-      showSuccess("Registro clínico añadido exitosamente.");
-      return [...prevRecords, recordWithId];
-    });
-  };
+  // Fetch clinical records from Supabase
+  const { data: clinicalRecords, isLoading: isLoadingRecords, isError: isErrorRecords, error: errorRecords } = useQuery<ClinicalRecord[], Error>({
+    queryKey: ["clinical_records", patients], // Invalidate if patients change to update patientName
+    queryFn: async () => {
+      const { data, error } = await supabase.from("clinical_records").select("*");
+      if (error) throw error;
 
-  const handleEditRecord = (updatedRecord: ClinicalRecord) => {
-    setRecords((prevRecords) =>
-      prevRecords.map((r) => (r.id === updatedRecord.id ? { ...updatedRecord, updatedAt: new Date().toISOString() } : r))
-    );
-    showSuccess("Registro clínico actualizado exitosamente.");
-  };
+      // Map DB data to frontend ClinicalRecord interface, including patientName and attachments
+      const recordsWithDetails: ClinicalRecord[] = await Promise.all((data as any[]).map(async (record) => {
+        const patient = patients?.find(p => p.id === record.patient_id);
+        const { data: attachmentsData, error: attachmentsError } = await supabase
+          .from("attachments")
+          .select("*")
+          .eq("clinical_record_id", record.id);
 
-  const handleDeleteRecord = (id: string) => {
-    setRecords((prevRecords) => prevRecords.filter((r) => r.id !== id));
-    showSuccess("Registro clínico eliminado exitosamente.");
-    // TODO: Implement actual file deletion from storage
+        if (attachmentsError) console.error("Error fetching attachments for record", record.id, attachmentsError);
+
+        return {
+          id: record.id,
+          patientId: record.patient_id,
+          patientName: patient?.name || "Desconocido",
+          type: record.type,
+          date: record.date,
+          title: record.title,
+          createdAt: record.created_at,
+          updatedAt: record.updated_at,
+          attachments: attachmentsData?.map(att => ({
+            name: att.file_name,
+            url: att.file_url,
+            type: att.file_type,
+            path: att.file_path,
+          })) || [],
+          // Map all other flattened fields
+          school_level: record.school_level,
+          reason_for_consultation: record.reason_for_consultation,
+          medical_diagnosis: record.medical_diagnosis,
+          anamnesis_info: record.anamnesis_info,
+          family_context: record.family_context,
+          previous_therapies: record.previous_therapies,
+          evaluation_conditions: record.evaluation_conditions,
+          hearing_aids_use: record.hearing_aids_use,
+          applied_tests: record.applied_tests,
+          clinical_observation_methods: record.clinical_observation_methods,
+          speech_anatomical_structures: record.speech_anatomical_structures,
+          acoustic_perception_detection: record.acoustic_perception_detection,
+          acoustic_perception_discrimination: record.acoustic_perception_discrimination,
+          acoustic_perception_identification: record.acoustic_perception_identification,
+          acoustic_perception_recognition: record.acoustic_perception_recognition,
+          acoustic_perception_comprehension: record.acoustic_perception_comprehension,
+          linguistic_skills_language: record.linguistic_skills_language,
+          linguistic_skills_semantics: record.linguistic_skills_semantics,
+          linguistic_skills_literacy: record.linguistic_skills_literacy,
+          linguistic_skills_pragmatics: record.linguistic_skills_pragmatics,
+          synthesis_comprehensive_level: record.synthesis_comprehensive_level,
+          synthesis_expressive_level: record.synthesis_expressive_level,
+          synthesis_acoustic_perception: record.synthesis_acoustic_perception,
+          phonodiagnosis: record.phonodiagnosis,
+          observations_suggestions: record.observations_suggestions,
+          geers_moog_category: record.geers_moog_category,
+          auditory_verbal_therapy_methodology: record.auditory_verbal_therapy_methodology,
+          techniques_strategies: record.techniques_strategies,
+          intervention_focus: record.intervention_focus,
+          modality: record.modality,
+          auditory_skills: record.auditory_skills,
+          semantics_intervention: record.semantics_intervention,
+          instruction_following: record.instruction_following,
+          communicative_intent: record.communicative_intent,
+          activities_specific: record.activities_specific,
+          materials_resources: record.materials_resources,
+          general_objective: record.general_objective,
+          specific_operational_objectives: record.specific_operational_objectives,
+          plan_duration_estimated: record.plan_duration_estimated,
+          session_frequency: record.session_frequency,
+          session_id: record.session_id,
+          session_objectives: record.session_objectives,
+          activities_performed: record.activities_performed,
+          clinical_observations: record.clinical_observations,
+          response_patient: record.response_patient,
+          next_session: record.next_session,
+        };
+      }));
+      return recordsWithDetails;
+    },
+    enabled: !!patients, // Only run if patients data is available
+  });
+
+  // Mutation for adding a clinical record
+  const addClinicalRecordMutation = useMutation<ClinicalRecord, Error, ClinicalRecord>({
+    mutationFn: async (newRecord) => {
+      // The onSubmit in ClinicalRecordForm handles the actual Supabase insert/update
+      // This mutation is primarily for invalidating queries and showing toasts
+      return newRecord;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clinical_records"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] }); // Update dashboard stats
+    },
+    onError: (err) => {
+      showError("Error al añadir registro clínico: " + err.message);
+    },
+  });
+
+  // Mutation for updating a clinical record
+  const updateClinicalRecordMutation = useMutation<ClinicalRecord, Error, ClinicalRecord>({
+    mutationFn: async (updatedRecord) => {
+      // The onSubmit in ClinicalRecordForm handles the actual Supabase insert/update
+      return updatedRecord;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clinical_records"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] }); // Update dashboard stats
+    },
+    onError: (err) => {
+      showError("Error al actualizar registro clínico: " + err.message);
+    },
+  });
+
+  // Mutation for deleting a clinical record
+  const deleteClinicalRecordMutation = useMutation<void, Error, string>({
+    mutationFn: async (id) => {
+      // First, fetch attachments to delete from storage
+      const { data: attachments, error: fetchAttError } = await supabase
+        .from("attachments")
+        .select("file_path")
+        .eq("clinical_record_id", id);
+
+      if (fetchAttError) throw fetchAttError;
+
+      // Delete files from storage
+      if (attachments && attachments.length > 0) {
+        const filePaths = attachments.map(att => att.file_path).filter(Boolean) as string[];
+        if (filePaths.length > 0) {
+          const { error: storageError } = await supabase.storage.from("clinical-record-attachments").remove(filePaths);
+          if (storageError) console.error("Error deleting files from storage:", storageError);
+        }
+      }
+
+      // Then delete attachments records from DB
+      const { error: deleteAttError } = await supabase.from("attachments").delete().eq("clinical_record_id", id);
+      if (deleteAttError) throw deleteAttError;
+
+      // Finally, delete the clinical record
+      const { error } = await supabase.from("clinical_records").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clinical_records"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] }); // Update dashboard stats
+      showSuccess("Registro clínico eliminado exitosamente.");
+    },
+    onError: (err) => {
+      showError("Error al eliminar registro clínico: " + err.message);
+    },
+  });
+
+  const handleFormSubmit = (record: ClinicalRecord) => {
+    if (editingRecord) {
+      updateClinicalRecordMutation.mutate(record);
+    } else {
+      addClinicalRecordMutation.mutate(record);
+    }
+    closeForm();
   };
 
   const openAddForm = (type: ClinicalRecordType) => {
@@ -87,7 +236,7 @@ const ClinicalRecords = () => {
 
   const openEditForm = (record: ClinicalRecord) => {
     setEditingRecord(record);
-    setInitialRecordType(record.recordType);
+    setInitialRecordType(record.type); // Use record.type
     setIsFormOpen(true);
   };
 
@@ -96,9 +245,8 @@ const ClinicalRecords = () => {
     setEditingRecord(null);
   };
 
-  const handleAddPatient = (newPatient: Patient) => {
-    // This will trigger a re-fetch of patients in the useQuery hook
-    queryClient.invalidateQueries({ queryKey: ["patients"] });
+  const handleAddPatient = () => {
+    queryClient.invalidateQueries({ queryKey: ["patients"] }); // Re-fetch patients after adding a new one
   };
 
   const handleViewAttachments = (attachments: Attachment[]) => {
@@ -107,10 +255,10 @@ const ClinicalRecords = () => {
   };
 
   const filteredRecords = useMemo(() => {
-    let filtered = records;
+    let filtered = clinicalRecords || [];
 
     if (currentTab !== "all") {
-      filtered = filtered.filter((record) => record.recordType === currentTab);
+      filtered = filtered.filter((record) => record.type === currentTab);
     }
 
     if (globalFilter) {
@@ -119,22 +267,24 @@ const ClinicalRecords = () => {
         (record) =>
           record.title.toLowerCase().includes(lowerCaseFilter) ||
           record.patientName.toLowerCase().includes(lowerCaseFilter) ||
-          record.recordType.toLowerCase().includes(lowerCaseFilter)
+          record.type.toLowerCase().includes(lowerCaseFilter)
       );
     }
     return filtered;
-  }, [records, currentTab, globalFilter]);
+  }, [clinicalRecords, currentTab, globalFilter]);
 
   const columns = createClinicalRecordColumns({
     onEdit: openEditForm,
-    onDelete: handleDeleteRecord,
+    onDelete: (id) => deleteClinicalRecordMutation.mutate(id),
     onViewAttachments: handleViewAttachments,
   });
 
   const existingRuts = patients?.map(p => p.rut) || [];
 
-  if (isLoadingPatients) return <div className="p-4 text-center">Cargando pacientes para registros clínicos...</div>;
+  if (isLoadingPatients || isLoadingSessions || isLoadingRecords) return <div className="p-4 text-center">Cargando datos para registros clínicos...</div>;
   if (isErrorPatients) return <div className="p-4 text-center text-red-500">Error al cargar pacientes: {errorPatients?.message}</div>;
+  if (isErrorSessions) return <div className="p-4 text-center text-red-500">Error al cargar sesiones: {errorSessions?.message}</div>;
+  if (isErrorRecords) return <div className="p-4 text-center text-red-500">Error al cargar registros clínicos: {errorRecords?.message}</div>;
 
   return (
     <div className="flex flex-col gap-6 p-4 lg:p-6">
@@ -185,12 +335,13 @@ const ClinicalRecords = () => {
       <ClinicalRecordForm
         isOpen={isFormOpen}
         onClose={closeForm}
-        onSubmit={editingRecord ? handleEditRecord : handleAddRecord}
+        onSubmit={handleFormSubmit}
         initialData={editingRecord}
-        availablePatients={patients || []} // Pass fetched patients
-        availableSessions={sessions}
+        availablePatients={patients || []}
+        availableSessions={sessions || []}
         onAddPatient={handleAddPatient}
         existingRuts={existingRuts}
+        isSubmitting={addClinicalRecordMutation.isPending || updateClinicalRecordMutation.isPending}
       />
 
       {/* Dialog for viewing attachments */}
@@ -215,6 +366,18 @@ const ClinicalRecords = () => {
                     <FileText className="h-4 w-4" />
                     {file.name}
                   </a>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={async () => {
+                      // Optional: Implement deletion of individual attachments from this dialog
+                      showError("La eliminación de adjuntos individuales no está implementada aquí.");
+                    }}
+                    className="h-6 w-6 text-gray-500 hover:text-red-500"
+                  >
+                    <Download className="h-4 w-4" />
+                    <span className="sr-only">Descargar archivo</span>
+                  </Button>
                 </div>
               ))
             ) : (

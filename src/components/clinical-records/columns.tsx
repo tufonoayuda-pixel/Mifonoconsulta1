@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, FileText, Pencil, Trash2 } from "lucide-react";
+import { MoreHorizontal, FileText, Pencil, Trash2, Download } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -20,7 +20,7 @@ import { ClinicalRecord, ClinicalRecordType } from "@/types/clinical-record";
 interface ClinicalRecordColumnsProps {
   onEdit: (record: ClinicalRecord) => void;
   onDelete: (id: string) => void;
-  onViewAttachments: (attachments: { name: string; url: string; type: string }[]) => void;
+  onViewAttachments: (attachments: { name: string; url: string; type: string; path?: string }[]) => void;
 }
 
 const getBadgeVariant = (type: ClinicalRecordType) => {
@@ -46,10 +46,10 @@ export const createClinicalRecordColumns = ({
     header: "Paciente",
   },
   {
-    accessorKey: "recordType",
+    accessorKey: "type", // Renamed from recordType
     header: "Tipo",
     cell: ({ row }) => {
-      const type: ClinicalRecordType = row.getValue("recordType");
+      const type: ClinicalRecordType = row.getValue("type");
       return <Badge variant={getBadgeVariant(type)}>{type}</Badge>;
     },
   },
@@ -58,10 +58,10 @@ export const createClinicalRecordColumns = ({
     header: "Título",
   },
   {
-    accessorKey: "recordDate",
+    accessorKey: "date", // Renamed from recordDate
     header: "Fecha Registro",
     cell: ({ row }) => {
-      const date = new Date(row.getValue("recordDate"));
+      const date = new Date(row.getValue("date"));
       return format(date, "PPP", { locale: es });
     },
   },
@@ -120,9 +120,25 @@ export const createClinicalRecordColumns = ({
               <Pencil className="mr-2 h-4 w-4" /> Editar
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onDelete(record.id)} className="text-red-600">
-              <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-            </DropdownMenuItem>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600">
+                  <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+                </DropdownMenuItem>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta acción no se puede deshacer. Esto eliminará permanentemente el registro clínico y todos sus archivos adjuntos.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => onDelete(record.id)}>Eliminar</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </DropdownMenuContent>
         </DropdownMenu>
       );

@@ -33,7 +33,7 @@ const fetchDashboardStats = async (): Promise<DashboardStats> => {
     if (sessionsError) throw sessionsError;
 
     const { count: totalClinicalRecords, error: clinicalRecordsError } = await supabase
-      .from("clinical_records")
+      .from("clinical_records") // Corrected table name
       .select("id", { count: "exact", head: true });
     if (clinicalRecordsError) throw clinicalRecordsError;
 

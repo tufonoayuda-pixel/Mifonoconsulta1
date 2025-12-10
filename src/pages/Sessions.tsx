@@ -16,6 +16,7 @@ import { format, parse, isBefore, addMinutes } from "date-fns";
 import { supabase } from "@/integrations/supabase/client"; // Import supabase client
 import { toast } from "sonner"; // Import sonner toast
 import { useQuery } from "@tanstack/react-query"; // Import useQuery
+import { es } from "date-fns/locale"; // Import es locale for date-fns
 
 const Sessions = () => {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -55,6 +56,7 @@ const Sessions = () => {
       title,
       message,
       read: false,
+      time: format(new Date(), "HH:mm", { locale: es }), // Add current time
     });
     if (error) {
       console.error("Error creating notification:", error);
