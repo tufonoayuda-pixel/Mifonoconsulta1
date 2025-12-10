@@ -1,0 +1,133 @@
+"use client";
+
+import React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Session } from "@/types/session";
+
+const statusFormSchema = z.object({
+  observations: z.string().optional(),
+  continueSessions: z.boolean().optional(),
+});
+
+type StatusFormValues = z.infer<typeof statusFormSchema>;
+
+interface SessionStatusDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (session: Session, values: StatusFormValues) => void;
+  session: Session | null;
+  statusType: "Atendida" | "No Atendida";
+}
+
+const SessionStatusDialog: React.FC<SessionStatusDialogProps> = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  session,
+  statusType,
+}) => {
+  const form = useForm<StatusFormValues>({
+    resolver: zodResolver(statusFormSchema),
+    defaultValues: {
+      observations: session?.observations || "",
+      continueSessions: true, // Default to true for attended, can be adjusted
+    },
+  });
+
+  React.useEffect(() => {
+    if (session) {
+      form.reset({
+        observations: session.observations || "",
+        continueSessions: statusType === "Atendida" ? true : false, // Sensible default
+      });
+    }
+  }, [session, statusType, form]);
+
+  const handleSubmit = (values: StatusFormValues) => {
+    if (session) {
+      onSubmit(session, values);
+      form.reset();
+      onClose();
+    }
+  };
+
+  if (!session) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Marcar Sesión como {statusType}</DialogTitle>
+          <DialogDescription>
+            Paciente: {session.patientName} - Fecha: {format(new Date(session.date), "PPP", { locale: es })} - Hora: {session.time}
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-4 py-4">
+            <FormField
+              control={form.control}
+              name="observations"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Observaciones</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Notas adicionales sobre la sesión..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {statusType === "Atendida" && (
+              <FormField
+                control={form.control}
+                name="continueSessions"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>
+                        ¿El paciente continuará con sesiones?
+                      </FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            )}
+            <DialogFooter>
+              <Button type="submit">Confirmar</Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default SessionStatusDialog;
