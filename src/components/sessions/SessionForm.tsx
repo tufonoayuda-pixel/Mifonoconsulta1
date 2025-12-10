@@ -23,6 +23,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,6 +40,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { Session } from "@/types/session";
 import { Patient } from "@/types/patient"; // Import Patient type
@@ -53,8 +55,22 @@ const sessionFormSchema = z.object({
   type: z.enum(["Evaluación", "Intervención", "Seguimiento", "Alta"], {
     message: "Tipo de sesión es obligatorio.",
   }),
-  // Justification field is handled by SessionStatusDialog, not directly in this form
   observations: z.string().optional(),
+  // New fields for recurrence
+  isRecurring: z.boolean().optional(),
+  recurrencePattern: z.enum(["daily", "weekly", "monthly", "yearly"]).optional(),
+  recurrenceEndDate: z.string().optional(), // YYYY-MM-DD
+}).refine((data) => {
+  if (data.isRecurring && !data.recurrencePattern) {
+    return false; // If recurring, pattern is required
+  }
+  if (data.isRecurring && !data.recurrenceEndDate) {
+    return false; // If recurring, end date is required
+  }
+  return true;
+}, {
+  message: "Patrón y fecha de fin de recurrencia son obligatorios si la sesión es recurrente.",
+  path: ["recurrencePattern"], // Can point to either field
 });
 
 type SessionFormValues = z.infer<typeof sessionFormSchema>;
@@ -84,6 +100,9 @@ const SessionForm: React.FC<SessionFormProps> = ({
       duration: 40, // Default duration
       type: "Intervención",
       observations: "",
+      isRecurring: false, // Default to not recurring
+      recurrencePattern: undefined,
+      recurrenceEndDate: undefined,
     },
   });
 
@@ -99,9 +118,14 @@ const SessionForm: React.FC<SessionFormProps> = ({
         duration: 40,
         type: "Intervención",
         observations: "",
+        isRecurring: false,
+        recurrencePattern: undefined,
+        recurrenceEndDate: undefined,
       });
     }
   }, [initialData, form]);
+
+  const isRecurring = form.watch("isRecurring");
 
   const handleSubmit = (values: SessionFormValues) => {
     onSubmit(values as Session);
@@ -111,7 +135,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{initialData ? "Editar Sesión" : "Programar Sesión"}</DialogTitle>
         </DialogHeader>
@@ -263,6 +287,97 @@ const SessionForm: React.FC<SessionFormProps> = ({
                 </FormItem>
               )}
             />
+
+            <div className="flex items-center space-x-2 mt-4">
+              <FormField
+                control={form.control}
+                name="isRecurring"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm w-full">
+                    <div className="space-y-0.5">
+                      <FormLabel>Sesión Recurrente</FormLabel>
+                      <FormDescription>
+                        Marca si esta sesión se repite periódicamente.
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {isRecurring && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="recurrencePattern"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Patrón de Recurrencia</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona un patrón" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="daily">Diario</SelectItem>
+                          <SelectItem value="weekly">Semanal</SelectItem>
+                          <SelectItem value="monthly">Mensual</SelectItem>
+                          <SelectItem value="yearly">Anual</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="recurrenceEndDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Fecha de Fin de Recurrencia</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(new Date(field.value), "PPP", { locale: es })
+                              ) : (
+                                <span>Selecciona una fecha de fin</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value ? new Date(field.value) : undefined}
+                            onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                            initialFocus
+                            locale={es}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
+
             <DialogFooter>
               <Button type="submit">{initialData ? "Guardar Cambios" : "Programar Sesión"}</Button>
             </DialogFooter>

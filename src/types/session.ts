@@ -8,4 +8,8 @@ export interface Session {
   type: "Evaluación" | "Intervención" | "Seguimiento" | "Alta";
   status: "Programada" | "Atendida" | "No Atendida";
   observations?: string;
+  // New fields for recurrence
+  isRecurring?: boolean;
+  recurrencePattern?: "daily" | "weekly" | "monthly" | "yearly"; // Example patterns
+  recurrenceEndDate?: string; // YYYY-MM-DD
 }

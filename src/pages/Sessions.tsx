@@ -7,9 +7,12 @@ import { DataTable } from "@/components/patients/data-table"; // Reusing generic
 import { createSessionColumns } from "@/components/sessions/columns";
 import SessionForm from "@/components/sessions/SessionForm";
 import SessionStatusDialog from "@/components/sessions/SessionStatusDialog";
+import SessionCalendar from "@/components/sessions/SessionCalendar"; // New import
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // New import
 import { Session } from "@/types/session";
 import { Patient } from "@/types/patient"; // Import Patient type
 import { showSuccess, showError } from "@/utils/toast";
+import { format, parse } from "date-fns";
 
 const Sessions = () => {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -18,6 +21,7 @@ const Sessions = () => {
   const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [sessionToUpdateStatus, setSessionToUpdateStatus] = useState<Session | null>(null);
   const [statusType, setStatusType] = useState<"Atendida" | "No Atendida">("Atendida");
+  const [currentView, setCurrentView] = useState<string>("table"); // New state for view
 
   // Mock patient data for session form, replace with actual patient list later
   const [availablePatients] = useState<Patient[]>([
@@ -28,9 +32,48 @@ const Sessions = () => {
 
   const handleAddSession = (newSession: Session) => {
     setSessions((prevSessions) => {
-      const sessionWithId = { ...newSession, id: uuidv4(), status: "Programada" };
-      showSuccess("Sesión programada exitosamente.");
-      return [...prevSessions, sessionWithId];
+      // For recurring sessions, generate multiple instances.
+      // This is a simplified example; a more robust solution would handle complex recurrence rules.
+      const sessionsToAdd: Session[] = [];
+      if (newSession.isRecurring && newSession.recurrencePattern && newSession.recurrenceEndDate) {
+        let currentDate = parse(newSession.date, "yyyy-MM-dd", new Date());
+        const endDate = parse(newSession.recurrenceEndDate, "yyyy-MM-dd", new Date());
+
+        while (currentDate <= endDate) {
+          sessionsToAdd.push({
+            ...newSession,
+            id: uuidv4(),
+            date: format(currentDate, "yyyy-MM-dd"),
+            status: "Programada",
+            isRecurring: true, // Mark generated sessions as recurring instances
+            recurrencePattern: newSession.recurrencePattern,
+            recurrenceEndDate: newSession.recurrenceEndDate,
+          });
+
+          // Increment date based on recurrence pattern
+          switch (newSession.recurrencePattern) {
+            case "daily":
+              currentDate.setDate(currentDate.getDate() + 1);
+              break;
+            case "weekly":
+              currentDate.setDate(currentDate.getDate() + 7);
+              break;
+            case "monthly":
+              currentDate.setMonth(currentDate.getMonth() + 1);
+              break;
+            case "yearly":
+              currentDate.setFullYear(currentDate.getFullYear() + 1);
+              break;
+            default:
+              break;
+          }
+        }
+        showSuccess(`${sessionsToAdd.length} sesiones recurrentes programadas exitosamente.`);
+      } else {
+        sessionsToAdd.push({ ...newSession, id: uuidv4(), status: "Programada" });
+        showSuccess("Sesión programada exitosamente.");
+      }
+      return [...prevSessions, ...sessionsToAdd];
     });
   };
 
@@ -106,9 +149,6 @@ const Sessions = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Gestión de Sesiones</h1>
         <div className="flex gap-2">
-          <Button onClick={() => alert("Funcionalidad de calendario pendiente.")} variant="outline">
-            Ver Calendario
-          </Button>
           <Button onClick={openAddForm}>Programar Sesión</Button>
         </div>
       </div>
@@ -116,12 +156,23 @@ const Sessions = () => {
         Programa, visualiza y gestiona todas las sesiones con tus pacientes.
       </p>
 
-      <DataTable
-        columns={columns}
-        data={sessions}
-        searchPlaceholder="Buscar sesiones por paciente, sala o estado..."
-        searchColumn="patientName" // Can be extended for multi-column search
-      />
+      <Tabs value={currentView} onValueChange={setCurrentView} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="table">Vista de Tabla</TabsTrigger>
+          <TabsTrigger value="calendar">Vista de Calendario</TabsTrigger>
+        </TabsList>
+        <TabsContent value="table">
+          <DataTable
+            columns={columns}
+            data={sessions}
+            searchPlaceholder="Buscar sesiones por paciente, sala o estado..."
+            searchColumn="patientName"
+          />
+        </TabsContent>
+        <TabsContent value="calendar">
+          <SessionCalendar sessions={sessions} onSelectSession={openEditForm} />
+        </TabsContent>
+      </Tabs>
 
       <SessionForm
         isOpen={isFormOpen}
