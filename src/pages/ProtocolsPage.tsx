@@ -137,11 +137,6 @@ const protocolsData: ProtocolCategory[] = [
     category: "Cognición Adulto",
     items: [
       {
-        name: "Escala de Depresión Geriátrica de Yesavage",
-        description: "Escala para la detección de depresión en la población geriátrica.",
-        url: "https://escala-yes1.space.z.ai/",
-      },
-      {
         name: "ACE-R-CH",
         description: "Evaluación Cognitiva de Cambridge Revisada (versión chilena).",
         url: "https://scr-acerch.space.z.ai/",
@@ -166,6 +161,11 @@ const protocolsData: ProtocolCategory[] = [
   {
     category: "Calidad de Vida",
     items: [
+      {
+        name: "Escala de Depresión Geriátrica de Yesavage",
+        description: "Escala para la detección de depresión en la población geriátrica.",
+        url: "https://escala-yes1.space.z.ai/",
+      },
       {
         name: "Escala de Lawton y Brody (AIVD)",
         description: "Evaluación de las Actividades Instrumentales de la Vida Diaria.",
