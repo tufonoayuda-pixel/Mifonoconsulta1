@@ -29,7 +29,12 @@ interface SessionCalendarProps {
 
 const SessionCalendar: React.FC<SessionCalendarProps> = ({ sessions, onSelectSession, onSelectSlot }) => {
   const events = sessions.map((session) => {
-    const startDateTime = parse(`${session.date} ${session.time}`, "yyyy-MM-dd HH:mm", new Date());
+    // Parse date and time components
+    const [year, month, day] = session.date.split('-').map(Number);
+    const [hours, minutes] = session.time.split(':').map(Number);
+
+    // Create Date objects in local timezone explicitly
+    const startDateTime = new Date(year, month - 1, day, hours, minutes);
     const endDateTime = new Date(startDateTime.getTime() + session.duration * 60 * 1000); // Add duration in minutes
 
     return {
