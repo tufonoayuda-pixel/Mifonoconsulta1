@@ -163,6 +163,26 @@ const protocolsData: ProtocolCategory[] = [
       },
     ],
   },
+  {
+    category: "Calidad de Vida",
+    items: [
+      {
+        name: "Escala de Lawton y Brody (AIVD)",
+        description: "Evaluación de las Actividades Instrumentales de la Vida Diaria.",
+        url: "https://calvida-esclawtonybrody.space.z.ai",
+      },
+      {
+        name: "Índice de Barthel",
+        description: "Evaluación de las Actividades Básicas de la Vida Diaria.",
+        url: "https://calvida-barthel.space.z.ai",
+      },
+      {
+        name: "TADL-Q (Test de Actividades de la Vida Diaria - Cuestionario)",
+        description: "Cuestionario para evaluar la capacidad de realizar actividades de la vida diaria.",
+        url: "https://calvida-tadlq.space.z.ai",
+      },
+    ],
+  },
 ];
 
 const ProtocolsPage: React.FC = () => {
