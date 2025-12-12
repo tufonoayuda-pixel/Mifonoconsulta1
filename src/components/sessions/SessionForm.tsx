@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format } from "date-fns";
+import { format, parse } from "date-fns"; // Import 'parse'
 import { CalendarIcon } from "lucide-react";
 import { es } from "date-fns/locale";
 
@@ -234,7 +234,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
                             )}
                           >
                             {field.value ? (
-                              format(new Date(field.value), "PPP", { locale: es })
+                              format(parse(field.value, "yyyy-MM-dd", new Date()), "PPP", { locale: es }) // Use parse here
                             ) : (
                               <span>Selecciona una fecha</span>
                             )}
@@ -245,7 +245,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           mode="single"
-                          selected={field.value ? new Date(field.value) : undefined}
+                          selected={field.value ? parse(field.value, "yyyy-MM-dd", new Date()) : undefined} // Use parse here
                           onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
                           initialFocus
                           locale={es}
@@ -387,7 +387,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
                               )}
                             >
                               {field.value ? (
-                                format(new Date(field.value), "PPP", { locale: es })
+                                format(parse(field.value, "yyyy-MM-dd", new Date()), "PPP", { locale: es }) // Use parse here
                               ) : (
                                 <span>Selecciona una fecha de fin</span>
                               )}
@@ -398,7 +398,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="single"
-                            selected={field.value ? new Date(field.value) : undefined}
+                            selected={field.value ? parse(field.value, "yyyy-MM-dd", new Date()) : undefined} // Use parse here
                             onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
                             initialFocus
                             locale={es}
