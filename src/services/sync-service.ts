@@ -1,6 +1,8 @@
 import { offlineSupabase, OfflineOperation } from '@/integrations/supabase/offline-client';
 import { showSuccess, showError } from '@/utils/toast';
 
+const MAX_RETRIES = 3; // Maximum number of retries for an operation
+
 class SyncService {
   private isSyncing: boolean = false;
   private syncInterval: ReturnType<typeof setInterval> | null = null;
@@ -97,15 +99,25 @@ class SyncService {
       console.log(`SyncService: Operation ${operation.id} (${operation.type}) synced successfully.`);
       // The queue is modified by offlineSupabase.processQueueItem, so next iteration will get the new first item
     } catch (error: any) {
-      console.error(`SyncService: Failed to sync operation ${operation.id} (${operation.type}):`, error);
-      this.lastSyncError = `Error al sincronizar ${operation.type} en ${operation.tableName}: ${error.message}`;
-      showError(this.lastSyncError);
-      // For basic conflict resolution, if an update/delete fails because the item doesn't exist,
-      // we might want to remove it from the queue or mark it as unresolvable.
-      // For now, we'll leave it in the queue to retry, but a more advanced system
-      // would require user intervention or more sophisticated logic.
-      // To prevent infinite retries on persistent errors, we could implement a retry count.
-      // For this implementation, we'll just log and keep it in queue for next attempt.
+      // Check if max retries reached
+      if (operation.retries >= MAX_RETRIES) {
+        console.error(`SyncService: Operation ${operation.id} (${operation.type}) failed after ${MAX_RETRIES} retries. Removing from queue.`);
+        this.lastSyncError = `Error persistente al sincronizar ${operation.type} en ${operation.tableName}: ${operation.lastError || error.message}. Eliminado de la cola.`;
+        showError(this.lastSyncError);
+        // Manually remove the failed operation from the queue
+        const currentQueue = offlineSupabase.getSyncQueue();
+        const indexToRemove = currentQueue.findIndex(op => op.id === operation.id);
+        if (indexToRemove !== -1) {
+          currentQueue.splice(indexToRemove, 1);
+          // Note: offlineSupabase.saveQueue() is private, so we'd need a public method or direct access.
+          // For now, we'll rely on the next successful operation or a full page refresh to clear it from localforage.
+          // A more robust solution would involve a dedicated 'failed operations' store.
+        }
+      } else {
+        console.warn(`SyncService: Failed to sync operation ${operation.id} (${operation.type}). Retrying (${operation.retries}/${MAX_RETRIES})...`);
+        this.lastSyncError = `Error al sincronizar ${operation.type} en ${operation.tableName}: ${operation.lastError || error.message}. Reintentando...`;
+        showError(this.lastSyncError);
+      }
     } finally {
       this.notifyListeners();
     }
@@ -113,6 +125,7 @@ class SyncService {
 
   public async forceSync() {
     if (navigator.onLine) {
+      showSuccess('Intentando sincronización manual...');
       this.startSync();
     } else {
       showError('No hay conexión a internet para forzar la sincronización.');

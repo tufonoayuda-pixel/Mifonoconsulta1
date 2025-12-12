@@ -65,6 +65,10 @@ const DailyAgenda = ({ // Eliminado React.FC
             initialFocus
             locale={es}
             className="rounded-md border shadow w-full"
+            defaultMonth={new Date(2025, 0, 1)} // Default to Jan 2025
+            fromYear={2020} // Allow selection from 2020
+            toYear={2030} // Allow selection up to 2030
+            captionLayout="dropdown-buttons" // Enable dropdowns for month/year
           />
         </CardContent>
       </Card>

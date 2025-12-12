@@ -9,6 +9,8 @@ export interface OfflineOperation {
   payload?: any; // Data for INSERT/UPDATE
   conditions?: any; // Conditions for UPDATE/DELETE (e.g., { id: '...' })
   timestamp: string;
+  retries: number; // New: Number of times this operation has been retried
+  lastError?: string; // New: Last error message for this operation
 }
 
 class SupabaseOfflineClient {
@@ -86,9 +88,15 @@ class SupabaseOfflineClient {
 
       if (result.error) {
         console.error('Error processing offline operation:', result.error);
-        // Basic conflict resolution: if it's an update and the row is not found, it might have been deleted online.
-        // For now, we'll just re-throw to indicate failure, SyncService can decide to remove or retry.
-        throw result.error;
+        // Specific error handling for common Supabase errors
+        if (result.error.code === 'PGRST116' && (operation.type === 'UPDATE' || operation.type === 'DELETE')) {
+          // PGRST116: "The row to update/delete was not found." - likely deleted online
+          console.warn(`Offline operation ${operation.id} (${operation.type}) failed because target row was not found. Removing from queue.`);
+          this.syncQueue.splice(operationIndex, 1); // Remove from queue
+          await this.saveQueue();
+          return true; // Consider it "handled" and removed
+        }
+        throw result.error; // Re-throw for SyncService to handle retries
       }
 
       // Remove from queue on success
@@ -97,6 +105,10 @@ class SupabaseOfflineClient {
       return true;
     } catch (error) {
       console.error('Failed to process offline operation:', error);
+      // Update operation with error and increment retries
+      this.syncQueue[operationIndex].retries = (this.syncQueue[operationIndex].retries || 0) + 1;
+      this.syncQueue[operationIndex].lastError = (error as Error).message || 'Unknown error';
+      await this.saveQueue();
       throw error; // Re-throw to allow SyncService to handle retries/errors
     }
   }
@@ -117,6 +129,7 @@ class SupabaseOfflineClient {
             type: 'INSERT',
             payload,
             timestamp: new Date().toISOString(),
+            retries: 0, // Initialize retries
           };
           this.syncQueue.push(operation);
           await this.saveQueue();
@@ -137,6 +150,7 @@ class SupabaseOfflineClient {
               payload,
               conditions,
               timestamp: new Date().toISOString(),
+              retries: 0, // Initialize retries
             };
             this.syncQueue.push(operation);
             await this.saveQueue();
@@ -157,6 +171,7 @@ class SupabaseOfflineClient {
               type: 'DELETE',
               conditions,
               timestamp: new Date().toISOString(),
+              retries: 0, // Initialize retries
             };
             this.syncQueue.push(operation);
             await this.saveQueue();

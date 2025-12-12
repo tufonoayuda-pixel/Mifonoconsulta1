@@ -257,6 +257,10 @@ const SessionForm: React.FC<SessionFormProps> = ({
                           }}
                           initialFocus
                           locale={es}
+                          defaultMonth={new Date(2025, 0, 1)} // Default to Jan 2025
+                          fromYear={2020} // Allow selection from 2020
+                          toYear={2030} // Allow selection up to 2030
+                          captionLayout="dropdown-buttons" // Enable dropdowns for month/year
                         />
                       </PopoverContent>
                     </Popover>
@@ -418,6 +422,10 @@ const SessionForm: React.FC<SessionFormProps> = ({
                             }}
                             initialFocus
                             locale={es}
+                            defaultMonth={new Date(2025, 0, 1)} // Default to Jan 2025
+                            fromYear={2020} // Allow selection from 2020
+                            toYear={2030} // Allow selection up to 2030
+                            captionLayout="dropdown-buttons" // Enable dropdowns for month/year
                           />
                         </PopoverContent>
                       </Popover>
