@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, CalendarDays, FileText, Bell, Circle, ExternalLink } from "lucide-react"; // Import ExternalLink icon
 import MyScheduleCard from "@/components/MyScheduleCard";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, db } from "@/integrations/supabase/client"; // Import both
 import { useQuery } from "@tanstack/react-query";
 import { showError } from "@/utils/toast";
 import { format } from "date-fns";
@@ -20,6 +20,7 @@ const fetchDashboardStats = async (): Promise<DashboardStats> => {
   const today = format(new Date(), "yyyy-MM-dd");
 
   try {
+    // For dashboard stats, we generally want the most up-to-date data, so use the online client
     const { count: totalPatients, error: patientsError } = await supabase
       .from("patients")
       .select("id", { count: "exact", head: true });
@@ -29,11 +30,11 @@ const fetchDashboardStats = async (): Promise<DashboardStats> => {
       .from("sessions")
       .select("id", { count: "exact", head: true })
       .eq("date", today)
-      .eq("status", "Programada");
+      .eq("status", "scheduled"); // Use 'scheduled' for DB status
     if (sessionsError) throw sessionsError;
 
     const { count: totalClinicalRecords, error: clinicalRecordsError } = await supabase
-      .from("clinical_records") // Corrected table name
+      .from("clinical_records")
       .select("id", { count: "exact", head: true });
     if (clinicalRecordsError) throw clinicalRecordsError;
 

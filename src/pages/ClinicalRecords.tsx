@@ -21,7 +21,7 @@ import { ClinicalRecord, ClinicalRecordType } from "@/types/clinical-record";
 import { Patient } from "@/types/patient";
 import { Session } from "@/types/session";
 import { showSuccess, showError } from "@/utils/toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, db } from "@/integrations/supabase/client"; // Import both
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
@@ -44,37 +44,37 @@ const ClinicalRecords = () => {
   const [isAttachmentsDialogOpen, setIsAttachmentsDialogOpen] = useState(false);
   const [attachmentsToView, setAttachmentsToView] = useState<Attachment[]>([]);
 
-  // Fetch patients from Supabase
+  // Fetch patients from Supabase (always try online for reads, or implement read-caching)
   const { data: patients, isLoading: isLoadingPatients, isError: isErrorPatients, error: errorPatients } = useQuery<Patient[], Error>({
     queryKey: ["patients"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("patients").select("*");
+      const { data, error } = await supabase.from("patients").select("*"); // Use online client for reads
       if (error) throw error;
       return data as Patient[];
     },
   });
 
-  // Fetch sessions from Supabase (assuming sessions are linked to patients)
+  // Fetch sessions from Supabase (always try online for reads, or implement read-caching)
   const { data: sessions, isLoading: isLoadingSessions, isError: isErrorSessions, error: errorSessions } = useQuery<Session[], Error>({
     queryKey: ["sessions"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("sessions").select("*");
+      const { data, error } = await supabase.from("sessions").select("*"); // Use online client for reads
       if (error) throw error;
       return data as Session[];
     },
   });
 
-  // Fetch clinical records from Supabase
+  // Fetch clinical records from Supabase (always try online for reads, or implement read-caching)
   const { data: clinicalRecords, isLoading: isLoadingRecords, isError: isErrorRecords, error: errorRecords } = useQuery<ClinicalRecord[], Error>({
     queryKey: ["clinical_records", patients], // Invalidate if patients change to update patientName
     queryFn: async () => {
-      const { data, error } = await supabase.from("clinical_records").select("*");
+      const { data, error } = await supabase.from("clinical_records").select("*"); // Use online client for reads
       if (error) throw error;
 
       // Map DB data to frontend ClinicalRecord interface, including patientName and attachments
       const recordsWithDetails: ClinicalRecord[] = await Promise.all((data as any[]).map(async (record) => {
         const patient = patients?.find(p => p.id === record.patient_id);
-        const { data: attachmentsData, error: attachmentsError } = await supabase
+        const { data: attachmentsData, error: attachmentsError } = await supabase // Use online client for attachments
           .from("attachments")
           .select("*")
           .eq("clinical_record_id", record.id);
@@ -185,7 +185,7 @@ const ClinicalRecords = () => {
   const deleteClinicalRecordMutation = useMutation<void, Error, string>({
     mutationFn: async (id) => {
       // First, fetch attachments to delete from storage
-      const { data: attachments, error: fetchAttError } = await supabase
+      const { data: attachments, error: fetchAttError } = await supabase // Use online client for storage operations
         .from("attachments")
         .select("file_path")
         .eq("clinical_record_id", id);
@@ -196,23 +196,23 @@ const ClinicalRecords = () => {
       if (attachments && attachments.length > 0) {
         const filePaths = attachments.map(att => att.file_path).filter(Boolean) as string[];
         if (filePaths.length > 0) {
-          const { error: storageError } = await supabase.storage.from("clinical-record-attachments").remove(filePaths);
+          const { error: storageError } = await supabase.onlineClient.storage.from("clinical-record-attachments").remove(filePaths); // Use online client for storage
           if (storageError) console.error("Error deleting files from storage:", storageError);
         }
       }
 
       // Then delete attachments records from DB
-      const { error: deleteAttError } = await supabase.from("attachments").delete().eq("clinical_record_id", id);
+      const { error: deleteAttError } = await db.from("attachments").delete().eq("clinical_record_id", id); // Use offline client for attachments table
       if (deleteAttError) throw deleteAttError;
 
       // Finally, delete the clinical record
-      const { error } = await supabase.from("clinical_records").delete().eq("id", id);
+      const { error } = await db.from("clinical_records").delete().eq("id", id); // Use offline client for clinical records table
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clinical_records"] });
       queryClient.invalidateQueries({ queryKey: ["dashboardStats"] }); // Update dashboard stats
-      showSuccess("Registro clínico eliminado exitosamente.");
+      showSuccess("Registro clínico eliminado exitosamente (o en cola para sincronizar).");
     },
     onError: (err) => {
       showError("Error al eliminar registro clínico: " + err.message);
@@ -342,7 +342,7 @@ const ClinicalRecords = () => {
         onAddPatient={handleAddPatient}
         existingRuts={existingRuts}
         isSubmitting={addClinicalRecordMutation.isPending || updateClinicalRecordMutation.isPending}
-        initialRecordType={initialRecordType} // Pass the initial type here
+        initialRecordType={initialRecordType}
       />
 
       {/* Dialog for viewing attachments */}

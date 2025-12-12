@@ -14,7 +14,7 @@ import { Session } from "@/types/session";
 import { Patient } from "@/types/patient";
 import { showSuccess, showError } from "@/utils/toast";
 import { format, parse, isBefore, addMinutes } from "date-fns";
-import { supabase } from "@/integrations/supabase/client"; // Import supabase client
+import { supabase, db } from "@/integrations/supabase/client"; // Import both supabase (online) and db (offline) clients
 import { toast } from "sonner"; // Import sonner toast
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"; // Import useQuery, useMutation and useQueryClient
 import { es } from "date-fns/locale"; // Import es locale for date-fns
@@ -63,21 +63,21 @@ const Sessions = () => {
   const [prefillTime, setPrefillTime] = useState<string | undefined>(undefined);
 
 
-  // Fetch patients from Supabase
+  // Fetch patients from Supabase (always try online for reads, or implement read-caching)
   const { data: availablePatients, isLoading: isLoadingPatients, isError: isErrorPatients, error: errorPatients } = useQuery<Patient[], Error>({
     queryKey: ["patients"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("patients").select("*");
+      const { data, error } = await supabase.from("patients").select("*"); // Use online client for reads
       if (error) throw error;
       return data as Patient[];
     },
   });
 
-  // Fetch sessions from Supabase
+  // Fetch sessions from Supabase (always try online for reads, or implement read-caching)
   const { data: sessions, isLoading: isLoadingSessions, isError: isErrorSessions, error: errorSessions } = useQuery<Session[], Error>({
     queryKey: ["sessions"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("sessions").select("*");
+      const { data, error } = await supabase.from("sessions").select("*"); // Use online client for reads
       if (error) throw error;
       return data.map(s => ({
         id: s.id,
@@ -115,6 +115,7 @@ const Sessions = () => {
   };
 
   const createNotification = useCallback(async (type: string, title: string, message: string) => {
+    // Notifications are typically online-only, so use the online client
     const { error } = await supabase.from("notifications").insert({
       type,
       title,
@@ -204,7 +205,7 @@ const Sessions = () => {
       sessionsToInsert.push({ ...newSession, patientId: patient.id, status: "Programada" });
     }
 
-    const { error } = await supabase.from("sessions").insert(sessionsToInsert.map(s => ({
+    const { error } = await db.from("sessions").insert(sessionsToInsert.map(s => ({ // Use offline client for inserts
       patient_id: s.patientId,
       room: s.room,
       date: s.date,
@@ -219,7 +220,7 @@ const Sessions = () => {
     })));
 
     if (error) throw error;
-    return sessionsToInsert.length > 1 ? `${sessionsToInsert.length} sesiones recurrentes programadas exitosamente.` : "Sesión programada exitosamente.";
+    return sessionsToInsert.length > 1 ? `${sessionsToInsert.length} sesiones recurrentes programadas exitosamente (o en cola para sincronizar).` : "Sesión programada exitosamente (o en cola para sincronizar).";
   };
 
   const updateSessionMutation = async (updatedSession: Session) => {
@@ -228,7 +229,7 @@ const Sessions = () => {
       throw new Error("Paciente no encontrado.");
     }
 
-    const { error } = await supabase.from("sessions").update({
+    const { error } = await db.from("sessions").update({ // Use offline client for updates
       patient_id: patient.id,
       room: updatedSession.room,
       date: updatedSession.date,
@@ -243,13 +244,13 @@ const Sessions = () => {
     }).eq("id", updatedSession.id);
 
     if (error) throw error;
-    return "Sesión actualizada exitosamente.";
+    return "Sesión actualizada exitosamente (o en cola para sincronizar).";
   };
 
   const deleteSessionMutation = async (id: string) => {
-    const { error } = await supabase.from("sessions").delete().eq("id", id);
+    const { error } = await db.from("sessions").delete().eq("id", id); // Use offline client for deletes
     if (error) throw error;
-    return "Sesión eliminada exitosamente.";
+    return "Sesión eliminada exitosamente (o en cola para sincronizar).";
   };
 
   const { mutate: addSession } = useMutation({
@@ -356,7 +357,7 @@ const Sessions = () => {
     try {
       // Use the existing updateSession mutation
       await updateSessionMutation.mutateAsync({ ...session, ...updatedFields });
-      showSuccess(`Sesión marcada como ${statusType} exitosamente.`);
+      showSuccess(`Sesión marcada como ${statusType} exitosamente (o en cola para sincronizar).`);
       closeStatusDialog();
     } catch (error: any) {
       showError("Error al actualizar el estado de la sesión: " + error.message);

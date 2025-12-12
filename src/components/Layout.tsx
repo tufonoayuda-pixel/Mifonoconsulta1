@@ -6,22 +6,25 @@ import { Menu, Bell } from "lucide-react";
 import Sidebar from "./Sidebar";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
-import PersonalFooter from "./PersonalFooter"; // Import the new PersonalFooter component
+import PersonalFooter from "./PersonalFooter";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client"; // Import supabase client
-import { Badge } from "@/components/ui/badge"; // Import Badge component
+import { supabase, db } from "@/integrations/supabase/client"; // Import both supabase (online) and db (offline) clients
+import { Badge } from "@/components/ui/badge";
+import SyncStatusIndicator from "./SyncStatusIndicator"; // Import the new component
+import { syncService } from "@/services/sync-service"; // Import syncService
 
 const Layout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
-  const [currentDateTime, setCurrentDateTime] = useState<string>(""); // State for date and time
+  const [currentDateTime, setCurrentDateTime] = useState<string>("");
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
   const fetchUnreadNotificationsCount = useCallback(async () => {
+    // Use the online client for notifications as they are not typically created offline by the user
     const { count, error } = await supabase
       .from("notifications")
       .select("id", { count: "exact" })
@@ -59,9 +62,9 @@ const Layout: React.FC = () => {
     const updateDateTime = () => {
       const now = new Date();
       const formatter = new Intl.DateTimeFormat("es-CL", {
-        weekday: "long", // "Lunes"
-        day: "numeric", // "26"
-        month: "long", // "octubre"
+        weekday: "long",
+        day: "numeric",
+        month: "long",
         hour: "2-digit",
         minute: "2-digit",
         timeZone: "America/Santiago",
@@ -69,10 +72,18 @@ const Layout: React.FC = () => {
       setCurrentDateTime(formatter.format(now));
     };
 
-    updateDateTime(); // Set initial time
-    const intervalId = setInterval(updateDateTime, 1000); // Update every second
+    updateDateTime();
+    const intervalId = setInterval(updateDateTime, 1000);
 
-    return () => clearInterval(intervalId); // Clean up on component unmount
+    return () => clearInterval(intervalId);
+  }, []);
+
+  // Initialize sync service
+  useEffect(() => {
+    if (navigator.onLine) {
+      syncService.startSync();
+    }
+    // The syncService itself listens to online/offline events
   }, []);
 
   return (
@@ -81,7 +92,7 @@ const Layout: React.FC = () => {
       <div
         className={cn(
           "flex flex-col flex-1 transition-all duration-300 ease-in-out",
-          !isMobile && "ml-64", // Adjust margin for desktop when sidebar is always open
+          !isMobile && "ml-64",
         )}
       >
         <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 lg:px-6">
@@ -100,7 +111,7 @@ const Layout: React.FC = () => {
             <span className="text-2xl">🧠👅</span> MiFonoConsulta
           </h1>
           <div className="ml-auto flex items-center gap-4">
-            {/* Display current date and time */}
+            <SyncStatusIndicator /> {/* Add the sync status indicator here */}
             <span className="text-sm text-gray-600 dark:text-gray-400">
               {currentDateTime}
             </span>
@@ -118,13 +129,12 @@ const Layout: React.FC = () => {
                 </Badge>
               )}
             </Link>
-            {/* Future: Add user menu */}
           </div>
         </header>
         <main className="flex-1 p-4 lg:p-6 overflow-auto">
           <Outlet />
         </main>
-        <PersonalFooter /> {/* Using the new PersonalFooter component */}
+        <PersonalFooter />
       </div>
     </div>
   );

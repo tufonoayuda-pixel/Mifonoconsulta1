@@ -46,7 +46,7 @@ import {
 import { Patient } from "@/types/patient";
 import { Session } from "@/types/session";
 import { showSuccess, showError } from "@/utils/toast";
-import { supabase } from "@/integrations/supabase/client"; // Import supabase client
+import { supabase, db } from "@/integrations/supabase/client"; // Import both supabase (online) and db (offline) clients
 
 import FileUpload from "./FileUpload";
 import EvaluationFields from "./EvaluationFields";
@@ -374,22 +374,15 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
       let recordId = values.id;
       if (initialData) {
         // Update existing record
-        const { error } = await supabase
-          .from("clinical_records")
-          .update(recordToSubmit)
-          .eq("id", initialData.id);
+        const { error } = await db.from("clinical_records").update(recordToSubmit).eq("id", initialData.id); // Use offline client
         if (error) throw error;
-        showSuccess("Registro clínico actualizado exitosamente.");
+        showSuccess("Registro clínico actualizado exitosamente (o en cola para sincronizar).");
       } else {
         // Insert new record
-        const { data, error } = await supabase
-          .from("clinical_records")
-          .insert(recordToSubmit)
-          .select("id")
-          .single();
+        const { data, error } = await db.from("clinical_records").insert(recordToSubmit).select("id").single(); // Use offline client
         if (error) throw error;
         recordId = data.id;
-        showSuccess("Registro clínico añadido exitosamente.");
+        showSuccess("Registro clínico añadido exitosamente (o en cola para sincronizar).");
       }
 
       // Handle attachments
@@ -402,8 +395,9 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
 
         for (const att of attachmentsToDelete) {
           if (att.path) {
-            await supabase.storage.from("clinical-record-attachments").remove([att.path]);
-            await supabase.from("attachments").delete().eq("file_url", att.url);
+            // Storage operations must use the online client directly
+            await supabase.onlineClient.storage.from("clinical-record-attachments").remove([att.path]);
+            await db.from("attachments").delete().eq("file_url", att.url); // Use offline client for attachments table
           }
         }
 
@@ -411,7 +405,8 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         for (const file of filesToUpload) {
           const fileExtension = file.name.split(".").pop();
           const filePath = `${recordId}/${crypto.randomUUID()}.${fileExtension}`;
-          const { data: uploadData, error: uploadError } = await supabase.storage
+          // Storage operations must use the online client directly
+          const { data: uploadData, error: uploadError } = await supabase.onlineClient.storage
             .from("clinical-record-attachments")
             .upload(filePath, await fetch(file.url).then(res => res.blob()), {
               cacheControl: '3600',
@@ -420,12 +415,12 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
 
           if (uploadError) throw uploadError;
 
-          const { data: publicUrlData } = supabase.storage
+          const { data: publicUrlData } = supabase.onlineClient.storage
             .from("clinical-record-attachments")
             .getPublicUrl(filePath);
 
           if (publicUrlData?.publicUrl) {
-            const { error: insertAttachmentError } = await supabase.from("attachments").insert({
+            const { error: insertAttachmentError } = await db.from("attachments").insert({ // Use offline client for attachments table
               clinical_record_id: recordId,
               file_name: file.name,
               file_type: file.type,

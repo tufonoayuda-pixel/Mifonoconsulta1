@@ -7,7 +7,7 @@ import { createPatientColumns } from "@/components/patients/columns";
 import PatientForm from "@/components/patients/PatientForm";
 import { Patient } from "@/types/patient";
 import { showSuccess, showError } from "@/utils/toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, db } from "@/integrations/supabase/client"; // Import both
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const Patients = () => {
@@ -15,11 +15,11 @@ const Patients = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
 
-  // Fetch patients from Supabase
+  // Fetch patients from Supabase (always try online for reads, or implement read-caching)
   const { data: patients, isLoading, isError, error } = useQuery<Patient[], Error>({
     queryKey: ["patients"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("patients").select("*");
+      const { data, error } = await supabase.from("patients").select("*"); // Use online client for reads
       if (error) throw error;
       return data as Patient[];
     },
@@ -28,15 +28,15 @@ const Patients = () => {
   // Mutation for adding a patient
   const addPatientMutation = useMutation<Patient, Error, Patient>({
     mutationFn: async (newPatient) => {
-      const { data, error } = await supabase.from("patients").insert({
+      const { data, error } = await db.from("patients").insert({ // Use offline client for inserts
         rut: newPatient.rut,
         name: newPatient.name,
         phone: newPatient.phone,
         age: newPatient.age,
-        preferred_room: newPatient.preferredRoom, // Mapeo explícito
-        preferred_day: newPatient.preferredDay,   // Mapeo explícito
-        preferred_time: newPatient.preferredTime, // Mapeo explícito
-        service_type: newPatient.serviceType,     // Mapeo explícito
+        preferred_room: newPatient.preferredRoom,
+        preferred_day: newPatient.preferredDay,
+        preferred_time: newPatient.preferredTime,
+        service_type: newPatient.serviceType,
         observations: newPatient.observations,
       }).select().single();
       if (error) throw error;
@@ -44,7 +44,7 @@ const Patients = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patients"] });
-      showSuccess("Paciente añadido exitosamente.");
+      showSuccess("Paciente añadido exitosamente (o en cola para sincronizar).");
     },
     onError: (err) => {
       showError("Error al añadir paciente: " + err.message);
@@ -54,15 +54,15 @@ const Patients = () => {
   // Mutation for updating a patient
   const updatePatientMutation = useMutation<Patient, Error, Patient>({
     mutationFn: async (updatedPatient) => {
-      const { data, error } = await supabase.from("patients").update({
+      const { data, error } = await db.from("patients").update({ // Use offline client for updates
         rut: updatedPatient.rut,
         name: updatedPatient.name,
         phone: updatedPatient.phone,
         age: updatedPatient.age,
-        preferred_room: updatedPatient.preferredRoom, // Mapeo explícito
-        preferred_day: updatedPatient.preferredDay,   // Mapeo explícito
-        preferred_time: updatedPatient.preferredTime, // Mapeo explícito
-        service_type: updatedPatient.serviceType,     // Mapeo explícito
+        preferred_room: updatedPatient.preferredRoom,
+        preferred_day: updatedPatient.preferredDay,
+        preferred_time: updatedPatient.preferredTime,
+        service_type: updatedPatient.serviceType,
         observations: updatedPatient.observations,
       }).eq("id", updatedPatient.id).select().single();
       if (error) throw error;
@@ -70,7 +70,7 @@ const Patients = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patients"] });
-      showSuccess("Paciente actualizado exitosamente.");
+      showSuccess("Paciente actualizado exitosamente (o en cola para sincronizar).");
     },
     onError: (err) => {
       showError("Error al actualizar paciente: " + err.message);
@@ -80,12 +80,12 @@ const Patients = () => {
   // Mutation for deleting a patient
   const deletePatientMutation = useMutation<void, Error, string>({
     mutationFn: async (id) => {
-      const { error } = await supabase.from("patients").delete().eq("id", id);
+      const { error } = await db.from("patients").delete().eq("id", id); // Use offline client for deletes
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patients"] });
-      showSuccess("Paciente eliminado exitosamente.");
+      showSuccess("Paciente eliminado exitosamente (o en cola para sincronizar).");
     },
     onError: (err) => {
       showError("Error al eliminar paciente: " + err.message);

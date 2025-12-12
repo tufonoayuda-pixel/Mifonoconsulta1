@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { supabase } from "@/integrations/supabase/client"; // Import supabase client
+import { supabase } from "@/integrations/supabase/client"; // Use online client for notifications
 import { Badge } from "@/components/ui/badge"; // Import Badge component
 
 interface SidebarProps {
@@ -67,6 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
 
   const fetchUnreadNotificationsCount = useCallback(async () => {
+    // Use the online client for notifications as they are not typically created offline by the user
     const { count, error } = await supabase
       .from("notifications")
       .select("id", { count: "exact" })

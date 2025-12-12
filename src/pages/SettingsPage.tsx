@@ -4,14 +4,14 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Wifi, WifiOff, Settings, Users, Calendar, ClipboardList, Download } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client"; // Use online client for stats and export
 import { useQuery } from "@tanstack/react-query";
-import { showError, showSuccess } from "@/utils/toast"; // Import showSuccess
+import { showError, showSuccess } from "@/utils/toast";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button"; // Import Button
-import JSZip from "jszip"; // Import JSZip
-import { saveAs } from "file-saver"; // Import saveAs
-import { format } from "date-fns"; // Import format from date-fns
+import { Button } from "@/components/ui/button";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
+import { format } from "date-fns";
 
 interface DashboardStats {
   patients: number;
@@ -37,6 +37,7 @@ const SettingsPage: React.FC = () => {
 
   const fetchDashboardStats = async (): Promise<DashboardStats> => {
     try {
+      // For dashboard stats, we generally want the most up-to-date data, so use the online client
       const { count: patientsCount, error: patientsError } = await supabase
         .from("patients")
         .select("count", { count: "exact", head: true });
@@ -48,7 +49,7 @@ const SettingsPage: React.FC = () => {
       if (sessionsError) throw sessionsError;
 
       const { count: clinicalRecordsCount, error: clinicalRecordsError } = await supabase
-        .from("clinical_records") // Corrected table name
+        .from("clinical_records")
         .select("count", { count: "exact", head: true });
       if (clinicalRecordsError) throw clinicalRecordsError;
 
@@ -71,6 +72,7 @@ const SettingsPage: React.FC = () => {
 
   const exportData = async (tableName: string, displayName: string) => {
     try {
+      // For export, we want all data from the online database
       const { data, error } = await supabase.from(tableName).select("*");
       if (error) throw error;
 

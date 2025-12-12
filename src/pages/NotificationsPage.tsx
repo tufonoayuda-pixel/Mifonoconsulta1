@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, db } from "@/integrations/supabase/client"; // Import both
 import { Notification } from "@/types/notification";
 import { showSuccess, showError } from "@/utils/toast";
 import { formatDistanceToNow, format } from "date-fns";
@@ -133,6 +133,7 @@ const NotificationsPage: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const fetchNotifications = useCallback(async () => {
+    // Notifications are typically online-only, so use the online client
     const { data, error } = await supabase
       .from("notifications")
       .select("*")
@@ -167,6 +168,7 @@ const NotificationsPage: React.FC = () => {
   }, [fetchNotifications]);
 
   const handleMarkAsRead = async (id: string) => {
+    // Notifications are typically online-only, so use the online client
     const { error } = await supabase
       .from("notifications")
       .update({ read: true, updated_at: new Date().toISOString() })
@@ -188,6 +190,7 @@ const NotificationsPage: React.FC = () => {
       return;
     }
 
+    // Notifications are typically online-only, so use the online client
     const { error } = await supabase
       .from("notifications")
       .update({ read: true, updated_at: new Date().toISOString() })
@@ -203,6 +206,7 @@ const NotificationsPage: React.FC = () => {
   };
 
   const handleDeleteNotification = async (id: string) => {
+    // Notifications are typically online-only, so use the online client
     const { error } = await supabase
       .from("notifications")
       .delete()
