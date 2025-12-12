@@ -23,13 +23,13 @@ interface DailyAgendaProps {
   onSelectSession: (session: Session) => void;
 }
 
-const DailyAgenda: React.FC<DailyAgendaProps> = ({
+const DailyAgenda = ({ // Eliminado React.FC
   sessions,
   availablePatients,
   selectedDate,
   onDateChange,
   onSelectSession,
-}) => {
+}: DailyAgendaProps) => { // Añadido DailyAgendaProps aquí
   // Formatear selectedDate a 'YYYY-MM-DD' para una comparación directa
   const formattedSelectedDate = format(selectedDate, "yyyy-MM-dd");
 
@@ -64,7 +64,7 @@ const DailyAgenda: React.FC<DailyAgendaProps> = ({
             onSelect={(date) => date && onDateChange(date)}
             initialFocus
             locale={es}
-            className="rounded-md border shadow w-full" {/* Added w-full here */}
+            className="rounded-md border shadow w-full"
           />
         </CardContent>
       </Card>
