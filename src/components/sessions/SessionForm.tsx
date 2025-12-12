@@ -234,7 +234,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
                             )}
                           >
                             {field.value ? (
-                              format(parse(field.value, "yyyy-MM-dd", new Date()), "PPP", { locale: es }) // Use parse here
+                              format(parse(field.value, "yyyy-MM-dd", new Date()), "PPP", { locale: es })
                             ) : (
                               <span>Selecciona una fecha</span>
                             )}
@@ -245,8 +245,16 @@ const SessionForm: React.FC<SessionFormProps> = ({
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           mode="single"
-                          selected={field.value ? parse(field.value, "yyyy-MM-dd", new Date()) : undefined} // Use parse here
-                          onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                          selected={field.value ? parse(field.value, "yyyy-MM-dd", new Date()) : undefined}
+                          onSelect={(selectedDate) => {
+                            if (selectedDate) {
+                              // Explicitly create a local date from components to avoid timezone shifts
+                              const localDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+                              field.onChange(format(localDate, "yyyy-MM-dd"));
+                            } else {
+                              field.onChange("");
+                            }
+                          }}
                           initialFocus
                           locale={es}
                         />
@@ -387,7 +395,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
                               )}
                             >
                               {field.value ? (
-                                format(parse(field.value, "yyyy-MM-dd", new Date()), "PPP", { locale: es }) // Use parse here
+                                format(parse(field.value, "yyyy-MM-dd", new Date()), "PPP", { locale: es })
                               ) : (
                                 <span>Selecciona una fecha de fin</span>
                               )}
@@ -398,8 +406,16 @@ const SessionForm: React.FC<SessionFormProps> = ({
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="single"
-                            selected={field.value ? parse(field.value, "yyyy-MM-dd", new Date()) : undefined} // Use parse here
-                            onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                            selected={field.value ? parse(field.value, "yyyy-MM-dd", new Date()) : undefined}
+                            onSelect={(selectedDate) => {
+                              if (selectedDate) {
+                                // Explicitly create a local date from components to avoid timezone shifts
+                                const localDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+                                field.onChange(format(localDate, "yyyy-MM-dd"));
+                              } else {
+                                field.onChange("");
+                              }
+                            }}
                             initialFocus
                             locale={es}
                           />

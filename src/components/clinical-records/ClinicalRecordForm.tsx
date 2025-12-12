@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format } from "date-fns";
+import { format, parse } from "date-fns"; // Import parse
 import { CalendarIcon, PlusCircle } from "lucide-react";
 import { es } from "date-fns/locale";
 
@@ -594,7 +594,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                               )}
                             >
                               {field.value ? (
-                                format(new Date(field.value), "PPP", { locale: es })
+                                format(parse(field.value, "yyyy-MM-dd", new Date()), "PPP", { locale: es })
                               ) : (
                                 <span>Selecciona una fecha</span>
                               )}
@@ -605,8 +605,16 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="single"
-                            selected={field.value ? new Date(field.value) : undefined}
-                            onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                            selected={field.value ? parse(field.value, "yyyy-MM-dd", new Date()) : undefined} // Use parse here
+                            onSelect={(selectedDate) => {
+                              if (selectedDate) {
+                                // Explicitly create a local date from components to avoid timezone shifts
+                                const localDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+                                field.onChange(format(localDate, "yyyy-MM-dd"));
+                              } else {
+                                field.onChange("");
+                              }
+                            }}
                             initialFocus
                             locale={es}
                           />
