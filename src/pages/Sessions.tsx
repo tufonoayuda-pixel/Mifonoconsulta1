@@ -223,7 +223,7 @@ const Sessions = () => {
   };
 
   const updateSessionMutation = async (updatedSession: Session) => {
-    const patient = availablePatients?.find(p => p.name === updatedSession.patientName);
+    const patient = availablePatients?.find(p => p.id === updatedSession.patientId); // Use patientId from updatedSession
     if (!patient) {
       throw new Error("Paciente no encontrado.");
     }
@@ -336,6 +336,32 @@ const Sessions = () => {
     const date = format(slotInfo.start, "yyyy-MM-dd");
     const time = format(slotInfo.start, "HH:mm");
     openAddForm(date, time); // Open the form with pre-filled date and time
+  };
+
+  // Define handleUpdateSessionStatus
+  const handleUpdateSessionStatus = async (session: Session, values: any) => {
+    if (!session.id) {
+      showError("ID de sesión no encontrado para actualizar.");
+      return;
+    }
+
+    const updatedFields: Partial<Session> = {
+      status: statusType,
+      observationsAttended: values.observationsAttended,
+      continueSessions: values.continueSessions,
+      justificationNotAttended: values.justificationNotAttended,
+      isJustifiedNotAttended: values.isJustifiedNotAttended,
+    };
+
+    try {
+      // Use the existing updateSession mutation
+      await updateSessionMutation.mutateAsync({ ...session, ...updatedFields });
+      showSuccess(`Sesión marcada como ${statusType} exitosamente.`);
+      closeStatusDialog();
+    } catch (error: any) {
+      showError("Error al actualizar el estado de la sesión: " + error.message);
+      console.error("Error updating session status:", error);
+    }
   };
 
   const columns = createSessionColumns({
