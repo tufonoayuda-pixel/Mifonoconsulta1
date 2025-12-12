@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, CalendarDays, FileText, Bell, Circle } from "lucide-react";
+import { Users, CalendarDays, FileText, Bell, Circle, ExternalLink } from "lucide-react"; // Import ExternalLink icon
 import MyScheduleCard from "@/components/MyScheduleCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -155,7 +155,55 @@ const Index = () => {
           </CardContent>
         </Card>
       </div>
+
       <MyScheduleCard />
+
+      <div className="flex flex-col gap-2 mt-6">
+        <h2 className="text-2xl font-bold">Enlaces Rápidos</h2>
+        <p className="text-lg text-gray-600 dark:text-gray-400">
+          Accede directamente a plataformas externas importantes.
+        </p>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-lg font-semibold">SIDRA</CardTitle>
+            <ExternalLink className="h-5 w-5 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <a
+              href="https://huechuraba.ssmn.cl/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 hover:underline dark:text-blue-400"
+            >
+              Acceder a SIDRA
+            </a>
+            <p className="text-xs text-muted-foreground mt-1">
+              Plataforma de gestión de salud.
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-lg font-semibold">ALACER</CardTitle>
+            <ExternalLink className="h-5 w-5 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <a
+              href="https://alacer.net/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-green-600 hover:underline dark:text-green-400"
+            >
+              Acceder a ALACER
+            </a>
+            <p className="text-xs text-muted-foreground mt-1">
+              Recursos y herramientas para profesionales.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
