@@ -64,7 +64,7 @@ const DailyAgenda: React.FC<DailyAgendaProps> = ({
             onSelect={(date) => date && onDateChange(date)}
             initialFocus
             locale={es}
-            className="rounded-md border shadow"
+            className="rounded-md border shadow w-full" {/* Added w-full here */}
           />
         </CardContent>
       </Card>
