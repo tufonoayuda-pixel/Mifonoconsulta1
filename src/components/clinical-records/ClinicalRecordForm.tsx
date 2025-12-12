@@ -520,7 +520,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                           {filteredSessions.length > 0 ? (
                             filteredSessions.map((session) => (
                               <SelectItem key={session.id} value={session.id}>
-                                {format(new Date(session.date), "PPP", { locale: es })} - {session.time} ({session.room})
+                                {format(parse(session.date, "yyyy-MM-dd", new Date()), "PPP", { locale: es })} - {session.time} ({session.room})
                               </SelectItem>
                             ))
                           ) : (
@@ -609,7 +609,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
               {selectedRecordType === "Plan de Intervención" && (
                 <InterventionPlanFields
                   patientNameDisplay={selectedPatient?.name}
-                  planDateDisplay={selectedRecordDate ? format(new Date(selectedRecordDate), "PPP", { locale: es }) : undefined}
+                  planDateDisplay={selectedRecordDate ? format(parse(selectedRecordDate, "yyyy-MM-dd", new Date()), "PPP", { locale: es }) : undefined}
                   patientAgeDisplay={selectedPatient?.age}
                 />
               )}

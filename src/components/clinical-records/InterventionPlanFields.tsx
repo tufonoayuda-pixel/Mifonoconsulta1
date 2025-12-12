@@ -19,7 +19,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ClinicalRecordFormValues } from "./ClinicalRecordForm"; // Import the type
-import { GeersMoogCategory, MethodologyType, InterventionFocus, Modality } from "@/types/clinical-record";
+// No need to import GeersMoogCategory, MethodologyType, InterventionFocus, Modality if not directly used here for types
+// import { GeersMoogCategory, MethodologyType, InterventionFocus, Modality } from "@/types/clinical-record";
 
 interface InterventionPlanFieldsProps {
   patientNameDisplay?: string;

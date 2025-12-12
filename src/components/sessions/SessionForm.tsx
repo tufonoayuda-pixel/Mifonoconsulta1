@@ -113,7 +113,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
       form.reset({
         ...initialData,
         patientId: patientIdFromInitialData, // Set patientId for the form
-        date: initialData.date || format(new Date(), "yyyy-MM-dd"),
+        date: initialData.date ? format(parse(initialData.date, "yyyy-MM-dd", new Date()), "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
         time: initialData.time || format(new Date(), "HH:mm"),
         duration: initialData.duration || 40,
         type: initialData.type || "Intervención",
