@@ -28,17 +28,18 @@ const Patients = () => {
   // Mutation for adding a patient
   const addPatientMutation = useMutation<Patient, Error, Patient>({
     mutationFn: async (newPatient) => {
-      const { data, error } = await db.from("patients").insert({ // Use offline client for inserts
+      const payload = {
         rut: newPatient.rut,
         name: newPatient.name,
-        phone: newPatient.phone,
-        age: newPatient.age,
-        preferred_room: newPatient.preferredRoom,
-        preferred_day: newPatient.preferredDay,
-        preferred_time: newPatient.preferredTime,
-        service_type: newPatient.serviceType,
-        observations: newPatient.observations,
-      }).select().single();
+        phone: newPatient.phone === "" ? null : newPatient.phone,
+        age: newPatient.age === undefined ? null : newPatient.age,
+        preferred_room: newPatient.preferredRoom === "Sin preferencia" ? null : newPatient.preferredRoom,
+        preferred_day: newPatient.preferredDay === "Sin preferencia" ? null : newPatient.preferredDay,
+        preferred_time: newPatient.preferredTime === "" ? null : newPatient.preferredTime,
+        service_type: newPatient.serviceType === "Sin preferencia" ? null : newPatient.serviceType,
+        observations: newPatient.observations === "" ? null : newPatient.observations,
+      };
+      const { data, error } = await db.from("patients").insert(payload).select().single(); // Use offline client for inserts
       if (error) throw error;
       return data as Patient;
     },
@@ -54,17 +55,18 @@ const Patients = () => {
   // Mutation for updating a patient
   const updatePatientMutation = useMutation<Patient, Error, Patient>({
     mutationFn: async (updatedPatient) => {
-      const { data, error } = await db.from("patients").update({ // Use offline client for updates
+      const payload = {
         rut: updatedPatient.rut,
         name: updatedPatient.name,
-        phone: updatedPatient.phone,
-        age: updatedPatient.age,
-        preferred_room: updatedPatient.preferredRoom,
-        preferred_day: updatedPatient.preferredDay,
-        preferred_time: updatedPatient.preferredTime,
-        service_type: updatedPatient.serviceType,
-        observations: updatedPatient.observations,
-      }).eq("id", updatedPatient.id).select().single();
+        phone: updatedPatient.phone === "" ? null : updatedPatient.phone,
+        age: updatedPatient.age === undefined ? null : updatedPatient.age,
+        preferred_room: updatedPatient.preferredRoom === "Sin preferencia" ? null : updatedPatient.preferredRoom,
+        preferred_day: updatedPatient.preferredDay === "Sin preferencia" ? null : updatedPatient.preferredDay,
+        preferred_time: updatedPatient.preferredTime === "" ? null : updatedPatient.preferredTime,
+        service_type: updatedPatient.serviceType === "Sin preferencia" ? null : updatedPatient.serviceType,
+        observations: updatedPatient.observations === "" ? null : updatedPatient.observations,
+      };
+      const { data, error } = await db.from("patients").update(payload).eq("id", updatedPatient.id).select().single();
       if (error) throw error;
       return data as Patient;
     },
