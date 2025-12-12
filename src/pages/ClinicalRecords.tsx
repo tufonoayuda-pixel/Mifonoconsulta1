@@ -202,11 +202,11 @@ const ClinicalRecords = () => {
       }
 
       // Then delete attachments records from DB
-      const { error: deleteAttError } = await db.from("attachments").delete().eq("clinical_record_id", id); // Use offline client for attachments table
+      const { error: deleteAttError } = await db.from("attachments").delete().match({ clinical_record_id: id }); // Corrected to use .match()
       if (deleteAttError) throw deleteAttError;
 
       // Finally, delete the clinical record
-      const { error } = await db.from("clinical_records").delete().eq("id", id); // Use offline client for clinical records table
+      const { error } = await db.from("clinical_records").delete().match({ id: id }); // Corrected to use .match()
       if (error) throw error;
     },
     onSuccess: () => {

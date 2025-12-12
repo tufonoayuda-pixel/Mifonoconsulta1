@@ -233,14 +233,14 @@ const Sessions = () => {
       continue_sessions: updatedSession.continueSessions,
       justification_not_attended: updatedSession.justificationNotAttended,
       is_justified_not_attended: updatedSession.isJustifiedNotAttended,
-    }).eq("id", updatedSession.id);
+    }).match({ id: updatedSession.id }); // Corrected to use .match()
 
     if (error) throw error;
     return "Sesión actualizada exitosamente (o en cola para sincronizar).";
   };
 
   const deleteSessionMutation = async (id: string) => {
-    const { error } = await db.from("sessions").delete().eq("id", id); // Use offline client for deletes
+    const { error } = await db.from("sessions").delete().match({ id: id }); // Corrected to use .match()
     if (error) throw error;
     return "Sesión eliminada exitosamente (o en cola para sincronizar).";
   };

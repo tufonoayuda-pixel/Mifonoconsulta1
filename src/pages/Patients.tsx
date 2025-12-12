@@ -66,7 +66,7 @@ const Patients = () => {
         service_type: updatedPatient.serviceType === "Sin preferencia" ? null : updatedPatient.serviceType,
         observations: updatedPatient.observations === "" ? null : updatedPatient.observations,
       };
-      const { data, error } = await db.from("patients").update(payload).eq("id", updatedPatient.id);
+      const { data, error } = await db.from("patients").update(payload).match({ id: updatedPatient.id }); // Corrected to use .match()
       if (error) throw error;
       return data as Patient;
     },
@@ -82,7 +82,7 @@ const Patients = () => {
   // Mutation for deleting a patient
   const deletePatientMutation = useMutation<void, Error, string>({
     mutationFn: async (id) => {
-      const { error } = await db.from("patients").delete().eq("id", id); // Use offline client for deletes
+      const { error } = await db.from("patients").delete().match({ id: id }); // Corrected to use .match()
       if (error) throw error;
     },
     onSuccess: () => {

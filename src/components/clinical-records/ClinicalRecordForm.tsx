@@ -202,7 +202,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         }
       : {
           patientId: "",
-          type: initialRecordType, // Use initialRecordType for new records
+          type: initialRecordType, // Use initialRecordType here
           date: format(new Date(), "yyyy-MM-dd"),
           title: "",
           attachments: [],
@@ -374,7 +374,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
       let recordId = values.id;
       if (initialData) {
         // Update existing record
-        const { error } = await db.from("clinical_records").update(recordToSubmit).eq("id", initialData.id); // Use offline client
+        const { error } = await db.from("clinical_records").update(recordToSubmit).match({ id: initialData.id }); // Corrected to use .match()
         if (error) throw error;
         showSuccess("Registro clínico actualizado exitosamente (o en cola para sincronizar).");
       } else {
@@ -397,7 +397,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
           if (att.path) {
             // Storage operations must use the online client directly
             await supabase.onlineClient.storage.from("clinical-record-attachments").remove([att.path]);
-            await db.from("attachments").delete().eq("file_url", att.url); // Use offline client for attachments table
+            await db.from("attachments").delete().match({ file_url: att.url }); // Corrected to use .match()
           }
         }
 
