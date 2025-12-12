@@ -39,7 +39,8 @@ const Patients = () => {
         service_type: newPatient.serviceType === "Sin preferencia" ? null : newPatient.serviceType,
         observations: newPatient.observations === "" ? null : newPatient.observations,
       };
-      const { data, error } = await db.from("patients").insert(payload).select().single(); // Use offline client for inserts
+      // Removed .select().single() as offline client returns data directly
+      const { data, error } = await db.from("patients").insert(payload); 
       if (error) throw error;
       return data as Patient;
     },
@@ -66,7 +67,8 @@ const Patients = () => {
         service_type: updatedPatient.serviceType === "Sin preferencia" ? null : updatedPatient.serviceType,
         observations: updatedPatient.observations === "" ? null : updatedPatient.observations,
       };
-      const { data, error } = await db.from("patients").update(payload).eq("id", updatedPatient.id).select().single();
+      // Removed .select().single() as offline client returns data directly
+      const { data, error } = await db.from("patients").update(payload).eq("id", updatedPatient.id);
       if (error) throw error;
       return data as Patient;
     },
