@@ -116,6 +116,11 @@ const protocolsData: ProtocolCategory[] = [
         description: "Herramienta de cribado rápido para detectar posibles afasias.",
         url: "https://scr-mast.space.z.ai",
       },
+      {
+        name: "SAQOL-39 (Calidad de Vida en Afasia)",
+        description: "Cuestionario para evaluar la calidad de vida en personas con afasia.",
+        url: "https://calvid-saqol39.space.z.ai",
+      },
     ],
   },
   {
