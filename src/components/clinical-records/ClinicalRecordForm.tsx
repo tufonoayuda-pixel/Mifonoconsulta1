@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format, parse } from "date-fns"; // Import parse
+import { format, parse } from "date-fns";
 import { CalendarIcon, PlusCircle } from "lucide-react";
 import { es } from "date-fns/locale";
 
@@ -46,22 +46,22 @@ import {
 import { Patient } from "@/types/patient";
 import { Session } from "@/types/session";
 import { showSuccess, showError } from "@/utils/toast";
-import { supabase, db } from "@/integrations/supabase/client"; // Import both supabase (online) and db (offline) clients
+import { supabase, db } from "@/integrations/supabase/client";
 
 import FileUpload from "./FileUpload";
 import EvaluationFields from "./EvaluationFields";
 import InterventionPlanFields from "./InterventionPlanFields";
 import SessionRecordFields from "./SessionRecordFields";
-import PatientForm from "../patients/PatientForm"; // Import PatientForm
+import PatientForm from "../patients/PatientForm";
 
 // Define Zod schema for all possible fields in a flattened structure
 const clinicalRecordFormSchema = z.object({
   id: z.string().optional(),
   patientId: z.string().min(1, { message: "Paciente es obligatorio." }),
-  type: z.enum(["Evaluación", "Plan de Intervención", "Registro de Sesión"], { // Renamed from recordType
+  type: z.enum(["Evaluación", "Plan de Intervención", "Registro de Sesión"], {
     message: "Tipo de registro es obligatorio.",
   }),
-  date: z.string().min(1, { message: "Fecha del registro es obligatoria." }), // Renamed from recordDate
+  date: z.string().min(1, { message: "Fecha del registro es obligatoria." }),
   title: z.string().min(1, { message: "Título es obligatorio." }),
   attachments: z.array(z.object({ name: z.string(), url: z.string(), type: z.string(), path: z.string().optional() })).optional(),
 
@@ -99,7 +99,7 @@ const clinicalRecordFormSchema = z.object({
   intervention_focus: z.enum(["Directo", "Indirecto", "Mixto"]).optional(),
   modality: z.enum(["Individual", "Grupal", "Familiar"]).optional(),
   auditory_skills: z.string().optional(),
-  semantics_intervention: z.string().optional(), // Renamed to avoid conflict
+  semantics_intervention: z.string().optional(),
   instruction_following: z.string().optional(),
   communicative_intent: z.string().optional(),
   activities_specific: z.string().optional(),
@@ -123,14 +123,14 @@ export type ClinicalRecordFormValues = z.infer<typeof clinicalRecordFormSchema>;
 interface ClinicalRecordFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (record: ClinicalRecord) => void; // This will now be handled by react-query mutations
+  onSubmit: (record: ClinicalRecord) => void;
   initialData?: ClinicalRecord | null;
   availablePatients: Patient[];
   availableSessions: Session[];
-  onAddPatient: (patient: Patient) => void; // Callback to add a new patient
-  existingRuts: string[]; // For PatientForm
-  isSubmitting: boolean; // New prop for submission state
-  initialRecordType: ClinicalRecordType; // Added prop to set initial type for new records
+  onAddPatient: (patient: Patient) => void;
+  existingRuts: string[];
+  isSubmitting: boolean;
+  initialRecordType: ClinicalRecordType;
 }
 
 const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
@@ -143,7 +143,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
   onAddPatient,
   existingRuts,
   isSubmitting,
-  initialRecordType, // Destructure the new prop
+  initialRecordType,
 }) => {
   const form = useForm<ClinicalRecordFormValues>({
     resolver: zodResolver(clinicalRecordFormSchema),
@@ -152,7 +152,6 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
           ...initialData,
           date: initialData.date || format(new Date(), "yyyy-MM-dd"),
           attachments: initialData.attachments || [],
-          // Ensure all fields are present, even if undefined
           school_level: initialData.school_level || "",
           reason_for_consultation: initialData.reason_for_consultation || "",
           medical_diagnosis: initialData.medical_diagnosis || "",
@@ -202,11 +201,10 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         }
       : {
           patientId: "",
-          type: initialRecordType, // Use initialRecordType here
+          type: initialRecordType,
           date: format(new Date(), "yyyy-MM-dd"),
           title: "",
           attachments: [],
-          // Initialize all optional fields to empty string or undefined
           school_level: "", reason_for_consultation: "", medical_diagnosis: "", anamnesis_info: "",
           family_context: "", previous_therapies: "", evaluation_conditions: "", hearing_aids_use: "",
           applied_tests: "", clinical_observation_methods: "", speech_anatomical_structures: "",
@@ -229,8 +227,8 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
   });
 
   const selectedPatientId = form.watch("patientId");
-  const selectedRecordType = form.watch("type"); // Renamed from recordType
-  const selectedRecordDate = form.watch("date"); // Renamed from recordDate
+  const selectedRecordType = form.watch("type");
+  const selectedRecordDate = form.watch("date");
   const currentAttachments = form.watch("attachments");
 
   const selectedPatient = availablePatients.find((p) => p.id === selectedPatientId);
@@ -238,7 +236,6 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
     (s) => s.patientName === selectedPatient?.name
   );
 
-  // State for PatientForm dialog
   const [isPatientFormOpen, setIsPatientFormOpen] = useState(false);
 
   useEffect(() => {
@@ -247,7 +244,6 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         ...initialData,
         date: initialData.date || format(new Date(), "yyyy-MM-dd"),
         attachments: initialData.attachments || [],
-        // Ensure all fields are present, even if undefined
         school_level: initialData.school_level || "",
         reason_for_consultation: initialData.reason_for_consultation || "",
         medical_diagnosis: initialData.medical_diagnosis || "",
@@ -296,14 +292,12 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         next_session: initialData.next_session || "",
       });
     } else {
-      // When creating a new record, set the type based on initialRecordType prop
       form.reset({
         patientId: "",
-        type: initialRecordType, // Use initialRecordType here
+        type: initialRecordType,
         date: format(new Date(), "yyyy-MM-dd"),
         title: "",
         attachments: [],
-        // Initialize all optional fields to empty string or undefined
         school_level: "", reason_for_consultation: "", medical_diagnosis: "", anamnesis_info: "",
         family_context: "", previous_therapies: "", evaluation_conditions: "", hearing_aids_use: "",
         applied_tests: "", clinical_observation_methods: "", speech_anatomical_structures: "",
@@ -324,9 +318,8 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         next_session: "",
       });
     }
-  }, [initialData, form, initialRecordType]); // Add initialRecordType to dependency array
+  }, [initialData, form, initialRecordType]);
 
-  // Auto-generate title
   useEffect(() => {
     if (!initialData && selectedPatient && selectedRecordType) {
       let defaultTitle = "";
@@ -354,40 +347,34 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
     const now = new Date().toISOString();
     const recordToSubmit: Partial<ClinicalRecord> = {
       ...values,
-      patientName: selectedPatient.name, // This is for display, not DB storage
+      patientName: selectedPatient.name,
       createdAt: initialData?.createdAt || now,
       updatedAt: now,
     };
 
-    // Clean up empty strings to null for DB insertion
     for (const key in recordToSubmit) {
       if (recordToSubmit[key as keyof ClinicalRecord] === "") {
         recordToSubmit[key as keyof ClinicalRecord] = null as any;
       }
     }
 
-    // Separate attachments for processing
     const filesToUpload = currentAttachments?.filter(file => file.url.startsWith("blob:")) || [];
     const existingAttachments = currentAttachments?.filter(file => !file.url.startsWith("blob:")) || [];
 
     try {
       let recordId = values.id;
       if (initialData) {
-        // Update existing record
-        const { error } = await db.from("clinical_records").update(recordToSubmit).match({ id: initialData.id }); // Corrected to use .match()
+        const { error } = await db.from("clinical_records").update(recordToSubmit).match({ id: initialData.id });
         if (error) throw error;
         showSuccess("Registro clínico actualizado exitosamente (o en cola para sincronizar).");
       } else {
-        // Insert new record
-        const { data, error } = await db.from("clinical_records").insert(recordToSubmit).select("id").single(); // Use offline client
+        const { data, error } = await db.from("clinical_records").insert(recordToSubmit).select("id").single();
         if (error) throw error;
         recordId = data.id;
         showSuccess("Registro clínico añadido exitosamente (o en cola para sincronizar).");
       }
 
-      // Handle attachments
       if (recordId) {
-        // Delete old attachments not present in currentAttachments
         const oldAttachments = initialData?.attachments || [];
         const attachmentsToDelete = oldAttachments.filter(
           oldAtt => !existingAttachments.some(newAtt => newAtt.path === oldAtt.path)
@@ -395,17 +382,14 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
 
         for (const att of attachmentsToDelete) {
           if (att.path) {
-            // Storage operations must use the online client directly
             await supabase.onlineClient.storage.from("clinical-record-attachments").remove([att.path]);
-            await db.from("attachments").delete().match({ file_url: att.url }); // Corrected to use .match()
+            await db.from("attachments").delete().match({ file_url: att.url });
           }
         }
 
-        // Upload new files and insert into attachments table
         for (const file of filesToUpload) {
           const fileExtension = file.name.split(".").pop();
           const filePath = `${recordId}/${crypto.randomUUID()}.${fileExtension}`;
-          // Storage operations must use the online client directly
           const { data: uploadData, error: uploadError } = await supabase.onlineClient.storage
             .from("clinical-record-attachments")
             .upload(filePath, await fetch(file.url).then(res => res.blob()), {
@@ -420,19 +404,19 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
             .getPublicUrl(filePath);
 
           if (publicUrlData?.publicUrl) {
-            const { error: insertAttachmentError } = await db.from("attachments").insert({ // Use offline client for attachments table
+            const { error: insertAttachmentError } = await db.from("attachments").insert({
               clinical_record_id: recordId,
               file_name: file.name,
               file_type: file.type,
               file_url: publicUrlData.publicUrl,
-              file_path: filePath, // Store path for deletion
+              file_path: filePath,
             });
             if (insertAttachmentError) throw insertAttachmentError;
           }
         }
       }
 
-      onSubmit(recordToSubmit as ClinicalRecord); // Trigger parent's onSuccess
+      onSubmit(recordToSubmit as ClinicalRecord);
       form.reset();
       onClose();
     } catch (error: any) {
@@ -442,34 +426,10 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
   };
 
   const handleAddPatientFromForm = (newPatient: Patient) => {
-    onAddPatient(newPatient); // Add to the main patient list
-    form.setValue("patientId", newPatient.id); // Select the newly added patient
+    onAddPatient(newPatient);
+    form.setValue("patientId", newPatient.id);
     setIsPatientFormOpen(false);
     showSuccess("Nuevo paciente añadido y seleccionado.");
-  };
-
-  const renderConditionalFields = () => {
-    switch (selectedRecordType) {
-      case "Evaluación":
-        return (
-          <EvaluationFields
-            patientRut={selectedPatient?.rut}
-            patientAge={selectedPatient?.age}
-          />
-        );
-      case "Plan de Intervención":
-        return (
-          <InterventionPlanFields
-            patientNameDisplay={selectedPatient?.name}
-            planDateDisplay={selectedRecordDate ? format(new Date(selectedRecordDate), "PPP", { locale: es }) : undefined}
-            patientAgeDisplay={selectedPatient?.age}
-          />
-        );
-      case "Registro de Sesión":
-        return <SessionRecordFields />;
-      default:
-        return null;
-    }
   };
 
   return (
@@ -484,11 +444,11 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="type" // Renamed from recordType
+                  name="type"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Tipo de Registro</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}> {/* Use value={field.value} */}
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecciona un tipo de registro" />
@@ -546,7 +506,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
               {selectedRecordType === "Registro de Sesión" && (
                 <FormField
                   control={form.control}
-                  name="session_id" // Renamed from data.sessionId
+                  name="session_id"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Sesión Asociada</FormLabel>
@@ -579,7 +539,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="date" // Renamed from recordDate
+                  name="date"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Fecha del Registro</FormLabel>
@@ -605,10 +565,9 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="single"
-                            selected={field.value ? parse(field.value, "yyyy-MM-dd", new Date()) : undefined} // Use parse here
+                            selected={field.value ? parse(field.value, "yyyy-MM-dd", new Date()) : undefined}
                             onSelect={(selectedDate) => {
                               if (selectedDate) {
-                                // Explicitly create a local date from components to avoid timezone shifts
                                 const localDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
                                 field.onChange(format(localDate, "yyyy-MM-dd"));
                               } else {
@@ -640,7 +599,23 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                 />
               </div>
 
-              {renderConditionalFields()}
+              {/* Render conditional fields based on selectedRecordType */}
+              {selectedRecordType === "Evaluación" && (
+                <EvaluationFields
+                  patientRut={selectedPatient?.rut}
+                  patientAge={selectedPatient?.age}
+                />
+              )}
+              {selectedRecordType === "Plan de Intervención" && (
+                <InterventionPlanFields
+                  patientNameDisplay={selectedPatient?.name}
+                  planDateDisplay={selectedRecordDate ? format(new Date(selectedRecordDate), "PPP", { locale: es }) : undefined}
+                  patientAgeDisplay={selectedPatient?.age}
+                />
+              )}
+              {selectedRecordType === "Registro de Sesión" && (
+                <SessionRecordFields />
+              )}
 
               <FormField
                 control={form.control}
@@ -670,7 +645,6 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         </DialogContent>
       </Dialog>
 
-      {/* PatientForm dialog for adding new patients on the fly */}
       <PatientForm
         isOpen={isPatientFormOpen}
         onClose={() => setIsPatientFormOpen(false)}
