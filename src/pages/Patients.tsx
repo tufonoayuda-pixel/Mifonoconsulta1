@@ -19,7 +19,7 @@ const Patients = () => {
   const { data: patients, isLoading, isError, error } = useQuery<Patient[], Error>({
     queryKey: ["patients"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("patients").select("*"); // Use online client for reads
+      const { data, error } = await supabase.from("patients").select("*").order("created_at", { ascending: false }); // Añadido ordenación por created_at descendente
       if (error) throw error;
       return data as Patient[];
     },
@@ -39,7 +39,6 @@ const Patients = () => {
         service_type: newPatient.serviceType === "Sin preferencia" ? null : newPatient.serviceType,
         observations: newPatient.observations === "" ? null : newPatient.observations,
       };
-      // Removed .select().single() as offline client returns data directly
       const { data, error } = await db.from("patients").insert(payload); 
       if (error) throw error;
       return data as Patient;
@@ -67,7 +66,6 @@ const Patients = () => {
         service_type: updatedPatient.serviceType === "Sin preferencia" ? null : updatedPatient.serviceType,
         observations: updatedPatient.observations === "" ? null : updatedPatient.observations,
       };
-      // Removed .select().single() as offline client returns data directly
       const { data, error } = await db.from("patients").update(payload).eq("id", updatedPatient.id);
       if (error) throw error;
       return data as Patient;
