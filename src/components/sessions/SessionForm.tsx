@@ -47,7 +47,7 @@ import { Patient } from "@/types/patient"; // Import Patient type
 
 const sessionFormSchema = z.object({
   id: z.string().optional(),
-  patientName: z.string().min(1, { message: "Nombre del paciente es obligatorio." }),
+  patientId: z.string().min(1, { message: "Paciente es obligatorio." }), // Changed from patientName
   room: z.string().min(1, { message: "Sala es obligatoria." }),
   date: z.string().min(1, { message: "Fecha es obligatoria." }),
   time: z.string().min(1, { message: "Hora es obligatoria." }),
@@ -92,8 +92,8 @@ const SessionForm: React.FC<SessionFormProps> = ({
 }) => {
   const form = useForm<SessionFormValues>({
     resolver: zodResolver(sessionFormSchema),
-    defaultValues: initialData || {
-      patientName: "",
+    defaultValues: {
+      patientId: "", // Default to empty patientId
       room: "UAPORRINO", // Default room
       date: format(new Date(), "yyyy-MM-dd"), // Default to today's date
       time: format(new Date(), "HH:mm"), // Default to current time
@@ -108,13 +108,26 @@ const SessionForm: React.FC<SessionFormProps> = ({
 
   useEffect(() => {
     if (initialData) {
-      form.reset(initialData);
+      // When editing, map patientName from initialData to patientId for the form
+      const patientIdFromInitialData = availablePatients.find(p => p.name === initialData.patientName)?.id || "";
+      form.reset({
+        ...initialData,
+        patientId: patientIdFromInitialData, // Set patientId for the form
+        date: initialData.date || format(new Date(), "yyyy-MM-dd"),
+        time: initialData.time || format(new Date(), "HH:mm"),
+        duration: initialData.duration || 40,
+        type: initialData.type || "Intervención",
+        observations: initialData.observations || "",
+        isRecurring: initialData.isRecurring || false,
+        recurrencePattern: initialData.recurrencePattern || undefined,
+        recurrenceEndDate: initialData.recurrenceEndDate || undefined,
+      });
     } else {
       form.reset({
-        patientName: "",
+        patientId: "",
         room: "UAPORRINO",
-        date: format(new Date(), "yyyy-MM-dd"), // Default to today's date
-        time: format(new Date(), "HH:mm"), // Default to current time
+        date: format(new Date(), "yyyy-MM-dd"),
+        time: format(new Date(), "HH:mm"),
         duration: 40,
         type: "Intervención",
         observations: "",
@@ -123,10 +136,11 @@ const SessionForm: React.FC<SessionFormProps> = ({
         recurrenceEndDate: undefined,
       });
     }
-  }, [initialData, form]);
+  }, [initialData, form, availablePatients]); // Added availablePatients to dependencies
 
   const isRecurring = form.watch("isRecurring");
   const selectedRoom = form.watch("room"); // Watch for changes in the room
+  const selectedPatientId = form.watch("patientId"); // Watch for changes in patientId
 
   // Effect to update duration based on selected room
   useEffect(() => {
@@ -137,12 +151,15 @@ const SessionForm: React.FC<SessionFormProps> = ({
     }
   }, [selectedRoom, form]);
 
-
   const handleSubmit = (values: SessionFormValues) => {
-    onSubmit(values as Session);
+    // Find the patient name based on the selected patientId for the Session object
+    const patientName = availablePatients.find(p => p.id === values.patientId)?.name || "Desconocido";
+    onSubmit({ ...values, patientName: patientName } as Session); // Pass patientName back to onSubmit
     form.reset();
     onClose();
   };
+
+  const selectedPatient = availablePatients.find(p => p.id === selectedPatientId);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -155,19 +172,21 @@ const SessionForm: React.FC<SessionFormProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="patientName"
+                name="patientId" // Changed to patientId
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Paciente</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}> {/* Use value={field.value} */}
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecciona un paciente" />
+                          <SelectValue placeholder="Selecciona un paciente">
+                            {selectedPatient ? `${selectedPatient.name} (RUT: ${selectedPatient.rut})` : "Selecciona un paciente"}
+                          </SelectValue>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {availablePatients.map((patient) => (
-                          <SelectItem key={patient.id} value={patient.name}>
+                          <SelectItem key={patient.id} value={patient.id}> {/* Use patient.id as value */}
                             {patient.name} (RUT: {patient.rut})
                           </SelectItem>
                         ))}
@@ -293,13 +312,13 @@ const SessionForm: React.FC<SessionFormProps> = ({
               control={form.control}
               name="observations"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Observaciones</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Notas adicionales..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+                  <FormItem>
+                    <FormLabel>Observaciones</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Notas adicionales..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
               )}
             />
 
@@ -339,8 +358,8 @@ const SessionForm: React.FC<SessionFormProps> = ({
                           <SelectTrigger>
                             <SelectValue placeholder="Selecciona un patrón" />
                           </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
+                      </FormControl>
+                      <SelectContent>
                           <SelectItem value="daily">Diario</SelectItem>
                           <SelectItem value="weekly">Semanal</SelectItem>
                           <SelectItem value="monthly">Mensual</SelectItem>

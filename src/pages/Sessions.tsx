@@ -75,12 +75,13 @@ const Sessions = () => {
 
   // Fetch sessions from Supabase (always try online for reads, or implement read-caching)
   const { data: sessions, isLoading: isLoadingSessions, isError: isErrorSessions, error: errorSessions } = useQuery<Session[], Error>({
-    queryKey: ["sessions"],
+    queryKey: ["sessions", availablePatients], // Depend on availablePatients to map patientName
     queryFn: async () => {
       const { data, error } = await supabase.from("sessions").select("*"); // Use online client for reads
       if (error) throw error;
       return data.map(s => ({
         id: s.id,
+        patientId: s.patient_id, // Include patientId
         patientName: availablePatients?.find(p => p.id === s.patient_id)?.name || "Desconocido", // Map patient_id to patientName
         room: s.room,
         date: s.date,
@@ -163,11 +164,7 @@ const Sessions = () => {
 
 
   const addSessionMutation = async (newSession: Session) => {
-    const patient = availablePatients?.find(p => p.name === newSession.patientName);
-    if (!patient) {
-      throw new Error("Paciente no encontrado.");
-    }
-
+    // newSession now correctly has patientId
     const sessionsToInsert: Omit<Session, 'patientName'>[] = [];
     if (newSession.isRecurring && newSession.recurrencePattern && newSession.recurrenceEndDate) {
       let currentDate = parse(newSession.date, "yyyy-MM-dd", new Date());
@@ -176,7 +173,6 @@ const Sessions = () => {
       while (currentDate <= endDate) {
         sessionsToInsert.push({
           ...newSession,
-          patientId: patient.id, // Link to patient ID
           date: format(currentDate, "yyyy-MM-dd"),
           status: "Programada", // Always programada for new recurring sessions
           isRecurring: true,
@@ -202,7 +198,7 @@ const Sessions = () => {
         }
       }
     } else {
-      sessionsToInsert.push({ ...newSession, patientId: patient.id, status: "Programada" });
+      sessionsToInsert.push({ ...newSession, status: "Programada" });
     }
 
     const { error } = await db.from("sessions").insert(sessionsToInsert.map(s => ({ // Use offline client for inserts
@@ -224,13 +220,9 @@ const Sessions = () => {
   };
 
   const updateSessionMutation = async (updatedSession: Session) => {
-    const patient = availablePatients?.find(p => p.id === updatedSession.patientId); // Use patientId from updatedSession
-    if (!patient) {
-      throw new Error("Paciente no encontrado.");
-    }
-
+    // updatedSession now correctly has patientId
     const { error } = await db.from("sessions").update({ // Use offline client for updates
-      patient_id: patient.id,
+      patient_id: updatedSession.patientId,
       room: updatedSession.room,
       date: updatedSession.date,
       time: updatedSession.time,
@@ -424,9 +416,13 @@ const Sessions = () => {
         isOpen={isFormOpen}
         onClose={closeForm}
         onSubmit={editingSession ? handleEditSession : handleAddSession}
-        initialData={editingSession || (prefillDate ? { // Provide initialData for prefill
+        initialData={editingSession ? { // Map patientName to patientId for editing
+          ...editingSession,
+          patientId: availablePatients?.find(p => p.name === editingSession.patientName)?.id || "",
+        } : (prefillDate ? { // Provide initialData for prefill
           id: uuidv4(), // Generate a temporary ID for new session prefill
-          patientName: "", // Will be selected by user
+          patientId: "", // No patient selected yet for new prefilled session
+          patientName: "", // Will be derived on submit
           room: "UAPORRINO",
           date: prefillDate,
           time: prefillTime || "09:00", // Default time if only date is selected
