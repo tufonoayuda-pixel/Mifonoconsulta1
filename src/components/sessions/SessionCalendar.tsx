@@ -24,9 +24,10 @@ const localizer = dateFnsLocalizer({
 interface SessionCalendarProps {
   sessions: Session[];
   onSelectSession: (session: Session) => void;
+  onSelectSlot: (slotInfo: { start: Date; end: Date; action: 'select' | 'click' | 'doubleClick' }) => void; // Add onSelectSlot prop
 }
 
-const SessionCalendar: React.FC<SessionCalendarProps> = ({ sessions, onSelectSession }) => {
+const SessionCalendar: React.FC<SessionCalendarProps> = ({ sessions, onSelectSession, onSelectSlot }) => {
   const events = sessions.map((session) => {
     const startDateTime = parse(`${session.date} ${session.time}`, "yyyy-MM-dd HH:mm", new Date());
     const endDateTime = new Date(startDateTime.getTime() + session.duration * 60 * 1000); // Add duration in minutes
@@ -88,6 +89,8 @@ const SessionCalendar: React.FC<SessionCalendarProps> = ({ sessions, onSelectSes
           }}
           culture="es"
           onSelectEvent={(event) => onSelectSession(event.resource)}
+          onSelectSlot={onSelectSlot} // Pass onSelectSlot to Calendar
+          selectable // Enable slot selection
           eventPropGetter={eventPropGetter}
         />
       </CardContent>

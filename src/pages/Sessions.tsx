@@ -58,6 +58,11 @@ const Sessions = () => {
   const [currentView, setCurrentView] = useState<string>("table");
   const [selectedDayForAgenda, setSelectedDayForAgenda] = useState<Date>(new Date()); // New state for DailyAgenda
 
+  // New states for pre-filling the form when selecting a slot
+  const [prefillDate, setPrefillDate] = useState<string | undefined>(undefined);
+  const [prefillTime, setPrefillTime] = useState<string | undefined>(undefined);
+
+
   // Fetch patients from Supabase
   const { data: availablePatients, isLoading: isLoadingPatients, isError: isErrorPatients, error: errorPatients } = useQuery<Patient[], Error>({
     queryKey: ["patients"],
@@ -287,39 +292,17 @@ const Sessions = () => {
     deleteSession(id);
   };
 
-  const handleUpdateSessionStatus = (session: Session, values: { observationsAttended?: string; justificationNotAttended?: string; isJustifiedNotAttended?: boolean; continueSessions?: boolean }) => {
-    const updatedSession: Session = {
-      ...session,
-      status: statusType,
-      observationsAttended: values.observationsAttended,
-      continueSessions: values.continueSessions,
-      justificationNotAttended: values.justificationNotAttended,
-      isJustifiedNotAttended: values.isJustifiedNotAttended,
-    };
-    updateSession(updatedSession);
-
-    // Create a notification for the status change
-    let notificationMessage = "";
-    if (statusType === "Atendida") {
-      notificationMessage = `La sesión del paciente ${session.patientName} el ${format(new Date(session.date), "PPP", { locale: es })} a las ${session.time} ha sido marcada como Atendida. Observaciones: ${values.observationsAttended || "N/A"}.`;
-    } else {
-      notificationMessage = `La sesión del paciente ${session.patientName} el ${format(new Date(session.date), "PPP", { locale: es })} a las ${session.time} ha sido marcada como No Atendida. Justificación: ${values.justificationNotAttended || "N/A"}. Justificada: ${values.isJustifiedNotAttended ? "Sí" : "No"}.`;
-    }
-
-    createNotification(
-      "session_status_update",
-      `Sesión de ${session.patientName} ${statusType}`,
-      notificationMessage
-    );
-  };
-
-  const openAddForm = () => {
+  const openAddForm = (date?: string, time?: string) => { // Allow pre-filling date and time
     setEditingSession(null);
+    setPrefillDate(date);
+    setPrefillTime(time);
     setIsFormOpen(true);
   };
 
   const openEditForm = (session: Session) => {
     setEditingSession(session);
+    setPrefillDate(undefined); // Clear prefill when editing
+    setPrefillTime(undefined);
     setIsFormOpen(true);
   };
 
@@ -338,11 +321,21 @@ const Sessions = () => {
   const closeForm = () => {
     setIsFormOpen(false);
     setEditingSession(null);
+    setPrefillDate(undefined); // Clear prefill on close
+    setPrefillTime(undefined);
   };
 
   const closeStatusDialog = () => {
     setIsStatusDialogOpen(false);
     setSessionToUpdateStatus(null);
+  };
+
+  // New handler for selecting a slot in the calendar
+  const handleSelectSlot = (slotInfo: { start: Date; end: Date; action: 'select' | 'click' | 'doubleClick' }) => {
+    // Format the start date and time from the selected slot
+    const date = format(slotInfo.start, "yyyy-MM-dd");
+    const time = format(slotInfo.start, "HH:mm");
+    openAddForm(date, time); // Open the form with pre-filled date and time
   };
 
   const columns = createSessionColumns({
@@ -361,7 +354,7 @@ const Sessions = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Gestión de Sesiones</h1>
         <div className="flex gap-2">
-          <Button onClick={openAddForm}>Programar Sesión</Button>
+          <Button onClick={() => openAddForm()}>Programar Sesión</Button> {/* Call without args for default new session */}
         </div>
       </div>
       <p className="text-lg text-gray-600 dark:text-gray-400">
@@ -383,7 +376,11 @@ const Sessions = () => {
           />
         </TabsContent>
         <TabsContent value="calendar">
-          <SessionCalendar sessions={sessions || []} onSelectSession={openEditForm} />
+          <SessionCalendar
+            sessions={sessions || []}
+            onSelectSession={openEditForm}
+            onSelectSlot={handleSelectSlot} // Pass the new handler
+          />
         </TabsContent>
         <TabsContent value="daily-agenda">
           <DailyAgenda
@@ -400,7 +397,16 @@ const Sessions = () => {
         isOpen={isFormOpen}
         onClose={closeForm}
         onSubmit={editingSession ? handleEditSession : handleAddSession}
-        initialData={editingSession}
+        initialData={editingSession || (prefillDate ? { // Provide initialData for prefill
+          id: uuidv4(), // Generate a temporary ID for new session prefill
+          patientName: "", // Will be selected by user
+          room: "UAPORRINO",
+          date: prefillDate,
+          time: prefillTime || "09:00", // Default time if only date is selected
+          duration: 40,
+          type: "Intervención",
+          status: "Programada",
+        } as Session : null)}
         availablePatients={availablePatients || []}
       />
 

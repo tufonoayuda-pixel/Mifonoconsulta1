@@ -95,8 +95,8 @@ const SessionForm: React.FC<SessionFormProps> = ({
     defaultValues: initialData || {
       patientName: "",
       room: "UAPORRINO", // Default room
-      date: "",
-      time: "",
+      date: format(new Date(), "yyyy-MM-dd"), // Default to today's date
+      time: format(new Date(), "HH:mm"), // Default to current time
       duration: 40, // Default duration
       type: "Intervención",
       observations: "",
@@ -113,8 +113,8 @@ const SessionForm: React.FC<SessionFormProps> = ({
       form.reset({
         patientName: "",
         room: "UAPORRINO",
-        date: "",
-        time: "",
+        date: format(new Date(), "yyyy-MM-dd"), // Default to today's date
+        time: format(new Date(), "HH:mm"), // Default to current time
         duration: 40,
         type: "Intervención",
         observations: "",
@@ -148,7 +148,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto"> {/* Increased max-width */}
         <DialogHeader>
-          <DialogTitle>{initialData ? "Editar Sesión" : "Programar Sesión"}</DialogTitle>
+          <DialogTitle>{initialData && initialData.id ? "Editar Sesión" : "Programar Sesión"}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-4 py-4">
@@ -394,7 +394,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
             )}
 
             <DialogFooter>
-              <Button type="submit">{initialData ? "Guardar Cambios" : "Programar Sesión"}</Button>
+              <Button type="submit">{initialData && initialData.id ? "Guardar Cambios" : "Programar Sesión"}</Button>
             </DialogFooter>
           </form>
         </Form>
