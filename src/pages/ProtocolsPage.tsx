@@ -111,6 +111,11 @@ const protocolsData: ProtocolCategory[] = [
         description: "Herramienta para evaluar la severidad de la disfagia en adultos.",
         url: "https://escala-severidaddisfagia.space.z.ai/",
       },
+      {
+        name: "SWAL-QOL (Calidad de Vida en Disfagia)",
+        description: "Cuestionario para evaluar la calidad de vida relacionada con la deglución.",
+        url: "https://escdeglu-swalqol.space.z.ai",
+      },
     ],
   },
   {
