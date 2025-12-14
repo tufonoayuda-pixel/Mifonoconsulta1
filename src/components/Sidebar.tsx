@@ -11,6 +11,9 @@ import {
   Book,
   Settings,
   X,
+  ClipboardList, // Icon for Todos
+  NotebookPen, // Icon for Notes
+  CalendarCheck, // Icon for Weekly Planner
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -44,6 +47,21 @@ const navItems = [
     name: "Registros Clínicos",
     icon: FileText,
     path: "/records",
+  },
+  {
+    name: "Planificador Semanal", // New item
+    icon: CalendarCheck,
+    path: "/weekly-planner",
+  },
+  {
+    name: "Notas", // New item
+    icon: NotebookPen,
+    path: "/notes",
+  },
+  {
+    name: "Pendientes", // New item
+    icon: ClipboardList,
+    path: "/todos",
   },
   {
     name: "Notificaciones",

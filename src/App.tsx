@@ -10,7 +10,10 @@ import Sessions from "./pages/Sessions";
 import ClinicalRecords from "./pages/ClinicalRecords";
 import ProtocolsPage from "./pages/ProtocolsPage";
 import NotificationsPage from "./pages/NotificationsPage";
-import SettingsPage from "./pages/SettingsPage"; // Import the new SettingsPage
+import SettingsPage from "./pages/SettingsPage";
+import WeeklyPlanner from "./pages/WeeklyPlanner"; // Import the new WeeklyPlanner page
+import NotesPage from "./pages/NotesPage"; // Import the new NotesPage
+import TodoPage from "./pages/TodoPage"; // Import the new TodoPage
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,7 +33,10 @@ const App = () => (
             <Route path="records" element={<ClinicalRecords />} />
             <Route path="protocols" element={<ProtocolsPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
-            <Route path="settings" element={<SettingsPage />} /> {/* New route for SettingsPage */}
+            <Route path="settings" element={<SettingsPage />} />
+            <Route path="weekly-planner" element={<WeeklyPlanner />} /> {/* New route for WeeklyPlanner */}
+            <Route path="notes" element={<NotesPage />} /> {/* New route for NotesPage */}
+            <Route path="todos" element={<TodoPage />} /> {/* New route for TodoPage */}
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
