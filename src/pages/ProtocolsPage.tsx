@@ -101,6 +101,11 @@ const protocolsData: ProtocolCategory[] = [
         description: "Escala para evaluar la comprensión del habla en diferentes entornos naturales.",
         url: "https://escala-chan-i.space.z.ai/",
       },
+      {
+        name: "Audiometro Casero",
+        description: "Herramienta para realizar una evaluación auditiva básica.",
+        url: "https://audiometro-casero1.vercel.app/",
+      },
     ],
   },
   {
