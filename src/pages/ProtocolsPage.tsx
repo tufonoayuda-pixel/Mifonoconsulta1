@@ -104,6 +104,16 @@ const protocolsData: ProtocolCategory[] = [
     ],
   },
   {
+    category: "Deglución Adulto",
+    items: [
+      {
+        name: "Escala de Severidad de Disfagia",
+        description: "Herramienta para evaluar la severidad de la disfagia en adultos.",
+        url: "https://escala-severidaddisfagia.space.z.ai/",
+      },
+    ],
+  },
+  {
     category: "Lenguaje Adulto",
     items: [
       {
