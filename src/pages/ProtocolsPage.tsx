@@ -116,6 +116,11 @@ const protocolsData: ProtocolCategory[] = [
         description: "Cuestionario para evaluar la calidad de vida relacionada con la deglución.",
         url: "https://escdeglu-swalqol.space.z.ai",
       },
+      {
+        name: "DHI (Índice de Discapacidad por Disfagia)",
+        description: "Cuestionario para evaluar el impacto de la disfagia en la calidad de vida.",
+        url: "https://deglu-dhi.space.z.ai",
+      },
     ],
   },
   {
