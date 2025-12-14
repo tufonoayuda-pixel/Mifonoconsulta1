@@ -104,7 +104,7 @@ const protocolsData: ProtocolCategory[] = [
       {
         name: "Audiometro Casero",
         description: "Herramienta para realizar una evaluación auditiva básica.",
-        url: "https://audiometro-casero1.vercel.app/",
+        url: "https://audiometro-casero2.vercel.app/",
       },
     ],
   },
