@@ -131,6 +131,11 @@ const protocolsData: ProtocolCategory[] = [
         description: "Herramienta de cribado para la detección de disfagia en pacientes con accidente cerebrovascular.",
         url: "https://screen-gussmecv.space.z.ai",
       },
+      {
+        name: "OME (Evaluación Oro-Motora y de la Deglución)",
+        description: "Protocolo para la evaluación de las estructuras oromotoras y la función de deglución.",
+        url: "https://evdeglu-ome.space.z.ai",
+      },
     ],
   },
   {
