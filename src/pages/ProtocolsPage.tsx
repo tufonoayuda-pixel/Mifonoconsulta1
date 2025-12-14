@@ -136,6 +136,11 @@ const protocolsData: ProtocolCategory[] = [
         description: "Protocolo para la evaluación de las estructuras oromotoras y la función de deglución.",
         url: "https://evdeglu-ome.space.z.ai",
       },
+      {
+        name: "OHAT (Oral Health Assessment Tool)",
+        description: "Herramienta para la evaluación de la salud oral en pacientes con disfagia.",
+        url: "https://evaldeglu-ohat.space.z.ai",
+      },
     ],
   },
   {
