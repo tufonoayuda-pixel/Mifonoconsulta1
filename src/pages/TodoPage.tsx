@@ -19,6 +19,14 @@ import { Todo } from "@/types/todo";
 import { supabase, db } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { showSuccess, showError } from "@/utils/toast";
+import {
+  Form, // Import Form component
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 const todoFormSchema = z.object({
   task: z.string().min(1, { message: "La tarea no puede estar vacía." }),
