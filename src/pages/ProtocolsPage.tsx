@@ -121,6 +121,11 @@ const protocolsData: ProtocolCategory[] = [
         description: "Cuestionario para evaluar el impacto de la disfagia en la calidad de vida.",
         url: "https://deglu-dhi.space.z.ai",
       },
+      {
+        name: "EAT-10 (Eating Assessment Tool)",
+        description: "Cuestionario de 10 ítems para la detección y evaluación de la disfagia.",
+        url: "https://deglu-eat10.space.z.ai",
+      },
     ],
   },
   {
