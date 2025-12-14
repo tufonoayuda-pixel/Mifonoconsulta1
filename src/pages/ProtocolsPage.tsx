@@ -126,6 +126,11 @@ const protocolsData: ProtocolCategory[] = [
         description: "Cuestionario de 10 ítems para la detección y evaluación de la disfagia.",
         url: "https://deglu-eat10.space.z.ai",
       },
+      {
+        name: "GUSS (Gugging Swallowing Screen)",
+        description: "Herramienta de cribado para la detección de disfagia en pacientes con accidente cerebrovascular.",
+        url: "https://screen-gussmecv.space.z.ai",
+      },
     ],
   },
   {
