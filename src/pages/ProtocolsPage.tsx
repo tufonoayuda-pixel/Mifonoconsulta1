@@ -106,6 +106,11 @@ const protocolsData: ProtocolCategory[] = [
         description: "Herramienta para realizar una evaluación auditiva básica.",
         url: "https://audiometro-casero2.vercel.app/",
       },
+      {
+        name: "Escala de Tinnitus",
+        description: "Escala para evaluar la severidad y el impacto del tinnitus.",
+        url: "https://escaudio-tinnitus.space.z.ai",
+      },
     ],
   },
   {
