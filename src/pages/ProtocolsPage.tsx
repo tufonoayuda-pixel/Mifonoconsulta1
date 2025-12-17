@@ -191,6 +191,11 @@ const protocolsData: ProtocolCategory[] = [
         description: "Protocolo de Evaluación Vocal Hablada para adultos (versión abreviada).",
         url: "https://pevh-adulto.space.z.ai",
       },
+      {
+        name: "Escala de Inteligibilidad del Habla",
+        description: "Herramienta para evaluar la inteligibilidad del habla en adultos.",
+        url: "https://ev-integilibilidadduffy.space.z.ai",
+      },
     ],
   },
   {
