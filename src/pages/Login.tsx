@@ -6,7 +6,8 @@ import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client'; // Use the online supabase client
 import { useNavigate } from 'react-router-dom';
 import { useSession } from '@/components/SessionContextProvider';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import FallingIconsBackground from '@/components/FallingIconsBackground'; // Import the new component
 
 const Login: React.FC = () => {
   const { session, isLoading } = useSession();
@@ -23,11 +24,16 @@ const Login: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+      <FallingIconsBackground /> {/* Add the falling icons background */}
+      <Card className="w-full max-w-md z-10 bg-card/90 backdrop-blur-sm"> {/* Added z-10 and backdrop-blur for effect */}
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Bienvenido a MiFonoConsulta</CardTitle>
-          <p className="text-muted-foreground">Inicia sesión o regístrate para continuar</p>
+          <CardTitle className="text-4xl font-bold text-primary mb-2 flex items-center justify-center gap-2">
+            <span className="text-5xl">🧠👅</span> MiFonoConsulta
+          </CardTitle>
+          <CardDescription className="text-lg text-muted-foreground">
+            Tu consulta fonoaudiológica, organizada y al alcance de tu mano.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Auth

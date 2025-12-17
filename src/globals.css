@@ -97,6 +97,24 @@
   }
 }
 
+/* Keyframes for falling icons */
+@keyframes fall {
+  0% {
+    transform: translateY(var(--start-y, -10%)) scale(0.8);
+    opacity: var(--start-opacity, 0);
+  }
+  10% {
+    opacity: var(--end-opacity, 0.2);
+  }
+  90% {
+    opacity: var(--end-opacity, 0.2);
+  }
+  100% {
+    transform: translateY(var(--end-y, 110%)) scale(1.2);
+    opacity: var(--start-opacity, 0);
+  }
+}
+
 /* React Big Calendar styles */
 @import 'react-big-calendar/lib/css/react-big-calendar.css';
 
