@@ -13,3 +13,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Export the offline-capable client as the default for application use
 export const db = offlineSupabase;
+
+// Attach the online client to the offline client for specific operations like storage
+offlineSupabase.onlineClient = supabase;

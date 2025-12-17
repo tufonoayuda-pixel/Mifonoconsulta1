@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
 import Index from "./pages/Index";
 import Patients from "./pages/Patients";
@@ -14,10 +14,27 @@ import SettingsPage from "./pages/SettingsPage";
 import WeeklyPlanner from "./pages/WeeklyPlanner";
 import NotesPage from "./pages/NotesPage";
 import TodoPage from "./pages/TodoPage";
-import StudyMaterialsPage from "./pages/StudyMaterialsPage"; // Import the new StudyMaterialsPage
+import StudyMaterialsPage from "./pages/StudyMaterialsPage";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login"; // Import the new Login page
+import { useSession } from "./components/SessionContextProvider"; // Import useSession
 
 const queryClient = new QueryClient();
+
+// ProtectedRoute component
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { session, isLoading } = useSession();
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Cargando autenticación...</div>;
+  }
+
+  if (!session) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -26,9 +43,16 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Layout />}>
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<Index />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="patients" element={<Patients />} />
             <Route path="sessions" element={<Sessions />} />
             <Route path="records" element={<ClinicalRecords />} />
@@ -38,7 +62,7 @@ const App = () => (
             <Route path="weekly-planner" element={<WeeklyPlanner />} />
             <Route path="notes" element={<NotesPage />} />
             <Route path="todos" element={<TodoPage />} />
-            <Route path="study-materials" element={<StudyMaterialsPage />} /> {/* New route for StudyMaterialsPage */}
+            <Route path="study-materials" element={<StudyMaterialsPage />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>

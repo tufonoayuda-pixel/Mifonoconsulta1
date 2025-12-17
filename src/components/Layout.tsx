@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Outlet, Link } from "react-router-dom";
-import { Menu, Bell } from "lucide-react";
+import { Menu, Bell, LogOut } from "lucide-react";
 import Sidebar from "./Sidebar";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -12,12 +12,14 @@ import { supabase, db } from "@/integrations/supabase/client"; // Import both su
 import { Badge } from "@/components/ui/badge";
 import SyncStatusIndicator from "./SyncStatusIndicator"; // Import the new component
 import { syncService } from "@/services/sync-service"; // Import syncService
+import { useSession } from "./SessionContextProvider"; // Import useSession
 
 const Layout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [currentDateTime, setCurrentDateTime] = useState<string>("");
+  const { user, isLoading: isSessionLoading } = useSession(); // Get user and session loading state
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -86,6 +88,14 @@ const Layout: React.FC = () => {
     // The syncService itself listens to online/offline events
   }, []);
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  if (isSessionLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Cargando usuario...</div>;
+  }
+
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
@@ -115,6 +125,11 @@ const Layout: React.FC = () => {
             <span className="text-sm text-gray-600 dark:text-gray-400">
               {currentDateTime}
             </span>
+            {user && (
+              <span className="text-sm text-muted-foreground hidden md:block">
+                Hola, {user.email}
+              </span>
+            )}
             <Link to="/notifications" className="relative">
               <Button variant="ghost" size="icon" className="h-8 w-8">
                 <Bell className="h-5 w-5" />
@@ -129,6 +144,12 @@ const Layout: React.FC = () => {
                 </Badge>
               )}
             </Link>
+            {user && (
+              <Button variant="ghost" size="icon" onClick={handleLogout} className="h-8 w-8 hidden md:flex">
+                <LogOut className="h-5 w-5" />
+                <span className="sr-only">Cerrar Sesión</span>
+              </Button>
+            )}
           </div>
         </header>
         <main className="flex-1 p-4 lg:p-6 overflow-auto">

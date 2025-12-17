@@ -15,13 +15,15 @@ import {
   NotebookPen, // Icon for Notes
   CalendarCheck, // Icon for Weekly Planner
   LibraryBig, // Icon for Study Materials
+  LogOut, // Icon for Logout
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { supabase } from "@/integrations/supabase/client"; // Use online client for notifications
+import { supabase } from "@/integrations/supabase/client"; // Use online client for notifications and logout
 import { Badge } from "@/components/ui/badge"; // Import Badge component
+import { useSession } from "@/components/SessionContextProvider"; // Import useSession
 
 interface SidebarProps {
   isOpen: boolean;
@@ -89,6 +91,7 @@ const navItems = [
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const isMobile = useIsMobile();
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+  const { user } = useSession(); // Get the authenticated user
 
   const fetchUnreadNotificationsCount = useCallback(async () => {
     // Use the online client for notifications as they are not typically created offline by the user
@@ -123,6 +126,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       supabase.removeChannel(channel);
     };
   }, [fetchUnreadNotificationsCount]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    onClose(); // Close sidebar after logout
+  };
 
   return (
     <>
@@ -176,6 +184,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 )}
               </NavLink>
             ))}
+            {user && (
+              <Button
+                variant="ghost"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground transition-all hover:bg-destructive hover:text-destructive-foreground mt-4"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-5 w-5" />
+                Cerrar Sesión
+              </Button>
+            )}
           </nav>
         </ScrollArea>
       </aside>

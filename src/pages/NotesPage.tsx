@@ -33,6 +33,7 @@ import { Note } from "@/types/note";
 import { supabase, db } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { showSuccess, showError } from "@/utils/toast";
+import { useSession } from "@/components/SessionContextProvider"; // Import useSession
 
 const noteFormSchema = z.object({
   id: z.string().optional(),
@@ -46,6 +47,7 @@ const NotesPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const { user } = useSession(); // Get the authenticated user
 
   const form = useForm<NoteFormValues>({
     resolver: zodResolver(noteFormSchema),
@@ -57,21 +59,21 @@ const NotesPage: React.FC = () => {
 
   // Fetch notes
   const { data: notes, isLoading, isError, error } = useQuery<Note[], Error>({
-    queryKey: ["notes"],
+    queryKey: ["notes", user?.id], // Include user.id in query key
     queryFn: async () => {
-      // In a real auth scenario, user_id would be automatically filtered by RLS
-      const { data, error } = await supabase.from("notes").select("*").order("updated_at", { ascending: false });
+      if (!user?.id) return []; // Return empty if no user
+      const { data, error } = await supabase.from("notes").select("*").eq("user_id", user.id).order("updated_at", { ascending: false });
       if (error) throw error;
       return data as Note[];
     },
+    enabled: !!user?.id, // Only run query if user ID is available
   });
 
   // Add note mutation
   const addNoteMutation = useMutation<Note, Error, NoteFormValues>({
     mutationFn: async (newNote) => {
-      // For now, user_id is hardcoded or omitted if auth is not fully set up.
-      // Once auth is implemented, supabase.auth.uid() should be used.
-      const { data, error } = await db.from("notes").insert({ ...newNote, user_id: "00000000-0000-0000-0000-000000000000" }).select().single(); // Placeholder user_id
+      if (!user?.id) throw new Error("Usuario no autenticado.");
+      const { data, error } = await db.from("notes").insert({ ...newNote, user_id: user.id }).select().single();
       if (error) throw error;
       return data as Note;
     },
@@ -89,7 +91,8 @@ const NotesPage: React.FC = () => {
   // Update note mutation
   const updateNoteMutation = useMutation<Note, Error, NoteFormValues>({
     mutationFn: async (updatedNote) => {
-      const { data, error } = await db.from("notes").update(updatedNote).match({ id: updatedNote.id }).select().single();
+      if (!user?.id) throw new Error("Usuario no autenticado.");
+      const { data, error } = await db.from("notes").update(updatedNote).match({ id: updatedNote.id, user_id: user.id }).select().single();
       if (error) throw error;
       return data as Note;
     },
@@ -108,7 +111,8 @@ const NotesPage: React.FC = () => {
   // Delete note mutation
   const deleteNoteMutation = useMutation<void, Error, string>({
     mutationFn: async (id) => {
-      const { error } = await db.from("notes").delete().match({ id: id });
+      if (!user?.id) throw new Error("Usuario no autenticado.");
+      const { error } = await db.from("notes").delete().match({ id: id, user_id: user.id });
       if (error) throw error;
     },
     onSuccess: () => {

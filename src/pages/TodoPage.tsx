@@ -27,6 +27,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useSession } from "@/components/SessionContextProvider"; // Import useSession
 
 const todoFormSchema = z.object({
   task: z.string().min(1, { message: "La tarea no puede estar vacía." }),
@@ -42,23 +43,25 @@ const TodoPage: React.FC = () => {
       task: "",
     },
   });
+  const { user } = useSession(); // Get the authenticated user
 
   // Fetch todos
   const { data: todos, isLoading, isError, error } = useQuery<Todo[], Error>({
-    queryKey: ["todos"],
+    queryKey: ["todos", user?.id], // Include user.id in query key
     queryFn: async () => {
-      // In a real auth scenario, user_id would be automatically filtered by RLS
-      const { data, error } = await supabase.from("todos").select("*").order("created_at", { ascending: false });
+      if (!user?.id) return []; // Return empty if no user
+      const { data, error } = await supabase.from("todos").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
       if (error) throw error;
       return data as Todo[];
     },
+    enabled: !!user?.id, // Only run query if user ID is available
   });
 
   // Add todo mutation
   const addTodoMutation = useMutation<Todo, Error, TodoFormValues>({
     mutationFn: async (newTodo) => {
-      // Placeholder user_id
-      const { data, error } = await db.from("todos").insert({ ...newTodo, is_completed: false, user_id: "00000000-0000-0000-0000-000000000000" }).select().single();
+      if (!user?.id) throw new Error("Usuario no autenticado.");
+      const { data, error } = await db.from("todos").insert({ ...newTodo, is_completed: false, user_id: user.id }).select().single();
       if (error) throw error;
       return data as Todo;
     },
@@ -75,7 +78,8 @@ const TodoPage: React.FC = () => {
   // Update todo mutation (for toggling completion)
   const updateTodoMutation = useMutation<Todo, Error, Todo>({
     mutationFn: async (updatedTodo) => {
-      const { data, error } = await db.from("todos").update({ is_completed: updatedTodo.is_completed }).match({ id: updatedTodo.id }).select().single();
+      if (!user?.id) throw new Error("Usuario no autenticado.");
+      const { data, error } = await db.from("todos").update({ is_completed: updatedTodo.is_completed }).match({ id: updatedTodo.id, user_id: user.id }).select().single();
       if (error) throw error;
       return data as Todo;
     },
@@ -91,7 +95,8 @@ const TodoPage: React.FC = () => {
   // Delete todo mutation
   const deleteTodoMutation = useMutation<void, Error, string>({
     mutationFn: async (id) => {
-      const { error } = await db.from("todos").delete().match({ id: id });
+      if (!user?.id) throw new Error("Usuario no autenticado.");
+      const { error } = await db.from("todos").delete().match({ id: id, user_id: user.id });
       if (error) throw error;
     },
     onSuccess: () => {

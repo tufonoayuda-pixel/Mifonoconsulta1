@@ -24,6 +24,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { useSession } from "@/components/SessionContextProvider"; // Import useSession
 
 const StudyMaterialsPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -31,29 +32,31 @@ const StudyMaterialsPage: React.FC = () => {
   const [editingMaterial, setEditingMaterial] = useState<StudyMaterial | null>(null);
   const [currentTab, setCurrentTab] = useState<string>("all");
   const [globalFilter, setGlobalFilter] = useState<string>("");
+  const { user } = useSession(); // Get the authenticated user
 
   // Fetch study materials
   const { data: materials, isLoading, isError, error } = useQuery<StudyMaterial[], Error>({
-    queryKey: ["studyMaterials"],
+    queryKey: ["studyMaterials", user?.id], // Include user.id in query key
     queryFn: async () => {
-      const { data, error } = await supabase.from("study_materials").select("*").order("category", { ascending: true }).order("name", { ascending: true });
+      if (!user?.id) return []; // Return empty if no user
+      const { data, error } = await supabase.from("study_materials").select("*").eq("user_id", user.id).order("category", { ascending: true }).order("name", { ascending: true });
       if (error) throw error;
       return data as StudyMaterial[];
     },
+    enabled: !!user?.id, // Only run query if user ID is available
   });
 
   // Mutation for adding a study material
   const addMaterialMutation = useMutation<StudyMaterial, Error, { material: StudyMaterial; file?: File }>({
     mutationFn: async ({ material, file }) => {
-      const user = await supabase.auth.getUser();
-      if (!user.data.user) throw new Error("Usuario no autenticado.");
+      if (!user?.id) throw new Error("Usuario no autenticado.");
 
       let fileUrl: string | undefined = undefined;
       let filePath: string | undefined = undefined;
 
       if (file) {
         const fileExtension = file.name.split(".").pop();
-        const path = `${user.data.user.id}/${material.category}/${crypto.randomUUID()}.${fileExtension}`;
+        const path = `${user.id}/${material.category}/${crypto.randomUUID()}.${fileExtension}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("study-materials")
           .upload(path, file, {
@@ -74,7 +77,7 @@ const StudyMaterialsPage: React.FC = () => {
       }
 
       const payload = {
-        user_id: user.data.user.id,
+        user_id: user.id,
         name: material.name,
         description: material.description,
         category: material.category,
@@ -101,8 +104,7 @@ const StudyMaterialsPage: React.FC = () => {
   // Mutation for updating a study material
   const updateMaterialMutation = useMutation<StudyMaterial, Error, { material: StudyMaterial; file?: File }>({
     mutationFn: async ({ material, file }) => {
-      const user = await supabase.auth.getUser();
-      if (!user.data.user) throw new Error("Usuario no autenticado.");
+      if (!user?.id) throw new Error("Usuario no autenticado.");
 
       let fileUrl: string | undefined = material.file_url;
       let filePath: string | undefined = material.file_path;
@@ -115,7 +117,7 @@ const StudyMaterialsPage: React.FC = () => {
         }
 
         const fileExtension = file.name.split(".").pop();
-        const path = `${user.data.user.id}/${material.category}/${crypto.randomUUID()}.${fileExtension}`;
+        const path = `${user.id}/${material.category}/${crypto.randomUUID()}.${fileExtension}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("study-materials")
           .upload(path, file, {
@@ -133,7 +135,7 @@ const StudyMaterialsPage: React.FC = () => {
           fileUrl = publicUrlData.publicUrl;
           filePath = path;
         }
-      } else if (material.external_url && material.file_path) {
+      } else if (material.external_url && material.file_path && !material.file_url) {
         // If switching from file to external URL, delete the file
         await supabase.storage.from("study-materials").remove([material.file_path]);
         fileUrl = undefined;
@@ -155,7 +157,7 @@ const StudyMaterialsPage: React.FC = () => {
         file_path: filePath,
       };
 
-      const { data, error } = await db.from("study_materials").update(payload).match({ id: material.id }).select().single();
+      const { data, error } = await db.from("study_materials").update(payload).match({ id: material.id, user_id: user.id }).select().single();
       if (error) throw error;
       return data as StudyMaterial;
     },
@@ -173,10 +175,11 @@ const StudyMaterialsPage: React.FC = () => {
   // Mutation for deleting a study material
   const deleteMaterialMutation = useMutation<void, Error, StudyMaterial>({
     mutationFn: async (materialToDelete) => {
+      if (!user?.id) throw new Error("Usuario no autenticado.");
       if (materialToDelete.file_path) {
         await supabase.storage.from("study-materials").remove([materialToDelete.file_path]);
       }
-      const { error } = await db.from("study_materials").delete().match({ id: materialToDelete.id });
+      const { error } = await db.from("study_materials").delete().match({ id: materialToDelete.id, user_id: user.id });
       if (error) throw error;
     },
     onSuccess: () => {
