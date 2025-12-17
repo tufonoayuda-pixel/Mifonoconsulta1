@@ -16,6 +16,7 @@ import {
   CalendarCheck, // Icon for Weekly Planner
   LibraryBig, // Icon for Study Materials
   LogOut, // Icon for Logout
+  Home, // Icon for Home Tasks
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -57,6 +58,11 @@ const navItems = [
     path: "/weekly-planner",
   },
   {
+    name: "Tareas para Casa", // New item
+    icon: Home,
+    path: "/home-tasks",
+  },
+  {
     name: "Notas",
     icon: NotebookPen,
     path: "/notes",
@@ -67,7 +73,7 @@ const navItems = [
     path: "/todos",
   },
   {
-    name: "Material de Estudio", // New item
+    name: "Material de Estudio",
     icon: LibraryBig,
     path: "/study-materials",
   },

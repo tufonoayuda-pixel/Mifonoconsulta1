@@ -15,6 +15,7 @@ import WeeklyPlanner from "./pages/WeeklyPlanner";
 import NotesPage from "./pages/NotesPage";
 import TodoPage from "./pages/TodoPage";
 import StudyMaterialsPage from "./pages/StudyMaterialsPage";
+import HomeTasksPage from "./pages/HomeTasksPage"; // Import the new page
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login"; // Import the new Login page
 import { useSession } from "./components/SessionContextProvider"; // Import useSession
@@ -60,6 +61,7 @@ const App = () => (
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="weekly-planner" element={<WeeklyPlanner />} />
+            <Route path="home-tasks" element={<HomeTasksPage />} /> {/* New Route */}
             <Route path="notes" element={<NotesPage />} />
             <Route path="todos" element={<TodoPage />} />
             <Route path="study-materials" element={<StudyMaterialsPage />} />
