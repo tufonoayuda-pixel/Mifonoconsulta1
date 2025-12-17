@@ -5,13 +5,13 @@ import { Ear, Mic, Speech, Brain, BookOpenText, MessageSquare, HeartPulse } from
 import { cn } from '@/lib/utils';
 
 const icons = [
-  { icon: Ear, color: 'text-blue-500' },
-  { icon: Mic, color: 'text-green-500' },
-  { icon: Speech, color: 'text-red-500' },
-  { icon: Brain, color: 'text-purple-500' },
-  { icon: BookOpenText, color: 'text-yellow-500' },
-  { icon: MessageSquare, color: 'text-teal-500' },
-  { icon: HeartPulse, color: 'text-pink-500' },
+  { icon: Ear, color: 'text-white' },
+  { icon: Mic, color: 'text-white' },
+  { icon: Speech, color: 'text-white' },
+  { icon: Brain, color: 'text-white' },
+  { icon: BookOpenText, color: 'text-white' },
+  { icon: MessageSquare, color: 'text-white' },
+  { icon: HeartPulse, color: 'text-white' },
 ];
 
 const FallingIconsBackground: React.FC = () => {

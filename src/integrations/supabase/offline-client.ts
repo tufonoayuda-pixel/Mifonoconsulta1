@@ -73,10 +73,10 @@ class SupabaseOfflineClient {
       let result;
       switch (operation.type) {
         case 'INSERT':
-          result = await onlineSupabase.from(operation.tableName).insert(operation.payload);
+          result = await onlineSupabase.from(operation.tableName).insert(operation.payload).select().single();
           break;
         case 'UPDATE':
-          result = await onlineSupabase.from(operation.tableName).update(operation.payload).match(operation.conditions);
+          result = await onlineSupabase.from(operation.tableName).update(operation.payload).match(operation.conditions).select().single();
           break;
         case 'DELETE':
           result = await onlineSupabase.from(operation.tableName).delete().match(operation.conditions);
@@ -137,7 +137,9 @@ class SupabaseOfflineClient {
           // Simulate Supabase response for immediate UI update
           return { data: { ...payload, id: uuidv4() }, error: null };
         } else {
-          return onlineSupabase.from(tableName).insert(payload);
+          // When online, also select the inserted data to match offline behavior
+          const { data, error } = await onlineSupabase.from(tableName).insert(payload).select().single();
+          return { data, error };
         }
       },
       update: (payload: any) => ({
@@ -158,7 +160,9 @@ class SupabaseOfflineClient {
             // Simulate Supabase response
             return { data: { ...payload, ...conditions }, error: null };
           } else {
-            return onlineSupabase.from(tableName).update(payload).match(conditions);
+            // When online, also select the updated data to match offline behavior
+            const { data, error } = await onlineSupabase.from(tableName).update(payload).match(conditions).select().single();
+            return { data, error };
           }
         },
       }),
@@ -179,7 +183,9 @@ class SupabaseOfflineClient {
             // Simulate Supabase response
             return { data: null, error: null };
           } else {
-            return onlineSupabase.from(tableName).delete().match(conditions);
+            // For delete, we don't need to select anything, just perform the delete
+            const { error } = await onlineSupabase.from(tableName).delete().match(conditions);
+            return { data: null, error }; // Return data: null for consistency
           }
         },
       }),
