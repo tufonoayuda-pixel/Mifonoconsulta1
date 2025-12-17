@@ -107,9 +107,14 @@ const protocolsData: ProtocolCategory[] = [
         url: "https://audiometro-casero2.vercel.app/",
       },
       {
-        name: "Inventario de Incapacidad de Tinnitus", // Corrected name
+        name: "Inventario de Incapacidad de Tinnitus",
         description: "Escala para evaluar la severidad y el impacto del tinnitus.",
         url: "https://escaudio-tinnitus.space.z.ai/",
+      },
+      {
+        name: "Evaluación Informal del Tinnitus",
+        description: "Herramienta para una evaluación rápida y cualitativa del tinnitus.",
+        url: "https://evtinnitus1.vercel.app/",
       },
     ],
   },
