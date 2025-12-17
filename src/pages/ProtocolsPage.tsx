@@ -107,7 +107,7 @@ const protocolsData: ProtocolCategory[] = [
         url: "https://audiometro-casero2.vercel.app/",
       },
       {
-        name: "Escala de Tinnitus",
+        name: "Evaluación Informal del Tinnitus",
         description: "Escala para evaluar la severidad y el impacto del tinnitus.",
         url: "https://evtinnitus1.vercel.app", // URL actualizada
       },
