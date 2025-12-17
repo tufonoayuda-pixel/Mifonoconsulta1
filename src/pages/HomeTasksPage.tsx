@@ -380,9 +380,9 @@ const HomeTasksPage: React.FC = () => {
 
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width; // Corrected: use pdfHeight here
 
-        let heightLeft = imgHeight;
+        let heightLeft = pdfHeight; // Corrected: use pdfHeight here
         let position = 0;
 
         pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
