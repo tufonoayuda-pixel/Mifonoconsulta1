@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import SyncStatusIndicator from "./SyncStatusIndicator"; // Import the new component
 import { syncService } from "@/services/sync-service"; // Import syncService
 import { useSession } from "./SessionContextProvider"; // Import useSession
+import ThemeToggle from "./ThemeToggle"; // Import the new ThemeToggle component
 
 const Layout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -130,6 +131,7 @@ const Layout: React.FC = () => {
                 Hola, {user.email}
               </span>
             )}
+            <ThemeToggle /> {/* Theme toggle button */}
             <Link to="/notifications" className="relative">
               <Button variant="ghost" size="icon" className="h-8 w-8">
                 <Bell className="h-5 w-5" />

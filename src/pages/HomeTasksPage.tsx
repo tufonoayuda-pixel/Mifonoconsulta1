@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react"; // Import useEffect
 import { PlusCircle, Search, Printer, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/patients/data-table"; // Reusing patient data-table for now
@@ -30,6 +30,8 @@ const HomeTasksPage: React.FC = () => {
   const componentRef = useRef<HTMLDivElement>(null); // Ref for the printable component (all tasks)
   const singleTaskPrintRef = useRef<HTMLDivElement>(null); // New ref for single task printing
   const [taskToPrint, setTaskToPrint] = useState<HomeTask | null>(null); // State to hold the single task to print
+  const [triggerSinglePrint, setTriggerSinglePrint] = useState(false); // New state to trigger print
+  const [triggerSinglePdf, setTriggerSinglePdf] = useState(false); // New state to trigger PDF
 
   // Fetch patients for the dropdown
   const { data: availablePatients, isLoading: isLoadingPatients, isError: isErrorPatients, error: errorPatients } = useQuery<Patient[], Error>({
@@ -305,7 +307,7 @@ const HomeTasksPage: React.FC = () => {
   };
 
   // --- Single Task Print/PDF Functions ---
-  const handlePrintSingleTask = useReactToPrint({
+  const triggerPrint = useReactToPrint({
     content: () => {
       if (!taskToPrint) {
         showError("No hay tarea seleccionada para imprimir.");
@@ -344,28 +346,43 @@ const HomeTasksPage: React.FC = () => {
       }
     `,
     onBeforeGetContent: async () => {
-      // This is called before rendering, ensure taskToPrint is set
       if (!taskToPrint) {
         showError("No hay tarea seleccionada para imprimir.");
         return Promise.reject("No task selected");
       }
       return Promise.resolve();
     },
+    onAfterPrint: () => {
+      setTaskToPrint(null); // Clear the task after printing
+      setTriggerSinglePrint(false); // Reset trigger
+    }
   });
+
+  const handlePrintSingleTask = (task: HomeTask) => {
+    setTaskToPrint(task);
+    setTriggerSinglePrint(true); // Set trigger to true
+  };
+
+  useEffect(() => {
+    if (triggerSinglePrint && taskToPrint) {
+      triggerPrint();
+    }
+  }, [triggerSinglePrint, taskToPrint, triggerPrint]);
+
 
   const handleSavePdfSingleTask = async (task: HomeTask) => {
     setTaskToPrint(task); // Set the task to be rendered in the hidden div
-    
-    // Use setTimeout to wait for the state update and re-render to complete
-    setTimeout(async () => {
-      if (singleTaskPrintRef.current) {
+    setTriggerSinglePdf(true); // Set trigger to true
+  };
+
+  useEffect(() => {
+    const generatePdf = async () => {
+      if (triggerSinglePdf && singleTaskPrintRef.current && taskToPrint) {
         const printableElement = singleTaskPrintRef.current;
         const originalDisplay = printableElement.style.display;
         const originalColor = printableElement.style.color;
-        
-        // Temporarily make it visible and force black text for capture
-        printableElement.style.display = 'block';
-        printableElement.style.color = 'black';
+        printableElement.style.display = 'block'; // Temporarily make it visible
+        printableElement.style.color = 'black'; // Temporarily force black text
 
         try {
           const canvas = await html2canvas(printableElement, {
@@ -385,13 +402,13 @@ const HomeTasksPage: React.FC = () => {
 
           const pdf = new jsPDF('p', 'mm', 'a4');
           const pdfWidth = pdf.internal.pageSize.getWidth();
-          const imgHeight = (canvas.height * pdfWidth) / canvas.width; // Corrected: calculate imgHeight from canvas
+          const imgHeight = (canvas.height * pdfWidth) / canvas.width;
 
           let heightLeft = imgHeight;
           let position = 0;
 
           pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
-          heightLeft -= pdf.internal.pageSize.getHeight(); // Use PDF page height for remaining calculation
+          heightLeft -= pdf.internal.pageSize.getHeight();
 
           while (heightLeft >= 0) {
             position = heightLeft - imgHeight;
@@ -400,7 +417,7 @@ const HomeTasksPage: React.FC = () => {
             heightLeft -= pdf.internal.pageSize.getHeight();
           }
 
-          pdf.save(`Tarea_${task.title.replace(/\s/g, '_')}_${format(new Date(), "yyyyMMdd_HHmmss")}.pdf`);
+          pdf.save(`Tarea_${taskToPrint.title.replace(/\s/g, '_')}_${format(new Date(), "yyyyMMdd_HHmmss")}.pdf`);
           showSuccess("Tarea exportada a PDF exitosamente.");
         } catch (error: any) {
           showError("Error al exportar a PDF: " + error.message);
@@ -409,24 +426,28 @@ const HomeTasksPage: React.FC = () => {
           printableElement.style.display = originalDisplay; // Restore original display
           printableElement.style.color = originalColor; // Restore original color
           setTaskToPrint(null); // Clear the task after processing
+          setTriggerSinglePdf(false); // Reset trigger
         }
-      } else {
+      } else if (triggerSinglePdf && !singleTaskPrintRef.current) {
         showError("No hay contenido para exportar a PDF.");
-        setTaskToPrint(null); // Clear the task even if ref is not ready
+        setTaskToPrint(null);
+        setTriggerSinglePdf(false);
       }
-    }, 50); // Small delay to allow DOM update
-  };
+    };
+
+    if (triggerSinglePdf) {
+      // Small delay to ensure DOM update after setTaskToPrint
+      const timer = setTimeout(generatePdf, 50); 
+      return () => clearTimeout(timer);
+    }
+  }, [triggerSinglePdf, taskToPrint, singleTaskPrintRef]);
+
 
   const columns = createHomeTaskColumns({
     onEdit: openEditForm,
     onDelete: handleDeleteTask,
     onToggleStatus: handleToggleStatus,
-    onPrintSingleTask: (task) => {
-      setTaskToPrint(task); // Set the task to be printed
-      setTimeout(() => { // Give React a moment to render the task into singleTaskPrintRef
-        handlePrintSingleTask();
-      }, 100);
-    },
+    onPrintSingleTask: handlePrintSingleTask,
     onSavePdfSingleTask: handleSavePdfSingleTask,
   });
 
