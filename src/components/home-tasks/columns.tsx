@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, CheckCircle2, Circle, Trash2, Edit, Image as ImageIcon } from "lucide-react"; // Import ImageIcon
+import { MoreHorizontal, CheckCircle2, Circle, Trash2, Edit, Image as ImageIcon, Printer, FileDown } from "lucide-react"; // Import Printer and FileDown
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -24,6 +24,8 @@ interface HomeTaskColumnsProps {
   onEdit: (task: HomeTask) => void;
   onDelete: (id: string) => void;
   onToggleStatus: (task: HomeTask) => void;
+  onPrintSingleTask: (task: HomeTask) => void; // New prop for printing a single task
+  onSavePdfSingleTask: (task: HomeTask) => void; // New prop for saving a single task as PDF
 }
 
 const getStatusBadgeVariant = (status: HomeTask["status"]) => {
@@ -41,6 +43,8 @@ export const createHomeTaskColumns = ({
   onEdit,
   onDelete,
   onToggleStatus,
+  onPrintSingleTask, // Destructure new prop
+  onSavePdfSingleTask, // Destructure new prop
 }: HomeTaskColumnsProps): ColumnDef<HomeTask>[] => {
   const [isImageDialogOpen, setIsImageDialogOpen] = React.useState(false);
   const [currentImageUrl, setCurrentImageUrl] = React.useState<string | null>(null);
@@ -127,6 +131,13 @@ export const createHomeTaskColumns = ({
                       <Circle className="mr-2 h-4 w-4" /> Marcar como Asignada
                     </>
                   )}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => onPrintSingleTask(task)}>
+                  <Printer className="mr-2 h-4 w-4" /> Imprimir Tarea
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onSavePdfSingleTask(task)}>
+                  <FileDown className="mr-2 h-4 w-4" /> Guardar Tarea PDF
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <AlertDialog>

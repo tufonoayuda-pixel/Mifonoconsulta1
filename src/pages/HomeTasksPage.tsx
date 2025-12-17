@@ -27,7 +27,9 @@ const HomeTasksPage: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<string>("all");
   const [globalFilter, setGlobalFilter] = useState<string>("");
   const { user } = useSession();
-  const componentRef = useRef<HTMLDivElement>(null); // Ref for the printable component
+  const componentRef = useRef<HTMLDivElement>(null); // Ref for the printable component (all tasks)
+  const singleTaskPrintRef = useRef<HTMLDivElement>(null); // New ref for single task printing
+  const [taskToPrint, setTaskToPrint] = useState<HomeTask | null>(null); // State to hold the single task to print
 
   // Fetch patients for the dropdown
   const { data: availablePatients, isLoading: isLoadingPatients, isError: isErrorPatients, error: errorPatients } = useQuery<Patient[], Error>({
@@ -186,13 +188,7 @@ const HomeTasksPage: React.FC = () => {
     return filtered;
   }, [homeTasks, currentTab, globalFilter]);
 
-  const columns = createHomeTaskColumns({
-    onEdit: openEditForm,
-    onDelete: handleDeleteTask,
-    onToggleStatus: handleToggleStatus,
-  });
-
-  const handlePrint = useReactToPrint({
+  const handlePrintAll = useReactToPrint({
     content: () => {
       if (filteredTasks.length === 0) {
         showError("No hay tareas para imprimir en la vista actual.");
@@ -214,9 +210,13 @@ const HomeTasksPage: React.FC = () => {
       .no-print {
         display: none !important;
       }
-      /* Show the printable content */
+      /* Show the printable content and force black text */
       #printable-content {
         display: block !important;
+        color: black !important; /* Force black text for printing */
+      }
+      #printable-content * {
+        color: black !important; /* Force black text for all children */
       }
       .printable-table {
         width: 100%;
@@ -239,7 +239,7 @@ const HomeTasksPage: React.FC = () => {
     `,
   });
 
-  const handleSavePdf = async () => {
+  const handleSaveAllPdf = async () => {
     if (filteredTasks.length === 0) {
       showError("No hay tareas para exportar a PDF en la vista actual.");
       return;
@@ -248,7 +248,9 @@ const HomeTasksPage: React.FC = () => {
     if (componentRef.current) {
       const printableElement = componentRef.current;
       const originalDisplay = printableElement.style.display;
+      const originalColor = printableElement.style.color;
       printableElement.style.display = 'block'; // Temporarily make it visible
+      printableElement.style.color = 'black'; // Temporarily force black text
 
       try {
         const canvas = await html2canvas(printableElement, {
@@ -295,11 +297,131 @@ const HomeTasksPage: React.FC = () => {
         console.error("Error generating PDF:", error);
       } finally {
         printableElement.style.display = originalDisplay; // Restore original display
+        printableElement.style.color = originalColor; // Restore original color
       }
     } else {
       showError("No hay contenido para exportar a PDF.");
     }
   };
+
+  // --- Single Task Print/PDF Functions ---
+  const handlePrintSingleTask = useReactToPrint({
+    content: () => {
+      if (!taskToPrint) {
+        showError("No hay tarea seleccionada para imprimir.");
+        return null;
+      }
+      return singleTaskPrintRef.current;
+    },
+    documentTitle: `Tarea_${taskToPrint?.title.replace(/\s/g, '_')}_${format(new Date(), "yyyyMMdd_HHmmss")}`,
+    pageStyle: `
+      @page {
+        size: A4;
+        margin: 20mm;
+      }
+      body {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      #single-task-printable-content {
+        display: block !important;
+        color: black !important; /* Force black text for printing */
+      }
+      #single-task-printable-content * {
+        color: black !important; /* Force black text for all children */
+      }
+      .printable-task-card {
+        border: 1px solid #ccc;
+        padding: 16px;
+        margin-bottom: 16px;
+        border-radius: 8px;
+      }
+      .task-image {
+        max-width: 200px;
+        max-height: 200px;
+        object-fit: contain;
+        margin-top: 10px;
+      }
+    `,
+    onBeforeGetContent: async () => {
+      // This is called before rendering, ensure taskToPrint is set
+      if (!taskToPrint) {
+        showError("No hay tarea seleccionada para imprimir.");
+        return Promise.reject("No task selected");
+      }
+      return Promise.resolve();
+    },
+  });
+
+  const handleSavePdfSingleTask = async (task: HomeTask) => {
+    setTaskToPrint(task); // Set the task to be rendered in the hidden div
+    if (singleTaskPrintRef.current) {
+      const printableElement = singleTaskPrintRef.current;
+      const originalDisplay = printableElement.style.display;
+      const originalColor = printableElement.style.color;
+      printableElement.style.display = 'block'; // Temporarily make it visible
+      printableElement.style.color = 'black'; // Temporarily force black text
+
+      try {
+        const canvas = await html2canvas(printableElement, {
+          scale: 2,
+          useCORS: true,
+        });
+
+        if (!canvas) {
+          throw new Error("Failed to generate canvas from printable content.");
+        }
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.9);
+
+        if (!imgData || imgData.length < 100) {
+          throw new Error("Generated image data is empty or invalid.");
+        }
+
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
+        heightLeft -= pdfHeight;
+
+        while (heightLeft >= 0) {
+          position = heightLeft - pdfHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
+          heightLeft -= pdfHeight;
+        }
+
+        pdf.save(`Tarea_${task.title.replace(/\s/g, '_')}_${format(new Date(), "yyyyMMdd_HHmmss")}.pdf`);
+        showSuccess("Tarea exportada a PDF exitosamente.");
+      } catch (error: any) {
+        showError("Error al exportar a PDF: " + error.message);
+        console.error("Error generating PDF:", error);
+      } finally {
+        printableElement.style.display = originalDisplay; // Restore original display
+        printableElement.style.color = originalColor; // Restore original color
+        setTaskToPrint(null); // Clear the task after processing
+      }
+    } else {
+      showError("No hay contenido para exportar a PDF.");
+    }
+  };
+
+  const columns = createHomeTaskColumns({
+    onEdit: openEditForm,
+    onDelete: handleDeleteTask,
+    onToggleStatus: handleToggleStatus,
+    onPrintSingleTask: (task) => {
+      setTaskToPrint(task); // Set the task to be printed
+      setTimeout(() => { // Give React a moment to render the task into singleTaskPrintRef
+        handlePrintSingleTask();
+      }, 100);
+    },
+    onSavePdfSingleTask: handleSavePdfSingleTask,
+  });
 
   if (isLoadingPatients || isLoadingTasks) return <div className="p-4 text-center">Cargando tareas para casa...</div>;
   if (isErrorPatients) return <div className="p-4 text-center text-red-500">Error al cargar pacientes: {errorPatients?.message}</div>;
@@ -313,11 +435,11 @@ const HomeTasksPage: React.FC = () => {
           <Button onClick={openAddForm}>
             <PlusCircle className="mr-2 h-4 w-4" /> Asignar Tarea
           </Button>
-          <Button onClick={handlePrint} variant="outline">
-            <Printer className="mr-2 h-4 w-4" /> Imprimir
+          <Button onClick={handlePrintAll} variant="outline">
+            <Printer className="mr-2 h-4 w-4" /> Imprimir Todas
           </Button>
-          <Button onClick={handleSavePdf} variant="outline">
-            <FileDown className="mr-2 h-4 w-4" /> Guardar PDF
+          <Button onClick={handleSaveAllPdf} variant="outline">
+            <FileDown className="mr-2 h-4 w-4" /> Guardar Todas PDF
           </Button>
         </div>
       </div>
@@ -353,7 +475,7 @@ const HomeTasksPage: React.FC = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Printable content */}
+      {/* Printable content for ALL tasks (hidden by default) */}
       <div ref={componentRef} id="printable-content" className="p-4 hidden">
         <h1 className="text-2xl font-bold mb-2">Tareas para Casa</h1>
         <p className="text-lg mb-1">Flgo. Cristobal San Martin</p>
@@ -387,6 +509,30 @@ const HomeTasksPage: React.FC = () => {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Printable content for a SINGLE task (hidden by default) */}
+      <div ref={singleTaskPrintRef} id="single-task-printable-content" className="p-4 hidden">
+        {taskToPrint && (
+          <div className="printable-task-card">
+            <h1 className="text-2xl font-bold mb-2">Tarea para Casa</h1>
+            <p className="text-lg mb-1">Flgo. Cristobal San Martin</p>
+            <p className="text-md mb-4">CESFAM el Barrero</p>
+            <p className="text-md mb-4">Fecha de Impresión: {format(new Date(), "PPP", { locale: es })}</p>
+            <h2 className="text-xl font-semibold mt-4 mb-2">Título: {taskToPrint.title}</h2>
+            <p className="text-lg mb-2">Paciente: {taskToPrint.patientName}</p>
+            <p className="text-md mb-2">Fecha Límite: {taskToPrint.due_date ? format(new Date(taskToPrint.due_date), "PPP", { locale: es }) : "N/A"}</p>
+            <p className="text-md mb-2">Estado: {taskToPrint.status === "assigned" ? "Asignada" : "Completada"}</p>
+            <p className="text-md mt-4">Descripción:</p>
+            <p className="text-base">{taskToPrint.description || "Sin descripción."}</p>
+            {taskToPrint.image_url && (
+              <>
+                <p className="text-md mt-4">Imagen de Referencia:</p>
+                <img src={taskToPrint.image_url} alt="Referencia de Tarea" className="task-image" />
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <HomeTaskForm
