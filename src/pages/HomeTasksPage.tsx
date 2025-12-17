@@ -307,7 +307,10 @@ const HomeTasksPage: React.FC = () => {
 
       {/* Printable content */}
       <div ref={componentRef} className="p-4 print:block hidden">
-        <h1 className="text-2xl font-bold mb-4">Tareas para Casa - {format(new Date(), "PPP", { locale: es })}</h1>
+        <h1 className="text-2xl font-bold mb-2">Tareas para Casa</h1>
+        <p className="text-lg mb-1">Flgo. Cristobal San Martin</p>
+        <p className="text-md mb-4">CESFAM el Barrero</p>
+        <p className="text-md mb-4">Fecha de Impresión: {format(new Date(), "PPP", { locale: es })}</p>
         <table className="printable-table">
           <thead>
             <tr>
