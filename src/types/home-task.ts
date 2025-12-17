@@ -7,6 +7,8 @@ export interface HomeTask {
   description?: string;
   due_date?: string; // YYYY-MM-DD format
   status: "assigned" | "completed";
+  image_url?: string; // New: URL of the reference image
+  image_path?: string; // New: Path in Supabase Storage for the image
   created_at?: string;
   updated_at?: string;
 }

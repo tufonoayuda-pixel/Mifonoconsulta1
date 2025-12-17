@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -42,6 +42,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { HomeTask } from "@/types/home-task";
 import { Patient } from "@/types/patient";
+import { showSuccess, showError } from "@/utils/toast";
+import { supabase, db } from "@/integrations/supabase/client";
+import { useSession } from "@/components/SessionContextProvider";
+import ImageUpload from "./ImageUpload"; // Import the new ImageUpload component
 
 const homeTaskFormSchema = z.object({
   id: z.string().optional(),
@@ -50,6 +54,8 @@ const homeTaskFormSchema = z.object({
   description: z.string().optional(),
   due_date: z.string().optional(), // YYYY-MM-DD
   status: z.enum(["assigned", "completed"]).default("assigned"),
+  image_url: z.string().optional().nullable(), // New: Optional image URL
+  image_path: z.string().optional().nullable(), // New: Optional image path
 });
 
 type HomeTaskFormValues = z.infer<typeof homeTaskFormSchema>;
@@ -60,6 +66,7 @@ interface HomeTaskFormProps {
   onSubmit: (task: HomeTask) => void;
   initialData?: HomeTask | null;
   availablePatients: Patient[];
+  isSubmitting: boolean; // Added for loading state
 }
 
 const HomeTaskForm: React.FC<HomeTaskFormProps> = ({
@@ -68,6 +75,7 @@ const HomeTaskForm: React.FC<HomeTaskFormProps> = ({
   onSubmit,
   initialData,
   availablePatients,
+  isSubmitting,
 }) => {
   const form = useForm<HomeTaskFormValues>({
     resolver: zodResolver(homeTaskFormSchema),
@@ -77,8 +85,13 @@ const HomeTaskForm: React.FC<HomeTaskFormProps> = ({
       description: "",
       due_date: format(new Date(), "yyyy-MM-dd"),
       status: "assigned",
+      image_url: null,
+      image_path: null,
     },
   });
+
+  const { user } = useSession();
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (initialData) {
@@ -89,7 +102,10 @@ const HomeTaskForm: React.FC<HomeTaskFormProps> = ({
         description: initialData.description || "",
         due_date: initialData.due_date || format(new Date(), "yyyy-MM-dd"),
         status: initialData.status,
+        image_url: initialData.image_url || null,
+        image_path: initialData.image_path || null,
       });
+      setSelectedImageFile(null); // Clear selected file on reset
     } else {
       form.reset({
         patient_id: "",
@@ -97,14 +113,69 @@ const HomeTaskForm: React.FC<HomeTaskFormProps> = ({
         description: "",
         due_date: format(new Date(), "yyyy-MM-dd"),
         status: "assigned",
+        image_url: null,
+        image_path: null,
       });
+      setSelectedImageFile(null); // Clear selected file on reset
     }
   }, [initialData, form]);
 
-  const handleSubmit = (values: HomeTaskFormValues) => {
-    onSubmit(values as HomeTask);
-    form.reset();
-    onClose();
+  const handleSubmit = async (values: HomeTaskFormValues) => {
+    if (!user?.id) {
+      showError("Usuario no autenticado.");
+      return;
+    }
+
+    let imageUrl: string | null = values.image_url || null;
+    let imagePath: string | null = values.image_path || null;
+
+    try {
+      // Handle image upload if a new file is selected
+      if (selectedImageFile) {
+        // Delete old image from storage if it exists
+        if (initialData?.image_path) {
+          await supabase.onlineClient.storage.from("home-task-images").remove([initialData.image_path]);
+        }
+
+        const fileExtension = selectedImageFile.name.split(".").pop();
+        const filePath = `${user.id}/${values.patient_id}/${crypto.randomUUID()}.${fileExtension}`;
+        const { data: uploadData, error: uploadError } = await supabase.onlineClient.storage
+          .from("home-task-images")
+          .upload(filePath, selectedImageFile, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.onlineClient.storage
+          .from("home-task-images")
+          .getPublicUrl(filePath);
+
+        if (publicUrlData?.publicUrl) {
+          imageUrl = publicUrlData.publicUrl;
+          imagePath = filePath;
+        }
+      } else if (initialData?.image_path && !values.image_url) {
+        // If there was an initial image but it's now removed from the form
+        await supabase.onlineClient.storage.from("home-task-images").remove([initialData.image_path]);
+        imageUrl = null;
+        imagePath = null;
+      }
+
+      const taskToSubmit: HomeTask = {
+        ...values,
+        user_id: user.id,
+        image_url: imageUrl,
+        image_path: imagePath,
+      };
+
+      onSubmit(taskToSubmit);
+      setSelectedImageFile(null); // Clear selected file after submission
+    } catch (error: any) {
+      showError("Error al guardar la tarea: " + error.message);
+      console.error("Error saving home task:", error);
+    }
   };
 
   const selectedPatient = availablePatients.find(p => p.id === form.watch("patient_id"));
@@ -241,8 +312,18 @@ const HomeTaskForm: React.FC<HomeTaskFormProps> = ({
                 )}
               />
             </div>
+
+            <h3 className="text-lg font-semibold mt-4">Imagen de Referencia (Opcional)</h3>
+            <ImageUpload
+              onImageChange={setSelectedImageFile}
+              initialImageUrl={initialData?.image_url}
+              disabled={isSubmitting}
+            />
+
             <DialogFooter>
-              <Button type="submit">{initialData ? "Guardar Cambios" : "Asignar Tarea"}</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Guardando..." : (initialData ? "Guardar Cambios" : "Asignar Tarea")}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

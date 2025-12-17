@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { PlusCircle, Search } from "lucide-react";
+import React, { useState, useMemo, useRef } from "react";
+import { PlusCircle, Search, Printer, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/patients/data-table"; // Reusing patient data-table for now
 import { createHomeTaskColumns } from "@/components/home-tasks/columns";
@@ -14,6 +14,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSession } from "@/components/SessionContextProvider";
+import { useReactToPrint } from "react-to-print"; // Import react-to-print
+import jsPDF from "jspdf"; // Import jspdf
+import html2canvas from "html2canvas"; // Import html2canvas
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 const HomeTasksPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -22,6 +27,7 @@ const HomeTasksPage: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<string>("all");
   const [globalFilter, setGlobalFilter] = useState<string>("");
   const { user } = useSession();
+  const componentRef = useRef<HTMLDivElement>(null); // Ref for the printable component
 
   // Fetch patients for the dropdown
   const { data: availablePatients, isLoading: isLoadingPatients, isError: isErrorPatients, error: errorPatients } = useQuery<Patient[], Error>({
@@ -60,6 +66,8 @@ const HomeTasksPage: React.FC = () => {
         description: newTask.description,
         due_date: newTask.due_date,
         status: newTask.status,
+        image_url: newTask.image_url, // Include new fields
+        image_path: newTask.image_path, // Include new fields
       };
       const { data, error } = await db.from("home_tasks").insert(payload);
       if (error) throw error;
@@ -84,6 +92,8 @@ const HomeTasksPage: React.FC = () => {
         description: updatedTask.description,
         due_date: updatedTask.due_date,
         status: updatedTask.status,
+        image_url: updatedTask.image_url, // Include new fields
+        image_path: updatedTask.image_path, // Include new fields
       };
       const { data, error } = await db.from("home_tasks").update(payload).match({ id: updatedTask.id, user_id: user.id });
       if (error) throw error;
@@ -102,6 +112,17 @@ const HomeTasksPage: React.FC = () => {
   const deleteTaskMutation = useMutation<void, Error, string>({
     mutationFn: async (id) => {
       if (!user?.id) throw new Error("Usuario no autenticado.");
+
+      // Fetch the task to get image_path if it exists
+      const { data: taskToDelete, error: fetchError } = await supabase.from("home_tasks").select("image_path").eq("id", id).single();
+      if (fetchError) throw fetchError;
+
+      // Delete image from storage if it exists
+      if (taskToDelete?.image_path) {
+        const { error: storageError } = await supabase.onlineClient.storage.from("home-task-images").remove([taskToDelete.image_path]);
+        if (storageError) console.error("Error deleting image from storage:", storageError);
+      }
+
       const { error } = await db.from("home_tasks").delete().match({ id: id, user_id: user.id });
       if (error) throw error;
     },
@@ -171,23 +192,92 @@ const HomeTasksPage: React.FC = () => {
     onToggleStatus: handleToggleStatus,
   });
 
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+    documentTitle: `Tareas_para_Casa_${format(new Date(), "yyyyMMdd_HHmmss")}`,
+    pageStyle: `
+      @page {
+        size: A4;
+        margin: 20mm;
+      }
+      body {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .printable-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      .printable-table th, .printable-table td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+      }
+      .printable-table th {
+        background-color: #f2f2f2;
+      }
+      .task-image {
+        max-width: 100px;
+        max-height: 100px;
+        object-fit: cover;
+      }
+    `,
+  });
+
+  const handleSavePdf = async () => {
+    if (componentRef.current) {
+      try {
+        const canvas = await html2canvas(componentRef.current, {
+          scale: 2, // Increase scale for better resolution
+          useCORS: true, // Important for images from external URLs
+        });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgProps= pdf.getImageProperties(imgData);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save(`Tareas_para_Casa_${format(new Date(), "yyyyMMdd_HHmmss")}.pdf`);
+        showSuccess("Tareas exportadas a PDF exitosamente.");
+      } catch (error: any) {
+        showError("Error al exportar a PDF: " + error.message);
+        console.error("Error generating PDF:", error);
+      }
+    } else {
+      showError("No hay contenido para exportar a PDF.");
+    }
+  };
+
   if (isLoadingPatients || isLoadingTasks) return <div className="p-4 text-center">Cargando tareas para casa...</div>;
   if (isErrorPatients) return <div className="p-4 text-center text-red-500">Error al cargar pacientes: {errorPatients?.message}</div>;
   if (isErrorTasks) return <div className="p-4 text-center text-red-500">Error al cargar tareas: {errorTasks?.message}</div>;
 
   return (
     <div className="flex flex-col gap-6 p-4 lg:p-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between no-print">
         <h1 className="text-3xl font-bold">Tareas para Casa</h1>
-        <Button onClick={openAddForm}>
-          <PlusCircle className="mr-2 h-4 w-4" /> Asignar Tarea
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={openAddForm}>
+            <PlusCircle className="mr-2 h-4 w-4" /> Asignar Tarea
+          </Button>
+          <Button onClick={handlePrint} variant="outline">
+            <Printer className="mr-2 h-4 w-4" /> Imprimir
+          </Button>
+          <Button onClick={handleSavePdf} variant="outline">
+            <FileDown className="mr-2 h-4 w-4" /> Guardar PDF
+          </Button>
+        </div>
       </div>
-      <p className="text-lg text-gray-600 dark:text-gray-400">
+      <p className="text-lg text-gray-600 dark:text-gray-400 no-print">
         Asigna y gestiona las tareas que tus pacientes deben realizar en casa.
       </p>
 
-      <div className="flex items-center py-4">
+      <div className="flex items-center py-4 no-print">
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -199,7 +289,7 @@ const HomeTasksPage: React.FC = () => {
         </div>
       </div>
 
-      <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
+      <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full no-print">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="all">Todas</TabsTrigger>
           <TabsTrigger value="assigned">Asignadas</TabsTrigger>
@@ -215,12 +305,46 @@ const HomeTasksPage: React.FC = () => {
         </TabsContent>
       </Tabs>
 
+      {/* Printable content */}
+      <div ref={componentRef} className="p-4 print:block hidden">
+        <h1 className="text-2xl font-bold mb-4">Tareas para Casa - {format(new Date(), "PPP", { locale: es })}</h1>
+        <table className="printable-table">
+          <thead>
+            <tr>
+              <th>Tarea</th>
+              <th>Paciente</th>
+              <th>Fecha Límite</th>
+              <th>Estado</th>
+              <th>Descripción</th>
+              <th>Imagen</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredTasks.map((task) => (
+              <tr key={task.id}>
+                <td>{task.title}</td>
+                <td>{task.patientName}</td>
+                <td>{task.due_date ? format(new Date(task.due_date), "PPP", { locale: es }) : "N/A"}</td>
+                <td>{task.status === "assigned" ? "Asignada" : "Completada"}</td>
+                <td>{task.description || "N/A"}</td>
+                <td>
+                  {task.image_url && (
+                    <img src={task.image_url} alt="Referencia" className="task-image" />
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
       <HomeTaskForm
         isOpen={isFormOpen}
         onClose={closeForm}
         onSubmit={editingTask ? handleEditTask : handleAddTask}
         initialData={editingTask}
         availablePatients={availablePatients || []}
+        isSubmitting={addTaskMutation.isPending || updateTaskMutation.isPending}
       />
     </div>
   );
