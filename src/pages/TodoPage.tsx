@@ -61,7 +61,7 @@ const TodoPage: React.FC = () => {
   const addTodoMutation = useMutation<Todo, Error, TodoFormValues>({
     mutationFn: async (newTodo) => {
       if (!user?.id) throw new Error("Usuario no autenticado.");
-      const { data, error } = await db.from("todos").insert({ ...newTodo, is_completed: false, user_id: user.id }).select().single();
+      const { data, error } = await db.from("todos").insert({ ...newTodo, is_completed: false, user_id: user.id }); // Removed .select().single()
       if (error) throw error;
       return data as Todo;
     },
@@ -79,7 +79,7 @@ const TodoPage: React.FC = () => {
   const updateTodoMutation = useMutation<Todo, Error, Todo>({
     mutationFn: async (updatedTodo) => {
       if (!user?.id) throw new Error("Usuario no autenticado.");
-      const { data, error } = await db.from("todos").update({ is_completed: updatedTodo.is_completed }).match({ id: updatedTodo.id, user_id: user.id }).select().single();
+      const { data, error } = await db.from("todos").update({ is_completed: updatedTodo.is_completed }).match({ id: updatedTodo.id, user_id: user.id }); // Removed .select().single()
       if (error) throw error;
       return data as Todo;
     },

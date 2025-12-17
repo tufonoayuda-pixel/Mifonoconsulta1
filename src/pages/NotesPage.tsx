@@ -73,7 +73,7 @@ const NotesPage: React.FC = () => {
   const addNoteMutation = useMutation<Note, Error, NoteFormValues>({
     mutationFn: async (newNote) => {
       if (!user?.id) throw new Error("Usuario no autenticado.");
-      const { data, error } = await db.from("notes").insert({ ...newNote, user_id: user.id }).select().single();
+      const { data, error } = await db.from("notes").insert({ ...newNote, user_id: user.id }); // Removed .select().single()
       if (error) throw error;
       return data as Note;
     },
@@ -92,7 +92,7 @@ const NotesPage: React.FC = () => {
   const updateNoteMutation = useMutation<Note, Error, NoteFormValues>({
     mutationFn: async (updatedNote) => {
       if (!user?.id) throw new Error("Usuario no autenticado.");
-      const { data, error } = await db.from("notes").update(updatedNote).match({ id: updatedNote.id, user_id: user.id }).select().single();
+      const { data, error } = await db.from("notes").update(updatedNote).match({ id: updatedNote.id, user_id: user.id }); // Removed .select().single()
       if (error) throw error;
       return data as Note;
     },

@@ -86,7 +86,7 @@ const StudyMaterialsPage: React.FC = () => {
         file_path: filePath,
       };
 
-      const { data, error } = await db.from("study_materials").insert(payload).select().single();
+      const { data, error } = await db.from("study_materials").insert(payload); // Removed .select().single()
       if (error) throw error;
       return data as StudyMaterial;
     },
@@ -157,7 +157,7 @@ const StudyMaterialsPage: React.FC = () => {
         file_path: filePath,
       };
 
-      const { data, error } = await db.from("study_materials").update(payload).match({ id: material.id, user_id: user.id }).select().single();
+      const { data, error } = await db.from("study_materials").update(payload).match({ id: material.id, user_id: user.id }); // Removed .select().single()
       if (error) throw error;
       return data as StudyMaterial;
     },
