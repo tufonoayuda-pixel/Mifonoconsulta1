@@ -355,59 +355,66 @@ const HomeTasksPage: React.FC = () => {
 
   const handleSavePdfSingleTask = async (task: HomeTask) => {
     setTaskToPrint(task); // Set the task to be rendered in the hidden div
-    if (singleTaskPrintRef.current) {
-      const printableElement = singleTaskPrintRef.current;
-      const originalDisplay = printableElement.style.display;
-      const originalColor = printableElement.style.color;
-      printableElement.style.display = 'block'; // Temporarily make it visible
-      printableElement.style.color = 'black'; // Temporarily force black text
+    
+    // Use setTimeout to wait for the state update and re-render to complete
+    setTimeout(async () => {
+      if (singleTaskPrintRef.current) {
+        const printableElement = singleTaskPrintRef.current;
+        const originalDisplay = printableElement.style.display;
+        const originalColor = printableElement.style.color;
+        
+        // Temporarily make it visible and force black text for capture
+        printableElement.style.display = 'block';
+        printableElement.style.color = 'black';
 
-      try {
-        const canvas = await html2canvas(printableElement, {
-          scale: 2,
-          useCORS: true,
-        });
+        try {
+          const canvas = await html2canvas(printableElement, {
+            scale: 2,
+            useCORS: true,
+          });
 
-        if (!canvas) {
-          throw new Error("Failed to generate canvas from printable content.");
+          if (!canvas) {
+            throw new Error("Failed to generate canvas from printable content.");
+          }
+
+          const imgData = canvas.toDataURL('image/jpeg', 0.9);
+
+          if (!imgData || imgData.length < 100) {
+            throw new Error("Generated image data is empty or invalid.");
+          }
+
+          const pdf = new jsPDF('p', 'mm', 'a4');
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const imgHeight = (canvas.height * pdfWidth) / canvas.width; // Corrected: calculate imgHeight from canvas
+
+          let heightLeft = imgHeight;
+          let position = 0;
+
+          pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+          heightLeft -= pdf.internal.pageSize.getHeight(); // Use PDF page height for remaining calculation
+
+          while (heightLeft >= 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+            heightLeft -= pdf.internal.pageSize.getHeight();
+          }
+
+          pdf.save(`Tarea_${task.title.replace(/\s/g, '_')}_${format(new Date(), "yyyyMMdd_HHmmss")}.pdf`);
+          showSuccess("Tarea exportada a PDF exitosamente.");
+        } catch (error: any) {
+          showError("Error al exportar a PDF: " + error.message);
+          console.error("Error generating PDF:", error);
+        } finally {
+          printableElement.style.display = originalDisplay; // Restore original display
+          printableElement.style.color = originalColor; // Restore original color
+          setTaskToPrint(null); // Clear the task after processing
         }
-
-        const imgData = canvas.toDataURL('image/jpeg', 0.9);
-
-        if (!imgData || imgData.length < 100) {
-          throw new Error("Generated image data is empty or invalid.");
-        }
-
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width; // Corrected: use pdfHeight here
-
-        let heightLeft = pdfHeight; // Corrected: use pdfHeight here
-        let position = 0;
-
-        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
-        heightLeft -= pdfHeight;
-
-        while (heightLeft >= 0) {
-          position = heightLeft - pdfHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
-          heightLeft -= pdfHeight;
-        }
-
-        pdf.save(`Tarea_${task.title.replace(/\s/g, '_')}_${format(new Date(), "yyyyMMdd_HHmmss")}.pdf`);
-        showSuccess("Tarea exportada a PDF exitosamente.");
-      } catch (error: any) {
-        showError("Error al exportar a PDF: " + error.message);
-        console.error("Error generating PDF:", error);
-      } finally {
-        printableElement.style.display = originalDisplay; // Restore original display
-        printableElement.style.color = originalColor; // Restore original color
-        setTaskToPrint(null); // Clear the task after processing
+      } else {
+        showError("No hay contenido para exportar a PDF.");
+        setTaskToPrint(null); // Clear the task even if ref is not ready
       }
-    } else {
-      showError("No hay contenido para exportar a PDF.");
-    }
+    }, 50); // Small delay to allow DOM update
   };
 
   const columns = createHomeTaskColumns({
