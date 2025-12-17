@@ -109,7 +109,7 @@ const protocolsData: ProtocolCategory[] = [
       {
         name: "Escala de Tinnitus",
         description: "Escala para evaluar la severidad y el impacto del tinnitus.",
-        url: "https://escaudio-tinnitus.space.z.ai",
+        url: "https://evtinnitus1.vercel.app", // URL actualizada
       },
     ],
   },
