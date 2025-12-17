@@ -255,13 +255,39 @@ const HomeTasksPage: React.FC = () => {
           scale: 2, // Increase scale for better resolution
           useCORS: true, // Important for images from external URLs
         });
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const imgProps= pdf.getImageProperties(imgData);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        if (!canvas) {
+          throw new Error("Failed to generate canvas from printable content.");
+        }
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.9); // Changed to JPEG with quality
+        console.log("Generated imgData length:", imgData.length); // Log length for debugging
+
+        if (!imgData || imgData.length < 100) { // Basic check for empty/invalid data URL
+          throw new Error("Generated image data is empty or invalid.");
+        }
+
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth(); // A4 width in mm (210)
+        const pdfHeight = pdf.internal.pageSize.getHeight(); // A4 height in mm (297)
+
+        // Calculate image dimensions to fit PDF page, maintaining aspect ratio
+        const imgWidth = pdfWidth;
+        const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pdfHeight;
+        }
+
         pdf.save(`Tareas_para_Casa_${format(new Date(), "yyyyMMdd_HHmmss")}.pdf`);
         showSuccess("Tareas exportadas a PDF exitosamente.");
       } catch (error: any) {
