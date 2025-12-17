@@ -5,8 +5,8 @@ export interface StudyMaterial {
   description?: string;
   category: string;
   external_url?: string;
-  file_url?: string; // URL from Supabase Storage
-  file_path?: string; // Path in Supabase Storage for deletion
+  file_url?: string; // URL from Supabase Storage (now optional, for existing entries)
+  file_path?: string; // Path in Supabase Storage for deletion (now optional, for existing entries)
   created_at?: string;
   updated_at?: string;
 }

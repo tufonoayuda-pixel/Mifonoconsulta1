@@ -30,8 +30,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StudyMaterial } from "@/types/study-material";
-import { FileText, UploadCloud } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { showSuccess, showError } from "@/utils/toast";
 
 const studyMaterialFormSchema = z.object({
@@ -40,7 +38,15 @@ const studyMaterialFormSchema = z.object({
   description: z.string().optional(),
   category: z.string().min(1, { message: "La categoría es obligatoria." }),
   external_url: z.string().url({ message: "URL inválida." }).optional().or(z.literal("")),
-  file: z.any().optional(), // For file upload
+}).refine((data) => {
+  // For new materials, external_url is required
+  if (!data.id && !data.external_url) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Para nuevos materiales, el enlace externo es obligatorio.",
+  path: ["external_url"],
 });
 
 type StudyMaterialFormValues = z.infer<typeof studyMaterialFormSchema>;
@@ -48,7 +54,7 @@ type StudyMaterialFormValues = z.infer<typeof studyMaterialFormSchema>;
 interface StudyMaterialFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (material: StudyMaterial, file?: File) => void;
+  onSubmit: (material: StudyMaterial) => void; // Removed file parameter
   initialData?: StudyMaterial | null;
   isSubmitting: boolean;
 }
@@ -67,11 +73,8 @@ const StudyMaterialForm: React.FC<StudyMaterialFormProps> = ({
       description: "",
       category: "",
       external_url: "",
-      file: undefined,
     },
   });
-
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (initialData) {
@@ -81,30 +84,16 @@ const StudyMaterialForm: React.FC<StudyMaterialFormProps> = ({
         description: initialData.description || "",
         category: initialData.category,
         external_url: initialData.external_url || "",
-        file: undefined, // Clear file input on edit
       });
-      setSelectedFile(null);
     } else {
       form.reset({
         name: "",
         description: "",
         category: "",
         external_url: "",
-        file: undefined,
       });
-      setSelectedFile(null);
     }
   }, [initialData, form]);
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-      setSelectedFile(event.target.files[0]);
-      form.setValue("file", event.target.files[0]);
-    } else {
-      setSelectedFile(null);
-      form.setValue("file", undefined);
-    }
-  };
 
   const handleSubmit = (values: StudyMaterialFormValues) => {
     const materialToSubmit: StudyMaterial = {
@@ -113,11 +102,12 @@ const StudyMaterialForm: React.FC<StudyMaterialFormProps> = ({
       description: values.description || undefined,
       category: values.category,
       external_url: values.external_url || undefined,
-      file_url: initialData?.file_url || undefined, // Keep existing file_url if not uploading new
-      file_path: initialData?.file_path || undefined, // Keep existing file_path if not uploading new
+      // file_url and file_path are no longer managed by the form
+      file_url: initialData?.file_url, // Keep existing file_url if present
+      file_path: initialData?.file_path, // Keep existing file_path if present
     };
 
-    onSubmit(materialToSubmit, selectedFile || undefined);
+    onSubmit(materialToSubmit); // Removed file parameter
   };
 
   const currentCategories = [
@@ -129,7 +119,7 @@ const StudyMaterialForm: React.FC<StudyMaterialFormProps> = ({
     "Voz Adulto",
     "Calidad de Vida",
     "Herramientas Generales",
-    "Material de Estudio General", // New category for study materials
+    "Material de Estudio General",
   ];
 
   return (
@@ -203,39 +193,6 @@ const StudyMaterialForm: React.FC<StudyMaterialFormProps> = ({
                 </FormItem>
               )}
             />
-
-            <FormItem>
-              <FormLabel>Subir Archivo (PDF)</FormLabel>
-              <FormControl>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="file"
-                    accept="application/pdf"
-                    onChange={handleFileChange}
-                    disabled={isSubmitting}
-                    className="flex-1"
-                  />
-                  {selectedFile && (
-                    <span className="text-sm text-muted-foreground">{selectedFile.name}</span>
-                  )}
-                  {initialData?.file_url && !selectedFile && (
-                    <a
-                      href={initialData.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-sm text-blue-600 hover:underline dark:text-blue-400"
-                    >
-                      <FileText className="h-4 w-4" />
-                      Ver archivo actual
-                    </a>
-                  )}
-                </div>
-              </FormControl>
-              <FormMessage />
-              <p className="text-xs text-muted-foreground">
-                Sube un archivo PDF o proporciona un enlace externo. No puedes tener ambos.
-              </p>
-            </FormItem>
 
             <DialogFooter>
               <Button type="submit" disabled={isSubmitting}>

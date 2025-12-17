@@ -47,34 +47,9 @@ const StudyMaterialsPage: React.FC = () => {
   });
 
   // Mutation for adding a study material
-  const addMaterialMutation = useMutation<StudyMaterial, Error, { material: StudyMaterial; file?: File }>({
-    mutationFn: async ({ material, file }) => {
+  const addMaterialMutation = useMutation<StudyMaterial, Error, StudyMaterial>({ // Removed file parameter
+    mutationFn: async (material) => {
       if (!user?.id) throw new Error("Usuario no autenticado.");
-
-      let fileUrl: string | undefined = undefined;
-      let filePath: string | undefined = undefined;
-
-      if (file) {
-        const fileExtension = file.name.split(".").pop();
-        const path = `${user.id}/${material.category}/${crypto.randomUUID()}.${fileExtension}`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("study-materials")
-          .upload(path, file, {
-            cacheControl: '3600',
-            upsert: false
-          });
-
-        if (uploadError) throw uploadError;
-
-        const { data: publicUrlData } = supabase.storage
-          .from("study-materials")
-          .getPublicUrl(path);
-
-        if (publicUrlData?.publicUrl) {
-          fileUrl = publicUrlData.publicUrl;
-          filePath = path;
-        }
-      }
 
       const payload = {
         user_id: user.id,
@@ -82,11 +57,10 @@ const StudyMaterialsPage: React.FC = () => {
         description: material.description,
         category: material.category,
         external_url: material.external_url,
-        file_url: fileUrl,
-        file_path: filePath,
+        // file_url and file_path are not set for new entries
       };
 
-      const { data, error } = await db.from("study_materials").insert(payload); // Removed .select().single()
+      const { data, error } = await db.from("study_materials").insert(payload).select().single(); // Added .select().single() to get the inserted data
       if (error) throw error;
       return data as StudyMaterial;
     },
@@ -102,62 +76,25 @@ const StudyMaterialsPage: React.FC = () => {
   });
 
   // Mutation for updating a study material
-  const updateMaterialMutation = useMutation<StudyMaterial, Error, { material: StudyMaterial; file?: File }>({
-    mutationFn: async ({ material, file }) => {
+  const updateMaterialMutation = useMutation<StudyMaterial, Error, StudyMaterial>({ // Removed file parameter
+    mutationFn: async (material) => {
       if (!user?.id) throw new Error("Usuario no autenticado.");
 
-      let fileUrl: string | undefined = material.file_url;
-      let filePath: string | undefined = material.file_path;
-
-      // If a new file is provided, upload it and delete the old one if it exists
-      if (file) {
-        if (material.file_path) {
-          // Delete old file from storage
-          await supabase.storage.from("study-materials").remove([material.file_path]);
-        }
-
-        const fileExtension = file.name.split(".").pop();
-        const path = `${user.id}/${material.category}/${crypto.randomUUID()}.${fileExtension}`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("study-materials")
-          .upload(path, file, {
-            cacheControl: '3600',
-            upsert: false
-          });
-
-        if (uploadError) throw uploadError;
-
-        const { data: publicUrlData } = supabase.storage
-          .from("study-materials")
-          .getPublicUrl(path);
-
-        if (publicUrlData?.publicUrl) {
-          fileUrl = publicUrlData.publicUrl;
-          filePath = path;
-        }
-      } else if (material.external_url && material.file_path && !material.file_url) {
-        // If switching from file to external URL, delete the file
-        await supabase.storage.from("study-materials").remove([material.file_path]);
-        fileUrl = undefined;
-        filePath = undefined;
-      } else if (!material.external_url && !material.file_url && material.file_path) {
-        // If both URL and file are removed, delete the file
-        await supabase.storage.from("study-materials").remove([material.file_path]);
-        fileUrl = undefined;
-        filePath = undefined;
-      }
-
+      // If an existing material had a file_path, and now it's being updated without a new file
+      // and potentially with an external_url, we should delete the old file from storage.
+      // However, since we are removing file upload functionality, we will not manage file deletion here.
+      // Existing file_url/file_path will remain in the DB but won't be editable/removable via this form.
+      // If the user wants to remove an old file, they would need to do it manually in Supabase Storage.
 
       const payload = {
         name: material.name,
         description: material.description,
         category: material.category,
         external_url: material.external_url,
-        file_url: fileUrl,
-        file_path: filePath,
+        // file_url and file_path are not updated via this form
       };
 
-      const { data, error } = await db.from("study_materials").update(payload).match({ id: material.id, user_id: user.id }); // Removed .select().single()
+      const { data, error } = await db.from("study_materials").update(payload).match({ id: material.id, user_id: user.id }).select().single(); // Added .select().single()
       if (error) throw error;
       return data as StudyMaterial;
     },
@@ -176,9 +113,8 @@ const StudyMaterialsPage: React.FC = () => {
   const deleteMaterialMutation = useMutation<void, Error, StudyMaterial>({
     mutationFn: async (materialToDelete) => {
       if (!user?.id) throw new Error("Usuario no autenticado.");
-      if (materialToDelete.file_path) {
-        await supabase.storage.from("study-materials").remove([materialToDelete.file_path]);
-      }
+      // We are no longer managing file deletion from storage via the app.
+      // If there was an associated file, it will remain in storage unless manually deleted.
       const { error } = await db.from("study_materials").delete().match({ id: materialToDelete.id, user_id: user.id });
       if (error) throw error;
     },
@@ -201,11 +137,11 @@ const StudyMaterialsPage: React.FC = () => {
     setIsFormOpen(true);
   };
 
-  const handleFormSubmit = (material: StudyMaterial, file?: File) => {
+  const handleFormSubmit = (material: StudyMaterial) => { // Removed file parameter
     if (editingMaterial) {
-      updateMaterialMutation.mutate({ material, file });
+      updateMaterialMutation.mutate(material);
     } else {
-      addMaterialMutation.mutate({ material, file });
+      addMaterialMutation.mutate(material);
     }
   };
 
@@ -246,7 +182,7 @@ const StudyMaterialsPage: React.FC = () => {
         </Button>
       </div>
       <p className="text-lg text-gray-600 dark:text-gray-400">
-        Accede y gestiona recursos educativos, documentos y enlaces relevantes para tu práctica.
+        Accede y gestiona recursos educativos y enlaces relevantes para tu práctica.
       </p>
 
       <div className="flex items-center py-4">
@@ -280,7 +216,7 @@ const StudyMaterialsPage: React.FC = () => {
                 <Card key={material.id} className="relative border-l-4 border-primary">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-lg">
-                      {material.file_url ? <FileText className="h-5 w-5 text-primary" /> : <ExternalLink className="h-5 w-5 text-primary" />}
+                      {material.external_url ? <ExternalLink className="h-5 w-5 text-primary" /> : <FileText className="h-5 w-5 text-primary" />}
                       {material.name}
                     </CardTitle>
                     <CardDescription className="text-xs text-muted-foreground">
@@ -293,7 +229,7 @@ const StudyMaterialsPage: React.FC = () => {
                     <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 mb-3">
                       {material.description || "Sin descripción."}
                     </p>
-                    {material.external_url && (
+                    {material.external_url ? (
                       <a
                         href={material.external_url}
                         target="_blank"
@@ -303,8 +239,7 @@ const StudyMaterialsPage: React.FC = () => {
                         <ExternalLink className="h-4 w-4" />
                         Abrir Enlace
                       </a>
-                    )}
-                    {material.file_url && (
+                    ) : material.file_url ? (
                       <a
                         href={material.file_url}
                         target="_blank"
@@ -312,8 +247,10 @@ const StudyMaterialsPage: React.FC = () => {
                         className="flex items-center gap-1 text-sm text-green-600 hover:underline dark:text-green-400 mt-2"
                       >
                         <Download className="h-4 w-4" />
-                        Descargar PDF
+                        Descargar Archivo (existente)
                       </a>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No hay enlace ni archivo.</p>
                     )}
                     <div className="absolute top-4 right-4 flex gap-2">
                       <Button variant="ghost" size="icon" onClick={() => openEditForm(material)} className="h-8 w-8">
@@ -331,7 +268,7 @@ const StudyMaterialsPage: React.FC = () => {
                           <AlertDialogHeader>
                             <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Esta acción no se puede deshacer. Esto eliminará permanentemente el material de estudio y su archivo asociado (si existe).
+                              Esta acción no se puede deshacer. Esto eliminará permanentemente el material de estudio. Si tenía un archivo asociado, este deberá ser eliminado manualmente de Supabase Storage.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
