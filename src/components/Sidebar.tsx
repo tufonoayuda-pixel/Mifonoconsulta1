@@ -14,6 +14,7 @@ import {
   ClipboardList, // Icon for Todos
   NotebookPen, // Icon for Notes
   CalendarCheck, // Icon for Weekly Planner
+  LibraryBig, // Icon for Study Materials
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -49,19 +50,24 @@ const navItems = [
     path: "/records",
   },
   {
-    name: "Planificador Semanal", // New item
+    name: "Planificador Semanal",
     icon: CalendarCheck,
     path: "/weekly-planner",
   },
   {
-    name: "Notas", // New item
+    name: "Notas",
     icon: NotebookPen,
     path: "/notes",
   },
   {
-    name: "Pendientes", // New item
+    name: "Pendientes",
     icon: ClipboardList,
     path: "/todos",
+  },
+  {
+    name: "Material de Estudio", // New item
+    icon: LibraryBig,
+    path: "/study-materials",
   },
   {
     name: "Notificaciones",
