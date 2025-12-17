@@ -60,7 +60,7 @@ const StudyMaterialsPage: React.FC = () => {
         // file_url and file_path are not set for new entries
       };
 
-      const { data, error } = await db.from("study_materials").insert(payload).select().single(); // Added .select().single() to get the inserted data
+      const { data, error } = await db.from("study_materials").insert(payload); // Removed .select().single()
       if (error) throw error;
       return data as StudyMaterial;
     },
@@ -94,7 +94,7 @@ const StudyMaterialsPage: React.FC = () => {
         // file_url and file_path are not updated via this form
       };
 
-      const { data, error } = await db.from("study_materials").update(payload).match({ id: material.id, user_id: user.id }).select().single(); // Added .select().single()
+      const { data, error } = await db.from("study_materials").update(payload).match({ id: material.id, user_id: user.id }); // Removed .select().single()
       if (error) throw error;
       return data as StudyMaterial;
     },
