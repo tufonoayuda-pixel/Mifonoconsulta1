@@ -193,7 +193,13 @@ const HomeTasksPage: React.FC = () => {
   });
 
   const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
+    content: () => {
+      if (filteredTasks.length === 0) {
+        showError("No hay tareas para imprimir en la vista actual.");
+        return null; // Prevent printing empty content
+      }
+      return componentRef.current;
+    },
     documentTitle: `Tareas_para_Casa_${format(new Date(), "yyyyMMdd_HHmmss")}`,
     pageStyle: `
       @page {
@@ -204,8 +210,13 @@ const HomeTasksPage: React.FC = () => {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
+      /* Hide elements with 'no-print' class */
       .no-print {
         display: none !important;
+      }
+      /* Show the printable content */
+      #printable-content {
+        display: block !important;
       }
       .printable-table {
         width: 100%;
@@ -229,9 +240,18 @@ const HomeTasksPage: React.FC = () => {
   });
 
   const handleSavePdf = async () => {
+    if (filteredTasks.length === 0) {
+      showError("No hay tareas para exportar a PDF en la vista actual.");
+      return;
+    }
+
     if (componentRef.current) {
+      const printableElement = componentRef.current;
+      const originalDisplay = printableElement.style.display;
+      printableElement.style.display = 'block'; // Temporarily make it visible
+
       try {
-        const canvas = await html2canvas(componentRef.current, {
+        const canvas = await html2canvas(printableElement, {
           scale: 2, // Increase scale for better resolution
           useCORS: true, // Important for images from external URLs
         });
@@ -247,6 +267,8 @@ const HomeTasksPage: React.FC = () => {
       } catch (error: any) {
         showError("Error al exportar a PDF: " + error.message);
         console.error("Error generating PDF:", error);
+      } finally {
+        printableElement.style.display = originalDisplay; // Restore original display
       }
     } else {
       showError("No hay contenido para exportar a PDF.");
@@ -306,7 +328,7 @@ const HomeTasksPage: React.FC = () => {
       </Tabs>
 
       {/* Printable content */}
-      <div ref={componentRef} className="p-4 print:block hidden">
+      <div ref={componentRef} id="printable-content" className="p-4 hidden">
         <h1 className="text-2xl font-bold mb-2">Tareas para Casa</h1>
         <p className="text-lg mb-1">Flgo. Cristobal San Martin</p>
         <p className="text-md mb-4">CESFAM el Barrero</p>
