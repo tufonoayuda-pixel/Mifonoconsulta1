@@ -45,7 +45,7 @@ import { Patient } from "@/types/patient";
 import { showSuccess, showError } from "@/utils/toast";
 import { supabase, db } from "@/integrations/supabase/client";
 import { useSession } from "@/components/SessionContextProvider";
-import ImageUpload from "@/components/ImageUpload"; // Updated import path
+import ImageUpload from "@/components/home-tasks/ImageUpload"; // Reverted import path
 
 const homeTaskFormSchema = z.object({
   id: z.string().optional(),
@@ -318,8 +318,6 @@ const HomeTaskForm: React.FC<HomeTaskFormProps> = ({
               onImageChange={setSelectedImageFile}
               initialImageUrl={initialData?.image_url}
               disabled={isSubmitting}
-              label="Arrastra y suelta una imagen aquí, o haz clic para seleccionar"
-              description="(JPG, PNG, GIF - máximo 5MB)"
             />
 
             <DialogFooter>
