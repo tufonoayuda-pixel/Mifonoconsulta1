@@ -207,6 +207,8 @@ const HomeTasksPage: React.FC = () => {
       body {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+        font-family: Arial, sans-serif; /* Added font family */
+        font-size: 14pt; /* Added font size */
       }
       /* Hide elements with 'no-print' class */
       .no-print {
@@ -216,9 +218,13 @@ const HomeTasksPage: React.FC = () => {
       #printable-content {
         display: block !important;
         color: black !important; /* Force black text for printing */
+        font-family: Arial, sans-serif !important; /* Ensure font for printing */
+        font-size: 14pt !important; /* Ensure font size for printing */
       }
       #printable-content * {
         color: black !important; /* Force black text for all children */
+        font-family: Arial, sans-serif !important; /* Ensure font for all children */
+        font-size: 14pt !important; /* Ensure font size for all children */
       }
       .printable-table {
         width: 100%;
@@ -251,8 +257,13 @@ const HomeTasksPage: React.FC = () => {
       const printableElement = componentRef.current;
       const originalDisplay = printableElement.style.display;
       const originalColor = printableElement.style.color;
+      const originalFontFamily = printableElement.style.fontFamily; // Store original font family
+      const originalFontSize = printableElement.style.fontSize; // Store original font size
+
       printableElement.style.display = 'block'; // Temporarily make it visible
       printableElement.style.color = 'black'; // Temporarily force black text
+      printableElement.style.fontFamily = 'Arial, sans-serif'; // Set font family
+      printableElement.style.fontSize = '14pt'; // Set font size
 
       try {
         const canvas = await html2canvas(printableElement, {
@@ -300,6 +311,8 @@ const HomeTasksPage: React.FC = () => {
       } finally {
         printableElement.style.display = originalDisplay; // Restore original display
         printableElement.style.color = originalColor; // Restore original color
+        printableElement.style.fontFamily = originalFontFamily; // Restore original font family
+        printableElement.style.fontSize = originalFontSize; // Restore original font size
       }
     } else {
       showError("No hay contenido para exportar a PDF.");
@@ -324,13 +337,19 @@ const HomeTasksPage: React.FC = () => {
       body {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+        font-family: Arial, sans-serif; /* Added font family */
+        font-size: 14pt; /* Added font size */
       }
       #single-task-printable-content {
         display: block !important;
         color: black !important; /* Force black text for printing */
+        font-family: Arial, sans-serif !important; /* Ensure font for printing */
+        font-size: 14pt !important; /* Ensure font size for printing */
       }
       #single-task-printable-content * {
         color: black !important; /* Force black text for all children */
+        font-family: Arial, sans-serif !important; /* Ensure font for all children */
+        font-size: 14pt !important; /* Ensure font size for all children */
       }
       .printable-task-card {
         border: 1px solid #ccc;
@@ -381,8 +400,13 @@ const HomeTasksPage: React.FC = () => {
         const printableElement = singleTaskPrintRef.current;
         const originalDisplay = printableElement.style.display;
         const originalColor = printableElement.style.color;
+        const originalFontFamily = printableElement.style.fontFamily; // Store original font family
+        const originalFontSize = printableElement.style.fontSize; // Store original font size
+
         printableElement.style.display = 'block'; // Temporarily make it visible
         printableElement.style.color = 'black'; // Temporarily force black text
+        printableElement.style.fontFamily = 'Arial, sans-serif'; // Set font family
+        printableElement.style.fontSize = '14pt'; // Set font size
 
         try {
           const canvas = await html2canvas(printableElement, {
@@ -425,6 +449,8 @@ const HomeTasksPage: React.FC = () => {
         } finally {
           printableElement.style.display = originalDisplay; // Restore original display
           printableElement.style.color = originalColor; // Restore original color
+          printableElement.style.fontFamily = originalFontFamily; // Restore original font family
+          printableElement.style.fontSize = originalFontSize; // Restore original font size
           setTaskToPrint(null); // Clear the task after processing
           setTriggerSinglePdf(false); // Reset trigger
         }
