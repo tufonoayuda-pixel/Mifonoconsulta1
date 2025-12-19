@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm, FormProvider, UseFormReturn } from "react-hook-form"; // Import FormProvider and UseFormReturn
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, parse } from "date-fns";
@@ -17,7 +17,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Form, // Keep Form for FormField, FormItem, etc.
+  // Removed Form from here, as we're using FormProvider directly
   FormControl,
   FormField,
   FormItem,
@@ -439,7 +439,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
           <DialogHeader>
             <DialogTitle>{initialData ? "Editar Registro Clínico" : "Nuevo Registro Clínico"}</DialogTitle>
           </DialogHeader>
-          <Form {...form}> {/* Use shadcn/ui's Form component here */}
+          <FormProvider {...form}> {/* Use FormProvider directly */}
             <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-4 py-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
@@ -649,7 +649,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                 </Button>
               </DialogFooter>
             </form>
-          </Form>
+          </FormProvider>
         </DialogContent>
       </Dialog>
 
