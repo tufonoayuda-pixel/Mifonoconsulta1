@@ -4,89 +4,89 @@
 
 @layer base {
   :root { /* Light theme variables */
-    --background: 0 0% 100%; /* White background */
-    --foreground: 222.2 47.4% 11.2%; /* Dark text */
+    --background: 0 0% 100%;
+    --foreground: 220 10% 15%; /* Darker text for better contrast */
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 47.4% 11.2%;
+    --card-foreground: 220 10% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47.4% 11.2%;
+    --popover-foreground: 220 10% 15%;
 
-    --primary: 0 80% 50%; /* Red Ranger */
-    --primary-foreground: 0 0% 100%; /* White text */
+    --primary: 350 80% 45%; /* Deeper Red */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%; /* Light gray */
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 210 40% 92%; /* Softer light gray */
+    --secondary-foreground: 220 10% 15%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 15% 50%;
 
-    --accent: 45 90% 50%; /* Yellow Ranger */
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 40 95% 55%; /* Golden Yellow */
+    --accent-foreground: 220 10% 15%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 80% 50%; /* Standard Red */
     --destructive-foreground: 0 0% 100%;
 
-    --success: 120 80% 30%; /* Green Ranger */
+    --success: 140 70% 35%; /* Vibrant Green */
     --success-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 0 80% 50%;
+    --border: 210 20% 88%;
+    --input: 210 20% 90%;
+    --ring: 350 80% 45%; /* Primary red ring */
 
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222.2 47.4% 11.2%;
-    --sidebar-primary: 0 80% 50%;
+    --sidebar-foreground: 220 10% 15%;
+    --sidebar-primary: 350 80% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 96.1%;
-    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
-    --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-ring: 0 80% 50%;
+    --sidebar-accent: 210 40% 92%;
+    --sidebar-accent-foreground: 220 10% 15%;
+    --sidebar-border: 210 20% 88%;
+    --sidebar-ring: 350 80% 45%;
   }
 
   .dark { /* Dark theme variables */
-    --background: 220 10% 10%; /* Dark background */
-    --foreground: 210 40% 98%; /* Light text */
+    --background: 220 10% 10%;
+    --foreground: 210 40% 98%;
 
-    --card: 220 10% 15%; /* Slightly lighter dark for cards */
+    --card: 220 10% 15%;
     --card-foreground: 210 40% 98%;
 
     --popover: 220 10% 15%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 0 80% 50%; /* Red Ranger */
+    --primary: 350 80% 45%; /* Deeper Red */
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 220 80% 50%; /* Blue Ranger */
+    --secondary: 210 70% 40%; /* Muted Blue */
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 220 10% 20%; /* Muted dark */
-    --muted-foreground: 215.4 16.3% 60%; /* Lighter muted text */
+    --muted: 220 10% 20%;
+    --muted-foreground: 215 15% 65%;
 
-    --accent: 45 90% 50%; /* Yellow Ranger */
-    --accent-foreground: 222.2 47.4% 11.2%; /* Dark text for yellow */
+    --accent: 40 95% 55%; /* Golden Yellow */
+    --accent-foreground: 220 10% 15%; /* Dark text for yellow */
 
-    --destructive: 0 84.2% 60.2%; /* Standard destructive red */
+    --destructive: 0 80% 50%;
     --destructive-foreground: 210 40% 98%;
 
-    --success: 120 80% 30%; /* Green Ranger */
+    --success: 140 70% 35%; /* Vibrant Green */
     --success-foreground: 210 40% 98%;
 
-    --border: 220 10% 25%; /* Darker border */
+    --border: 220 10% 25%;
     --input: 220 10% 20%;
-    --ring: 0 80% 50%; /* Primary red ring */
+    --ring: 350 80% 45%;
 
     --sidebar-background: 220 10% 10%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 0 80% 50%;
+    --sidebar-primary: 350 80% 45%;
     --sidebar-primary-foreground: 210 40% 98%;
     --sidebar-accent: 220 10% 20%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 220 10% 25%;
-    --sidebar-ring: 0 80% 50%;
+    --sidebar-ring: 350 80% 45%;
   }
 }
 
@@ -97,6 +97,19 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Default card shadow for a bit more depth */
+  .card {
+    @apply shadow-md transition-shadow duration-200 ease-in-out;
   }
 }
 

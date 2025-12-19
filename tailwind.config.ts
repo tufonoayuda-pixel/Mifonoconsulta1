@@ -19,29 +19,29 @@ export default {
     },
     extend: {
       colors: {
-        // Power Rangers inspired palette
+        // Power Rangers inspired palette (refined)
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(var(--primary))", // Red Ranger
+          DEFAULT: "hsl(var(--primary))", // Deeper Red
           foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))", // Blue Ranger
+          DEFAULT: "hsl(var(--secondary))", // Muted Blue
           foreground: "hsl(var(--secondary-foreground))",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))", // Yellow Ranger
+          DEFAULT: "hsl(var(--accent))", // Golden Yellow
           foreground: "hsl(var(--accent-foreground))",
         },
         destructive: {
-          DEFAULT: "hsl(var(--destructive))", // For errors, a darker red
+          DEFAULT: "hsl(var(--destructive))", // Standard Red
           foreground: "hsl(var(--destructive-foreground))",
         },
-        success: { // New color for success states (Green Ranger)
+        success: { // Vibrant Green
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
         },
