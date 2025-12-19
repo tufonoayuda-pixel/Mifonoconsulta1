@@ -5,7 +5,7 @@ import { format, parse, addMinutes, isBefore } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, db } from "@/integrations/supabase/client"; // Import 'db' client
 import { Session } from "@/types/session";
 
 export const useSessionNotifications = (sessions: Session[]) => {
@@ -23,7 +23,8 @@ export const useSessionNotifications = (sessions: Session[]) => {
   };
 
   const createNotification = useCallback(async (type: string, title: string, message: string) => {
-    const { error } = await supabase.from("notifications").insert({
+    // Use the 'db' client for inserting notifications to support offline queuing
+    const { error } = await db.from("notifications").insert({
       type,
       title,
       message,
