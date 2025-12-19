@@ -11,9 +11,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns"; // Import parseISO
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { CalendarIcon } from "lucide-react"; // Import CalendarIcon
 
 import { Todo } from "@/types/todo";
 import { supabase, db } from "@/integrations/supabase/client";
@@ -28,9 +29,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useSession } from "@/components/SessionContextProvider"; // Import useSession
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"; // Import Popover
+import { Calendar } from "@/components/ui/calendar"; // Import Calendar
 
 const todoFormSchema = z.object({
   task: z.string().min(1, { message: "La tarea no puede estar vacía." }),
+  due_date: z.string().optional().nullable(), // New: Optional due date
 });
 
 type TodoFormValues = z.infer<typeof todoFormSchema>;
@@ -41,6 +45,7 @@ const TodoPage: React.FC = () => {
     resolver: zodResolver(todoFormSchema),
     defaultValues: {
       task: "",
+      due_date: format(new Date(), "yyyy-MM-dd"), // Default to today's date
     },
   });
   const { user } = useSession(); // Get the authenticated user
@@ -61,14 +66,20 @@ const TodoPage: React.FC = () => {
   const addTodoMutation = useMutation<Todo, Error, TodoFormValues>({
     mutationFn: async (newTodo) => {
       if (!user?.id) throw new Error("Usuario no autenticado.");
-      const { data, error } = await db.from("todos").insert({ ...newTodo, is_completed: false, user_id: user.id }); // Removed .select().single()
+      const payload = {
+        ...newTodo,
+        is_completed: false,
+        user_id: user.id,
+        due_date: newTodo.due_date === "" ? null : newTodo.due_date, // Handle empty string for due_date
+      };
+      const { data, error } = await db.from("todos").insert(payload); // Removed .select().single()
       if (error) throw error;
       return data as Todo;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["todos"] });
       showSuccess("Tarea añadida exitosamente (o en cola para sincronizar).");
-      form.reset();
+      form.reset({ task: "", due_date: format(new Date(), "yyyy-MM-dd") }); // Reset form with default date
     },
     onError: (err) => {
       showError("Error al añadir tarea: " + err.message);
@@ -79,7 +90,12 @@ const TodoPage: React.FC = () => {
   const updateTodoMutation = useMutation<Todo, Error, Todo>({
     mutationFn: async (updatedTodo) => {
       if (!user?.id) throw new Error("Usuario no autenticado.");
-      const { data, error } = await db.from("todos").update({ is_completed: updatedTodo.is_completed }).match({ id: updatedTodo.id, user_id: user.id }); // Removed .select().single()
+      const payload = {
+        is_completed: updatedTodo.is_completed,
+        task: updatedTodo.task, // Ensure task is also updated if needed
+        due_date: updatedTodo.due_date === "" ? null : updatedTodo.due_date, // Handle empty string for due_date
+      };
+      const { data, error } = await db.from("todos").update(payload).match({ id: updatedTodo.id, user_id: user.id }); // Removed .select().single()
       if (error) throw error;
       return data as Todo;
     },
@@ -134,7 +150,7 @@ const TodoPage: React.FC = () => {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleAddTodo)} className="flex gap-2">
+            <form onSubmit={form.handleSubmit(handleAddTodo)} className="flex flex-col sm:flex-row gap-2">
               <FormField
                 control={form.control}
                 name="task"
@@ -143,6 +159,54 @@ const TodoPage: React.FC = () => {
                     <FormControl>
                       <Input placeholder="Escribe una nueva tarea..." {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="due_date"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(parseISO(field.value), "PPP", { locale: es })
+                            ) : (
+                              <span>Fecha Límite</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value ? parseISO(field.value) : undefined}
+                          onSelect={(date) => {
+                            if (date) {
+                              field.onChange(format(date, "yyyy-MM-dd"));
+                            } else {
+                              field.onChange("");
+                            }
+                          }}
+                          initialFocus
+                          locale={es}
+                          defaultMonth={new Date()}
+                          fromYear={2020}
+                          toYear={2030}
+                          captionLayout="dropdown-buttons"
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -185,6 +249,11 @@ const TodoPage: React.FC = () => {
                         className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                       >
                         {todo.task}
+                        {todo.due_date && (
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            (Fecha Límite: {format(parseISO(todo.due_date), "PPP", { locale: es })})
+                          </span>
+                        )}
                       </label>
                     </div>
                     <AlertDialog>
