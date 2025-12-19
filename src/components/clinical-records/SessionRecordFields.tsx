@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useFormContext } from "react-hook-form";
+import { UseFormReturn } from "react-hook-form"; // Import UseFormReturn
 import {
   FormControl,
   FormField,
@@ -12,15 +12,19 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ClinicalRecordFormValues } from "./ClinicalRecordForm"; // Import the type
 
-const SessionRecordFields: React.FC = () => {
-  const form = useFormContext<ClinicalRecordFormValues>();
+interface SessionRecordFieldsProps {
+  form: UseFormReturn<ClinicalRecordFormValues>; // Accept form as a prop
+}
+
+const SessionRecordFields: React.FC<SessionRecordFieldsProps> = ({ form }) => {
+  // Removed useFormContext()
 
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-semibold">Objetivos de la Sesión</h3>
       <FormField
         control={form.control}
-        name="session_objectives" // Acceso directo
+        name="session_objectives"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Objetivos planteados para esta sesión</FormLabel>
@@ -35,7 +39,7 @@ const SessionRecordFields: React.FC = () => {
       <h3 className="text-lg font-semibold mt-8">Desarrollo de la Sesión</h3>
       <FormField
         control={form.control}
-        name="activities_performed" // Acceso directo
+        name="activities_performed"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Actividades Realizadas</FormLabel>
@@ -48,7 +52,7 @@ const SessionRecordFields: React.FC = () => {
       />
       <FormField
         control={form.control}
-        name="clinical_observations" // Acceso directo (reutilizando para 'Logros Observados')
+        name="clinical_observations"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Logros Observados (Progreso)</FormLabel>
@@ -61,7 +65,7 @@ const SessionRecordFields: React.FC = () => {
       />
       <FormField
         control={form.control}
-        name="observations_suggestions" // Acceso directo (reutilizando para 'Observaciones Clínicas Adicionales')
+        name="observations_suggestions"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Observaciones Clínicas Adicionales</FormLabel>
@@ -74,7 +78,7 @@ const SessionRecordFields: React.FC = () => {
       />
       <FormField
         control={form.control}
-        name="response_patient" // Acceso directo
+        name="response_patient"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Respuesta del Paciente</FormLabel>
@@ -89,7 +93,7 @@ const SessionRecordFields: React.FC = () => {
       <h3 className="text-lg font-semibold mt-8">Planificación Futura</h3>
       <FormField
         control={form.control}
-        name="next_session" // Acceso directo
+        name="next_session"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Próxima Sesión / Tareas para el hogar</FormLabel>

@@ -17,7 +17,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Form,
+  Form, // Keep Form for FormField, FormItem, etc.
   FormControl,
   FormField,
   FormItem,
@@ -439,7 +439,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
           <DialogHeader>
             <DialogTitle>{initialData ? "Editar Registro Clínico" : "Nuevo Registro Clínico"}</DialogTitle>
           </DialogHeader>
-          <FormProvider {...form}>
+          <Form {...form}> {/* Use shadcn/ui's Form component here */}
             <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-4 py-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
@@ -606,19 +606,23 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
               {/* Render conditional fields based on selectedRecordType */}
               {selectedRecordType === "Evaluación" && (
                 <EvaluationFields
+                  form={form} // Pass form directly
                   patientRut={selectedPatient?.rut}
                   patientAge={selectedPatient?.age}
                 />
               )}
               {selectedRecordType === "Plan de Intervención" && (
                 <InterventionPlanFields
+                  form={form} // Pass form directly
                   patientNameDisplay={selectedPatient?.name}
                   planDateDisplay={selectedRecordDate ? format(parse(selectedRecordDate, "yyyy-MM-dd", new Date()), "PPP", { locale: es }) : undefined}
                   patientAgeDisplay={selectedPatient?.age}
                 />
               )}
               {selectedRecordType === "Registro de Sesión" && (
-                <SessionRecordFields />
+                <SessionRecordFields
+                  form={form} // Pass form directly
+                />
               )}
 
               <FormField
@@ -645,7 +649,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                 </Button>
               </DialogFooter>
             </form>
-          </FormProvider>
+          </Form>
         </DialogContent>
       </Dialog>
 
