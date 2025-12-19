@@ -39,18 +39,31 @@ export const createPatientColumns = ({ onEdit, onDelete }: PatientColumnsProps):
   {
     accessorKey: "preferredRoom",
     header: "Sala Pref.",
+    cell: ({ row }) => row.original.preferredRoom && row.original.preferredRoom !== "Sin preferencia" ? row.original.preferredRoom : "N/A",
   },
   {
     accessorKey: "preferredDay",
     header: "Día Pref.",
+    cell: ({ row }) => row.original.preferredDay && row.original.preferredDay !== "Sin preferencia" ? row.original.preferredDay : "N/A",
   },
   {
     accessorKey: "preferredTime",
     header: "Hora Pref.",
+    cell: ({ row }) => row.original.preferredTime && row.original.preferredTime !== "" ? row.original.preferredTime : "N/A",
   },
   {
     accessorKey: "serviceType",
     header: "Prestación",
+    cell: ({ row }) => row.original.serviceType && row.original.serviceType !== "Sin preferencia" ? row.original.serviceType : "N/A",
+  },
+  {
+    accessorKey: "observations",
+    header: "Observaciones",
+    cell: ({ row }) => (
+      <span className="line-clamp-1 max-w-[150px] block text-muted-foreground text-sm">
+        {row.original.observations || "N/A"}
+      </span>
+    ),
   },
   {
     id: "actions",
