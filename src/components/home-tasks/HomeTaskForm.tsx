@@ -45,14 +45,14 @@ import { Patient } from "@/types/patient";
 import { showSuccess, showError } from "@/utils/toast";
 import { supabase, db } from "@/integrations/supabase/client";
 import { useSession } from "@/components/SessionContextProvider";
-import ImageUpload from "./ImageUpload"; // Import the new ImageUpload component
+import ImageUpload from "@/components/ImageUpload"; // Updated import path
 
 const homeTaskFormSchema = z.object({
   id: z.string().optional(),
   patient_id: z.string().min(1, { message: "Paciente es obligatorio." }),
   title: z.string().min(1, { message: "El título es obligatorio." }),
   description: z.string().optional(),
-  due_date: z.string().optional(), // YYYY-MM-DD
+  due_date: z.string().optional().nullable(), // YYYY-MM-DD
   status: z.enum(["assigned", "completed"]).default("assigned"),
   image_url: z.string().optional().nullable(), // New: Optional image URL
   image_path: z.string().optional().nullable(), // New: Optional image path
@@ -318,6 +318,8 @@ const HomeTaskForm: React.FC<HomeTaskFormProps> = ({
               onImageChange={setSelectedImageFile}
               initialImageUrl={initialData?.image_url}
               disabled={isSubmitting}
+              label="Arrastra y suelta una imagen aquí, o haz clic para seleccionar"
+              description="(JPG, PNG, GIF - máximo 5MB)"
             />
 
             <DialogFooter>

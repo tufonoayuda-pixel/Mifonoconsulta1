@@ -4,14 +4,17 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Wifi, WifiOff, Settings, Users, Calendar, ClipboardList, Download } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client"; // Use online client for stats and export
-import { useQuery } from "@tanstack/react-query";
+import { supabase, db } from "@/integrations/supabase/client"; // Use online client for stats and export
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { showError, showSuccess } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { format } from "date-fns";
+import { useSession } from "@/components/SessionContextProvider"; // Import useSession
+import SettingsForm from "@/components/settings/SettingsForm"; // Import the new SettingsForm
+import { SystemConfig } from "@/types/system-config"; // Import the new type
 
 interface DashboardStats {
   patients: number;
@@ -21,6 +24,8 @@ interface DashboardStats {
 
 const SettingsPage: React.FC = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const { user } = useSession(); // Get the authenticated user
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -70,6 +75,99 @@ const SettingsPage: React.FC = () => {
     refetchInterval: 60000, // Refetch every minute
   });
 
+  // Fetch user-specific settings
+  const { data: userSettings, isLoading: isLoadingSettings, isError: isErrorSettings, error: errorSettings } = useQuery<SystemConfig | null, Error>({
+    queryKey: ["userSettings", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from("system_config")
+        .select("key, value")
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      const config: SystemConfig = {};
+      data.forEach(item => {
+        switch (item.key) {
+          case "professional_name":
+            config.professionalName = item.value;
+            break;
+          case "digital_signature_url":
+            config.digitalSignatureUrl = item.value;
+            break;
+          case "digital_signature_path":
+            config.digitalSignaturePath = item.value;
+            break;
+          case "professional_logo_url":
+            config.professionalLogoUrl = item.value;
+            break;
+          case "professional_logo_path":
+            config.professionalLogoPath = item.value;
+            break;
+          case "health_superintendence_registration":
+            config.healthSuperintendenceRegistration = item.value;
+            break;
+        }
+      });
+      return config;
+    },
+    enabled: !!user?.id,
+  });
+
+  // Mutation for saving user settings
+  const saveSettingsMutation = useMutation<void, Error, SystemConfig>({
+    mutationFn: async (newConfig) => {
+      if (!user?.id) throw new Error("Usuario no autenticado.");
+
+      const updates = [
+        { key: "professional_name", value: newConfig.professionalName || null },
+        { key: "digital_signature_url", value: newConfig.digitalSignatureUrl || null },
+        { key: "digital_signature_path", value: newConfig.digitalSignaturePath || null },
+        { key: "professional_logo_url", value: newConfig.professionalLogoUrl || null },
+        { key: "professional_logo_path", value: newConfig.professionalLogoPath || null },
+        { key: "health_superintendence_registration", value: newConfig.healthSuperintendenceRegistration || null },
+      ];
+
+      for (const update of updates) {
+        // Check if the setting already exists
+        const { data: existingSetting, error: fetchError } = await db
+          .from("system_config")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("key", update.key)
+          .single();
+
+        if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means "no rows found"
+          console.error(`Error checking existing setting for key ${update.key}:`, fetchError);
+          throw fetchError;
+        }
+
+        if (existingSetting) {
+          // Update existing setting
+          const { error: updateError } = await db
+            .from("system_config")
+            .update({ value: update.value, updated_at: new Date().toISOString() })
+            .eq("id", existingSetting.id);
+          if (updateError) throw updateError;
+        } else if (update.value !== null) {
+          // Insert new setting if it has a value
+          const { error: insertError } = await db
+            .from("system_config")
+            .insert({ user_id: user.id, key: update.key, value: update.value });
+          if (insertError) throw insertError;
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userSettings", user?.id] });
+      showSuccess("Configuración guardada exitosamente.");
+    },
+    onError: (err) => {
+      showError("Error al guardar la configuración: " + err.message);
+    },
+  });
+
   const exportData = async (tableName: string, displayName: string) => {
     try {
       // For export, we want all data from the online database
@@ -88,6 +186,18 @@ const SettingsPage: React.FC = () => {
       console.error(`Error exporting ${displayName} data:`, error);
     }
   };
+
+  if (isLoadingStats || isLoadingSettings) {
+    return <div className="p-4 text-center">Cargando configuración...</div>;
+  }
+
+  if (isErrorStats) {
+    return <div className="p-4 text-center text-red-500">Error al cargar estadísticas: {errorStats?.message}</div>;
+  }
+
+  if (isErrorSettings) {
+    return <div className="p-4 text-center text-red-500">Error al cargar configuración del usuario: {errorSettings?.message}</div>;
+  }
 
   return (
     <div className="flex flex-col gap-6 p-4 lg:p-6">
@@ -181,6 +291,13 @@ const SettingsPage: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* New section for Professional Settings */}
+      <SettingsForm
+        initialData={userSettings}
+        onSave={saveSettingsMutation.mutateAsync}
+        isSaving={saveSettingsMutation.isPending}
+      />
     </div>
   );
 };
