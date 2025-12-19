@@ -32,6 +32,7 @@ const mapDbStatusToFrontend = (dbStatus: string): Session["status"] => {
     case "completed":
       return "Atendida";
     case "cancelled":
+    case "canceled": // Also handle 'canceled' if it might come from DB
       return "No Atendida";
     case "in-progress":
     default:
@@ -83,6 +84,7 @@ export const useSessionsData = () => {
   // Mutation for adding a session
   const addSessionMutation = useMutation<string, Error, Session>({
     mutationFn: async (newSession) => {
+      console.log("Attempting to add new session(s):", newSession);
       const sessionsToInsert: Omit<Session, 'patientName'>[] = [];
       if (newSession.isRecurring && newSession.recurrencePattern && newSession.recurrenceEndDate) {
         let currentDate = parse(newSession.date, "yyyy-MM-dd", new Date());
@@ -119,7 +121,7 @@ export const useSessionsData = () => {
         sessionsToInsert.push({ ...newSession, status: "Programada" });
       }
 
-      const { error } = await db.from("sessions").insert(sessionsToInsert.map(s => ({
+      const payload = sessionsToInsert.map(s => ({
         patient_id: s.patientId,
         room: s.room,
         date: s.date,
@@ -134,22 +136,31 @@ export const useSessionsData = () => {
         is_recurring: s.isRecurring,
         recurrence_pattern: s.recurrencePattern,
         recurrence_end_date: s.recurrenceEndDate,
-      })));
+      }));
+
+      console.log("Payload for Supabase insert:", payload);
+
+      const { error } = await db.from("sessions").insert(payload);
 
       if (error) throw error;
       return sessionsToInsert.length > 1 ? `${sessionsToInsert.length} sesiones recurrentes programadas exitosamente (o en cola para sincronizar).` : "Sesión programada exitosamente (o en cola para sincronizar).";
     },
     onSuccess: (message) => {
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] }); // Invalidate dashboard stats as well
       showSuccess(message);
     },
-    onError: (err: Error) => showError("Error al programar sesión: " + err.message),
+    onError: (err: Error) => {
+      console.error("Error in addSessionMutation:", err); // Log the full error
+      showError("Error al programar sesión: " + err.message);
+    },
   });
 
   // Mutation for updating a session
   const updateSessionMutation = useMutation<string, Error, Session>({
     mutationFn: async (updatedSession) => {
-      const { error } = await db.from("sessions").update({
+      console.log("Attempting to update session:", updatedSession);
+      const payload = {
         patient_id: updatedSession.patientId,
         room: updatedSession.room,
         date: updatedSession.date,
@@ -164,30 +175,42 @@ export const useSessionsData = () => {
         is_recurring: updatedSession.isRecurring,
         recurrence_pattern: updatedSession.recurrencePattern,
         recurrence_end_date: updatedSession.recurrenceEndDate,
-      }).match({ id: updatedSession.id });
+      };
+      console.log("Payload for Supabase update:", payload);
+
+      const { error } = await db.from("sessions").update(payload).match({ id: updatedSession.id });
 
       if (error) throw error;
       return "Sesión actualizada exitosamente (o en cola para sincronizar).";
     },
     onSuccess: (message) => {
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] }); // Invalidate dashboard stats as well
       showSuccess(message);
     },
-    onError: (err: Error) => showError("Error al actualizar sesión: " + err.message),
+    onError: (err: Error) => {
+      console.error("Error in updateSessionMutation:", err); // Log the full error
+      showError("Error al actualizar sesión: " + err.message);
+    },
   });
 
   // Mutation for deleting a session
   const deleteSessionMutation = useMutation<string, Error, string>({
     mutationFn: async (id) => {
+      console.log("Attempting to delete session with ID:", id);
       const { error } = await db.from("sessions").delete().match({ id: id });
       if (error) throw error;
       return "Sesión eliminada exitosamente (o en cola para sincronizar).";
     },
     onSuccess: (message) => {
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] }); // Invalidate dashboard stats as well
       showSuccess(message);
     },
-    onError: (err: Error) => showError("Error al eliminar sesión: " + err.message),
+    onError: (err: Error) => {
+      console.error("Error in deleteSessionMutation:", err); // Log the full error
+      showError("Error al eliminar sesión: " + err.message);
+    },
   });
 
   return {

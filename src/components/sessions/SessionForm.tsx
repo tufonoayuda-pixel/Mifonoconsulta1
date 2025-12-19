@@ -60,17 +60,30 @@ const sessionFormSchema = z.object({
   isRecurring: z.boolean().optional(),
   recurrencePattern: z.enum(["daily", "weekly", "monthly", "yearly"]).optional(),
   recurrenceEndDate: z.string().optional(), // YYYY-MM-DD
-}).refine((data) => {
-  if (data.isRecurring && !data.recurrencePattern) {
-    return false; // If recurring, pattern is required
+}).superRefine((data, ctx) => { // Changed from .refine to .superRefine for better error messages
+  if (data.isRecurring) {
+    if (!data.recurrencePattern) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "El patrón de recurrencia es obligatorio para sesiones recurrentes.",
+        path: ["recurrencePattern"],
+      });
+    }
+    if (!data.recurrenceEndDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La fecha de fin de recurrencia es obligatoria para sesiones recurrentes.",
+        path: ["recurrenceEndDate"],
+      });
+    }
+    if (data.recurrenceEndDate && data.date && data.recurrenceEndDate < data.date) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La fecha de fin de recurrencia no puede ser anterior a la fecha de inicio.",
+        path: ["recurrenceEndDate"],
+      });
+    }
   }
-  if (data.isRecurring && !data.recurrenceEndDate) {
-    return false; // If recurring, end date is required
-  }
-  return true;
-}, {
-  message: "Patrón y fecha de fin de recurrencia son obligatorios si la sesión es recurrente.",
-  path: ["recurrencePattern"], // Can point to either field
 });
 
 type SessionFormValues = z.infer<typeof sessionFormSchema>;
@@ -152,6 +165,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
   }, [selectedRoom, form]);
 
   const handleSubmit = (values: SessionFormValues) => {
+    console.log("Form values submitted:", values); // Log submitted values
     // Find the patient name based on the selected patientId for the Session object
     const patientName = availablePatients.find(p => p.id === values.patientId)?.name || "Desconocido";
     onSubmit({ ...values, patientName: patientName } as Session); // Pass patientName back to onSubmit
