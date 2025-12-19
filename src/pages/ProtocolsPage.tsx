@@ -116,6 +116,16 @@ const protocolsData: ProtocolCategory[] = [
         description: "Herramienta para una evaluación rápida y cualitativa del tinnitus.",
         url: "https://evtinnitus1.vercel.app/",
       },
+      {
+        name: "Entrenamiento Binaural",
+        description: "Herramienta para el entrenamiento de la audición binaural.",
+        url: "https://ent-binaural1.space.z.ai",
+      },
+      {
+        name: "Enmascarador de Tinnitus",
+        description: "Herramienta para generar sonidos que ayuden a enmascarar el tinnitus.",
+        url: "https://enmascarador-tinnitus1.space.z.ai",
+      },
     ],
   },
   {
@@ -272,7 +282,6 @@ const ProtocolsPage: React.FC = () => {
                 <Card key={itemIndex} className="border-l-4 border-primary">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-lg">
-                      <FileText className="h-5 w-5 text-primary" />
                       {protocol.url ? (
                         <a
                           href={protocol.url}
