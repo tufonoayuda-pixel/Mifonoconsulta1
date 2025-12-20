@@ -73,7 +73,7 @@ const NotesPage: React.FC = () => {
   const addNoteMutation = useMutation<Note, Error, NoteFormValues>({
     mutationFn: async (newNote) => {
       if (!user?.id) throw new Error("Usuario no autenticado.");
-      const { data, error } = await db.from("notes").insert({ ...newNote, user_id: user.id }); // Removed .select().single()
+      const { data, error } = await db.from("notes").insert({ ...newNote, user_id: user.id }).select().single(); // Ensure select().single() for return data
       if (error) throw error;
       return data as Note;
     },
@@ -92,7 +92,7 @@ const NotesPage: React.FC = () => {
   const updateNoteMutation = useMutation<Note, Error, NoteFormValues>({
     mutationFn: async (updatedNote) => {
       if (!user?.id) throw new Error("Usuario no autenticado.");
-      const { data, error } = await db.from("notes").update(updatedNote).match({ id: updatedNote.id, user_id: user.id }); // Removed .select().single()
+      const { data, error } = await db.from("notes").update(updatedNote).match({ id: updatedNote.id, user_id: user.id }).select().single(); // Ensure select().single() for return data
       if (error) throw error;
       return data as Note;
     },
@@ -132,7 +132,7 @@ const NotesPage: React.FC = () => {
 
   const openEditForm = (note: Note) => {
     setEditingNote(note);
-    form.reset({ id: note.id, title: note.title, content: note.content });
+    form.reset({ id: note.id, title: note.title, content: note.content || "" }); // Ensure content is string
     setIsFormOpen(true);
   };
 
@@ -151,8 +151,8 @@ const NotesPage: React.FC = () => {
     <div className="flex flex-col gap-6 p-4 lg:p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Mis Notas</h1>
-        <Button onClick={openAddForm}>
-          <PlusCircle className="mr-2 h-4 w-4" /> Nueva Nota
+        <Button onClick={openAddForm} className="flex items-center gap-2">
+          <PlusCircle className="h-4 w-4" /> Nueva Nota
         </Button>
       </div>
       <p className="text-lg text-gray-600 dark:text-gray-400">
@@ -162,11 +162,15 @@ const NotesPage: React.FC = () => {
       <ScrollArea className="h-[calc(100vh-200px)] rounded-md border p-4">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {notes?.length === 0 ? (
-            <p className="text-center text-muted-foreground col-span-full py-8">No hay notas creadas aún.</p>
+            <div className="col-span-full flex flex-col items-center justify-center py-12 text-muted-foreground">
+              <FileText className="h-16 w-16 mb-4" />
+              <p className="text-xl font-semibold">No hay notas creadas aún.</p>
+              <p className="text-sm">Haz clic en "Nueva Nota" para empezar a organizar tus ideas.</p>
+            </div>
           ) : (
             notes?.map((note) => (
-              <Card key={note.id} className="relative">
-                <CardHeader>
+              <Card key={note.id} className="relative border-l-4 border-primary hover:shadow-lg transition-shadow duration-200 ease-in-out">
+                <CardHeader className="pb-2">
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <FileText className="h-5 w-5 text-primary" />
                     {note.title}
@@ -175,8 +179,8 @@ const NotesPage: React.FC = () => {
                     Última actualización: {note.updated_at ? format(new Date(note.updated_at), "PPP HH:mm", { locale: es }) : "N/A"}
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-4">
+                <CardContent className="pt-2">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-4 mb-4">
                     {note.content || "Sin contenido."}
                   </p>
                   <div className="absolute top-4 right-4 flex gap-2">
