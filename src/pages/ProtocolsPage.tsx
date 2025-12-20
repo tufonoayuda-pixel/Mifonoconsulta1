@@ -132,6 +132,11 @@ const protocolsData: ProtocolCategory[] = [
     category: "Deglución Adulto",
     items: [
       {
+        name: "EIDEFO",
+        description: "Plataforma de evaluación de disfagia. Para ingresar es usuario: test y clave: password.",
+        url: "https://eidefo.vercel.app/login",
+      },
+      {
         name: "Escala de Severidad de Disfagia",
         description: "Herramienta para evaluar la severidad de la disfagia en adultos.",
         url: "https://escala-severidaddisfagia.space.z.ai/",
