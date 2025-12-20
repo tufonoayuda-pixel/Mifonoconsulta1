@@ -170,20 +170,14 @@ const NotesPage: React.FC = () => {
           ) : (
             notes?.map((note) => (
               <Card key={note.id} className="relative border-l-4 border-primary hover:shadow-lg transition-shadow duration-200 ease-in-out">
-                <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <FileText className="h-5 w-5 text-primary" />
-                    {note.title}
-                  </CardTitle>
-                  <CardDescription className="text-xs text-muted-foreground">
-                    Última actualización: {note.updated_at ? format(new Date(note.updated_at), "PPP HH:mm", { locale: es }) : "N/A"}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-2">
-                  <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-4 mb-4">
-                    {note.content || "Sin contenido."}
-                  </p>
-                  <div className="absolute top-4 right-4 flex gap-2">
+                <CardHeader className="flex flex-row items-start justify-between pb-2">
+                  <div className="flex items-center gap-2 text-lg flex-1 min-w-0">
+                    <FileText className="h-5 w-5 text-primary shrink-0" />
+                    <CardTitle className="text-lg font-semibold truncate">
+                      {note.title}
+                    </CardTitle>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
                     <Button variant="ghost" size="icon" onClick={() => openEditForm(note)} className="h-8 w-8">
                       <Edit className="h-4 w-4" />
                       <span className="sr-only">Editar nota</span>
@@ -209,6 +203,14 @@ const NotesPage: React.FC = () => {
                       </AlertDialogContent>
                     </AlertDialog>
                   </div>
+                </CardHeader>
+                <CardDescription className="text-xs text-muted-foreground px-6">
+                  Última actualización: {note.updated_at ? format(new Date(note.updated_at), "PPP HH:mm", { locale: es }) : "N/A"}
+                </CardDescription>
+                <CardContent className="pt-2 px-6">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-4 mb-4">
+                    {note.content || "Sin contenido."}
+                  </p>
                 </CardContent>
               </Card>
             ))
