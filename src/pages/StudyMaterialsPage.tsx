@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { PlusCircle, FileText, ExternalLink, Trash2, Edit, Download } from "lucide-react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
+import { PlusCircle, FileText, ExternalLink, Trash2, Edit, Download, BookOpenText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -210,22 +210,54 @@ const StudyMaterialsPage: React.FC = () => {
         <TabsContent value={currentTab} className="mt-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filteredMaterials.length === 0 ? (
-              <p className="text-center text-muted-foreground col-span-full py-8">No hay materiales en esta categoría.</p>
+              <div className="col-span-full flex flex-col items-center justify-center py-12 text-muted-foreground">
+                <BookOpenText className="h-16 w-16 mb-4" />
+                <p className="text-xl font-semibold">No hay materiales de estudio en esta categoría.</p>
+                <p className="text-sm">Haz clic en "Añadir Material" para empezar a organizar tus recursos.</p>
+              </div>
             ) : (
               filteredMaterials.map((material) => (
-                <Card key={material.id} className="relative border-l-4 border-primary">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      {material.external_url ? <ExternalLink className="h-5 w-5 text-primary" /> : <FileText className="h-5 w-5 text-primary" />}
-                      {material.name}
-                    </CardTitle>
-                    <CardDescription className="text-xs text-muted-foreground">
-                      Categoría: {material.category}
-                      <br />
-                      Última actualización: {material.updated_at ? format(new Date(material.updated_at), "PPP HH:mm", { locale: es }) : "N/A"}
-                    </CardDescription>
+                <Card key={material.id} className="relative border-l-4 border-primary hover:shadow-lg transition-shadow duration-200 ease-in-out">
+                  <CardHeader className="flex flex-row items-start justify-between pb-2">
+                    <div className="flex items-center gap-2 text-lg flex-1 min-w-0">
+                      {material.external_url ? <ExternalLink className="h-5 w-5 text-primary shrink-0" /> : <FileText className="h-5 w-5 text-primary shrink-0" />}
+                      <CardTitle className="text-lg font-semibold truncate">
+                        {material.name}
+                      </CardTitle>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <Button variant="ghost" size="icon" onClick={() => openEditForm(material)} className="h-8 w-8">
+                        <Edit className="h-4 w-4" />
+                        <span className="sr-only">Editar material</span>
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Eliminar material</span>
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Esta acción no se puede deshacer. Esto eliminará permanentemente el material de estudio. Si tenía un archivo asociado, este deberá ser eliminado manualmente de Supabase Storage.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteMaterialMutation.mutate(material)}>Eliminar</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </CardHeader>
-                  <CardContent>
+                  <CardDescription className="text-xs text-muted-foreground px-6">
+                    Categoría: {material.category}
+                    <br />
+                    Última actualización: {material.updated_at ? format(new Date(material.updated_at), "PPP HH:mm", { locale: es }) : "N/A"}
+                  </CardDescription>
+                  <CardContent className="pt-2 px-6">
                     <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 mb-3">
                       {material.description || "Sin descripción."}
                     </p>
@@ -252,32 +284,6 @@ const StudyMaterialsPage: React.FC = () => {
                     ) : (
                       <p className="text-sm text-muted-foreground">No hay enlace ni archivo.</p>
                     )}
-                    <div className="absolute top-4 right-4 flex gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => openEditForm(material)} className="h-8 w-8">
-                        <Edit className="h-4 w-4" />
-                        <span className="sr-only">Editar material</span>
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Eliminar material</span>
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Esta acción no se puede deshacer. Esto eliminará permanentemente el material de estudio. Si tenía un archivo asociado, este deberá ser eliminado manualmente de Supabase Storage.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteMaterialMutation.mutate(material)}>Eliminar</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
                   </CardContent>
                 </Card>
               ))
