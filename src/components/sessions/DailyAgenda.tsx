@@ -86,7 +86,7 @@ const DailyAgenda = ({ // Eliminado React.FC
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[calc(100vh-350px)] pr-4">
+          <ScrollArea className="max-h-[50vh] lg:h-[calc(100vh-350px)] pr-4"> {/* Adjusted height for mobile */}
             <div className="grid gap-4">
               {filteredSessions.length > 0 ? (
                 filteredSessions.map((session) => (

@@ -66,7 +66,7 @@ const SessionCalendar: React.FC<SessionCalendarProps> = ({ sessions, onSelectSes
   };
 
   return (
-    <Card className="h-[700px]"> {/* Fixed height for calendar */}
+    <Card className="h-[500px] lg:h-[700px]"> {/* Adjusted height for mobile */}
       <CardHeader>
         <CardTitle>Calendario de Sesiones</CardTitle>
       </CardHeader>

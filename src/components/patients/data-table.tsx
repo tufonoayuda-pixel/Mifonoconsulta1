@@ -65,7 +65,7 @@ export function DataTable<TData, TValue>({
           />
         </div>
       )}
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto"> {/* Added overflow-x-auto here */}
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

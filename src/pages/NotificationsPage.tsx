@@ -52,7 +52,7 @@ const NotificationList: React.FC<NotificationListProps> = ({ notifications, onMa
   }
 
   return (
-    <ScrollArea className="h-[calc(100vh-200px)] rounded-md border p-4">
+    <ScrollArea className="max-h-[70vh] rounded-md border p-4"> {/* Adjusted height for mobile */}
       <div className="grid gap-4">
         {notifications.map((notification) => (
           <Card key={notification.id} className={cn(

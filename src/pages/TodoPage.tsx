@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { useForm } from "react-hook-form";
+import { useForm } => "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, parseISO } from "date-fns"; // Import parseISO
@@ -225,7 +225,7 @@ const TodoPage: React.FC = () => {
           <CardDescription>Tareas pendientes y completadas.</CardDescription>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[calc(100vh-450px)] pr-4">
+          <ScrollArea className="max-h-[50vh] pr-4"> {/* Adjusted height for mobile */}
             <div className="grid gap-3">
               {todos?.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">No hay tareas pendientes.</p>
