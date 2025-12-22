@@ -126,6 +126,21 @@ const protocolsData: ProtocolCategory[] = [
         description: "Herramienta para generar sonidos que ayuden a enmascarar el tinnitus.",
         url: "https://enmascarador-tinnitus1.space.z.ai",
       },
+      {
+        name: "Localización Auditiva",
+        description: "Herramienta para trabajar la localización auditiva.",
+        url: "https://localizacion-auditiva.space.z.ai",
+      },
+      {
+        name: "Entrenador Binaural",
+        description: "Otra herramienta para el entrenamiento de la audición binaural.",
+        url: "https://entrenamientobinaural1.vercel.app/",
+      },
+      {
+        name: "Enmascarador de Tinnitus (Alternativo)",
+        description: "Otra herramienta para generar sonidos que ayuden a enmascarar el tinnitus.",
+        url: "https://tinnitus-masker2.vercel.app/",
+      },
     ],
   },
   {
