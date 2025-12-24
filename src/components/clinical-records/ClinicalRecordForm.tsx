@@ -49,7 +49,8 @@ import { showSuccess, showError } from "@/utils/toast";
 import { supabase, db } from "@/integrations/supabase/client";
 
 import FileUpload from "./FileUpload";
-import EvaluationFields from "./EvaluationFields";
+import UAPORRINO_EvaluationFields from "./UAPORRINO_EvaluationFields"; // Renamed import
+import RBC_EvaluationFields from "./RBC_EvaluationFields"; // New import
 import InterventionPlanFields from "./InterventionPlanFields";
 import SessionRecordFields from "./SessionRecordFields";
 import PatientForm from "../patients/PatientForm";
@@ -66,7 +67,7 @@ const clinicalRecordFormSchema = z.object({
   room: z.string().optional(), // Nuevo: Campo para la sala
   attachments: z.array(z.object({ name: z.string(), url: z.string(), type: z.string(), path: z.string().optional() })).optional(),
 
-  // Evaluation Record Specific Fields
+  // Evaluation Record Specific Fields (UAPORRINO)
   school_level: z.string().optional(),
   reason_for_consultation: z.string().optional(),
   medical_diagnosis: z.string().optional(),
@@ -92,6 +93,35 @@ const clinicalRecordFormSchema = z.object({
   synthesis_acoustic_perception: z.string().optional(),
   phonodiagnosis: z.string().optional(),
   observations_suggestions: z.string().optional(),
+
+  // Evaluation Record Specific Fields (RBC) - New fields
+  lateralidad: z.string().optional(),
+  direccion: z.string().optional(),
+  ocupacion: z.string().optional(),
+  diagnosticos_previos: z.string().optional(),
+  instrumento_plepaf: z.boolean().optional(),
+  instrumento_test_boston: z.boolean().optional(),
+  instrumento_protocolo_pragmatico: z.boolean().optional(),
+  instrumento_ceti: z.boolean().optional(),
+  instrumento_cadl2: z.boolean().optional(),
+  instrumento_ace_r: z.boolean().optional(),
+  instrumento_protocolo_cognitivo: z.boolean().optional(),
+  instrumento_pauta_ofa: z.boolean().optional(),
+  otros_instrumentos: z.string().optional(),
+  organos_fonoarticulatorios: z.string().optional(),
+  audicion: z.string().optional(),
+  deglucion: z.string().optional(),
+  caracteristicas_vocales: z.string().optional(),
+  caracteristicas_habla: z.string().optional(),
+  caracteristicas_linguisticas: z.string().optional(),
+  caracteristicas_cognitivas: z.string().optional(),
+  caracteristicas_comunicativas: z.string().optional(),
+  hipotesis_diagnostica: z.string().optional(),
+  severidad: z.string().optional(),
+  justificacion_diagnostico: z.string().optional(),
+  derivacion_psicologo: z.boolean().optional(),
+  derivacion_otra: z.string().optional(),
+  nombre_evaluador: z.string().optional(),
 
   // Intervention Plan Specific Fields
   geers_moog_category: z.enum(["Detección", "Discriminación", "Identificación", "Reconocimiento", "Comprensión"]).optional(),
@@ -200,6 +230,34 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
           clinical_observations: initialData.clinical_observations || "",
           response_patient: initialData.response_patient || "",
           next_session: initialData.next_session || "",
+          // RBC fields
+          lateralidad: initialData.lateralidad || "",
+          direccion: initialData.direccion || "",
+          ocupacion: initialData.ocupacion || "",
+          diagnosticos_previos: initialData.diagnosticos_previos || "",
+          instrumento_plepaf: initialData.instrumento_plepaf || false,
+          instrumento_test_boston: initialData.instrumento_test_boston || false,
+          instrumento_protocolo_pragmatico: initialData.instrumento_protocolo_pragmatico || false,
+          instrumento_ceti: initialData.instrumento_ceti || false,
+          instrumento_cadl2: initialData.instrumento_cadl2 || false,
+          instrumento_ace_r: initialData.instrumento_ace_r || false,
+          instrumento_protocolo_cognitivo: initialData.instrumento_protocolo_cognitivo || false,
+          instrumento_pauta_ofa: initialData.instrumento_pauta_ofa || false,
+          otros_instrumentos: initialData.otros_instrumentos || "",
+          organos_fonoarticulatorios: initialData.organos_fonoarticulatorios || "",
+          audicion: initialData.audicion || "",
+          deglucion: initialData.deglucion || "",
+          caracteristicas_vocales: initialData.caracteristicas_vocales || "",
+          caracteristicas_habla: initialData.caracteristicas_habla || "",
+          caracteristicas_linguisticas: initialData.caracteristicas_linguisticas || "",
+          caracteristicas_cognitivas: initialData.caracteristicas_cognitivas || "",
+          caracteristicas_comunicativas: initialData.caracteristicas_comunicativas || "",
+          hipotesis_diagnostica: initialData.hipotesis_diagnostica || "",
+          severidad: initialData.severidad || "",
+          justificacion_diagnostico: initialData.justificacion_diagnostico || "",
+          derivacion_psicologo: initialData.derivacion_psicologo || false,
+          derivacion_otra: initialData.derivacion_otra || "",
+          nombre_evaluador: initialData.nombre_evaluador || "",
         }
       : {
           patientId: "",
@@ -208,6 +266,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
           title: "",
           room: "UAPORRINO", // Default room for new records
           attachments: [],
+          // UAPORRINO fields
           school_level: "", reason_for_consultation: "", medical_diagnosis: "", anamnesis_info: "",
           family_context: "", previous_therapies: "", evaluation_conditions: "", hearing_aids_use: "",
           applied_tests: "", clinical_observation_methods: "", speech_anatomical_structures: "",
@@ -217,15 +276,27 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
           linguistic_skills_semantics: "", linguistic_skills_literacy: "",
           linguistic_skills_pragmatics: "", synthesis_comprehensive_level: "",
           synthesis_expressive_level: "", synthesis_acoustic_perception: "",
-          phonodiagnosis: "", observations_suggestions: "", geers_moog_category: undefined,
-          auditory_verbal_therapy_methodology: undefined, techniques_strategies: "",
-          intervention_focus: undefined, modality: undefined, auditory_skills: "",
-          semantics_intervention: "", instruction_following: "", communicative_intent: "",
-          activities_specific: "", materials_resources: "", general_objective: "",
-          specific_operational_objectives: "", plan_duration_estimated: undefined,
-          session_frequency: "", session_id: "", session_objectives: "",
-          activities_performed: "", clinical_observations: "", response_patient: "",
-          next_session: "",
+          phonodiagnosis: "", observations_suggestions: "",
+          // Intervention Plan fields
+          geers_moog_category: undefined, auditory_verbal_therapy_methodology: undefined,
+          techniques_strategies: "", intervention_focus: undefined, modality: undefined,
+          auditory_skills: "", semantics_intervention: "", instruction_following: "",
+          communicative_intent: "", activities_specific: "", materials_resources: "",
+          general_objective: "", specific_operational_objectives: "", plan_duration_estimated: undefined,
+          session_frequency: "",
+          // Session Record fields
+          session_id: "", session_objectives: "", activities_performed: "", clinical_observations: "",
+          response_patient: "", next_session: "",
+          // RBC fields
+          lateralidad: "", direccion: "", ocupacion: "", diagnosticos_previos: "",
+          instrumento_plepaf: false, instrumento_test_boston: false, instrumento_protocolo_pragmatico: false,
+          instrumento_ceti: false, instrumento_cadl2: false, instrumento_ace_r: false,
+          instrumento_protocolo_cognitivo: false, instrumento_pauta_ofa: false, otros_instrumentos: "",
+          organos_fonoarticulatorios: "", audicion: "", deglucion: "", caracteristicas_vocales: "",
+          caracteristicas_habla: "", caracteristicas_linguisticas: "", caracteristicas_cognitivas: "",
+          caracteristicas_comunicativas: "", hipotesis_diagnostica: "", severidad: "",
+          justificacion_diagnostico: "", derivacion_psicologo: false, derivacion_otra: "",
+          nombre_evaluador: "",
         },
   });
 
@@ -295,6 +366,34 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         clinical_observations: initialData.clinical_observations || "",
         response_patient: initialData.response_patient || "",
         next_session: initialData.next_session || "",
+        // RBC fields
+        lateralidad: initialData.lateralidad || "",
+        direccion: initialData.direccion || "",
+        ocupacion: initialData.ocupacion || "",
+        diagnosticos_previos: initialData.diagnosticos_previos || "",
+        instrumento_plepaf: initialData.instrumento_plepaf || false,
+        instrumento_test_boston: initialData.instrumento_test_boston || false,
+        instrumento_protocolo_pragmatico: initialData.instrumento_protocolo_pragmatico || false,
+        instrumento_ceti: initialData.instrumento_ceti || false,
+        instrumento_cadl2: initialData.instrumento_cadl2 || false,
+        instrumento_ace_r: initialData.instrumento_ace_r || false,
+        instrumento_protocolo_cognitivo: initialData.instrumento_protocolo_cognitivo || false,
+        instrumento_pauta_ofa: initialData.instrumento_pauta_ofa || false,
+        otros_instrumentos: initialData.otros_instrumentos || "",
+        organos_fonoarticulatorios: initialData.organos_fonoarticulatorios || "",
+        audicion: initialData.audicion || "",
+        deglucion: initialData.deglucion || "",
+        caracteristicas_vocales: initialData.caracteristicas_vocales || "",
+        caracteristicas_habla: initialData.caracteristicas_habla || "",
+        caracteristicas_linguisticas: initialData.caracteristicas_linguisticas || "",
+        caracteristicas_cognitivas: initialData.caracteristicas_cognitivas || "",
+        caracteristicas_comunicativas: initialData.caracteristicas_comunicativas || "",
+        hipotesis_diagnostica: initialData.hipotesis_diagnostica || "",
+        severidad: initialData.severidad || "",
+        justificacion_diagnostico: initialData.justificacion_diagnostico || "",
+        derivacion_psicologo: initialData.derivacion_psicologo || false,
+        derivacion_otra: initialData.derivacion_otra || "",
+        nombre_evaluador: initialData.nombre_evaluador || "",
       });
     } else {
       form.reset({
@@ -304,6 +403,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         title: "",
         room: "UAPORRINO", // Default room for new records
         attachments: [],
+        // UAPORRINO fields
         school_level: "", reason_for_consultation: "", medical_diagnosis: "", anamnesis_info: "",
         family_context: "", previous_therapies: "", evaluation_conditions: "", hearing_aids_use: "",
         applied_tests: "", clinical_observation_methods: "", speech_anatomical_structures: "",
@@ -313,15 +413,27 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         linguistic_skills_semantics: "", linguistic_skills_literacy: "",
         linguistic_skills_pragmatics: "", synthesis_comprehensive_level: "",
         synthesis_expressive_level: "", synthesis_acoustic_perception: "",
-        phonodiagnosis: "", observations_suggestions: "", geers_moog_category: undefined,
-        auditory_verbal_therapy_methodology: undefined, techniques_strategies: "",
-        intervention_focus: undefined, modality: undefined, auditory_skills: "",
-        semantics_intervention: "", instruction_following: "", communicative_intent: "",
-        activities_specific: "", materials_resources: "", general_objective: "",
-        specific_operational_objectives: "", plan_duration_estimated: undefined,
-        session_frequency: "", session_id: "", session_objectives: "",
-        activities_performed: "", clinical_observations: "", response_patient: "",
-        next_session: "",
+        phonodiagnosis: "", observations_suggestions: "",
+        // Intervention Plan fields
+        geers_moog_category: undefined, auditory_verbal_therapy_methodology: undefined,
+        techniques_strategies: "", intervention_focus: undefined, modality: undefined,
+        auditory_skills: "", semantics_intervention: "", instruction_following: "",
+        communicative_intent: "", activities_specific: "", materials_resources: "",
+        general_objective: "", specific_operational_objectives: "", plan_duration_estimated: undefined,
+        session_frequency: "",
+        // Session Record fields
+        session_id: "", session_objectives: "", activities_performed: "", clinical_observations: "",
+        response_patient: "", next_session: "",
+        // RBC fields
+        lateralidad: "", direccion: "", ocupacion: "", diagnosticos_previos: "",
+        instrumento_plepaf: false, instrumento_test_boston: false, instrumento_protocolo_pragmatico: false,
+        instrumento_ceti: false, instrumento_cadl2: false, instrumento_ace_r: false,
+        instrumento_protocolo_cognitivo: false, instrumento_pauta_ofa: false, otros_instrumentos: "",
+        organos_fonoarticulatorios: "", audicion: "", deglucion: "", caracteristicas_vocales: "",
+        caracteristicas_habla: "", caracteristicas_linguisticas: "", caracteristicas_cognitivas: "",
+        caracteristicas_comunicativas: "", hipotesis_diagnostica: "", severidad: "",
+        justificacion_diagnostico: "", derivacion_psicologo: false, derivacion_otra: "",
+        nombre_evaluador: "",
       });
     }
   }, [initialData, form, initialRecordType]);
@@ -361,6 +473,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
       updatedAt: now,
     };
 
+    // Clean up empty strings to null for DB
     for (const key in recordToSubmit) {
       if (recordToSubmit[key as keyof ClinicalRecord] === "") {
         recordToSubmit[key as keyof ClinicalRecord] = null as any;
@@ -638,12 +751,22 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                 />
               </div>
 
-              {/* Render conditional fields based on selectedRecordType */}
-              {selectedRecordType === "Evaluación" && (
-                <EvaluationFields
+              {/* Render conditional fields based on selectedRecordType and selectedRoom */}
+              {selectedRecordType === "Evaluación" && selectedRoom === "UAPORRINO" && (
+                <UAPORRINO_EvaluationFields
                   form={form} // Pass form directly
                   patientRut={selectedPatient?.rut}
                   patientAge={selectedPatient?.age}
+                  room={selectedRoom} // Pass selected room
+                />
+              )}
+              {selectedRecordType === "Evaluación" && selectedRoom === "RBC" && (
+                <RBC_EvaluationFields
+                  form={form} // Pass form directly
+                  patientNameDisplay={selectedPatient?.name}
+                  patientAgeDisplay={selectedPatient?.age}
+                  patientRutDisplay={selectedPatient?.rut}
+                  patientPhoneDisplay={selectedPatient?.phone}
                   room={selectedRoom} // Pass selected room
                 />
               )}

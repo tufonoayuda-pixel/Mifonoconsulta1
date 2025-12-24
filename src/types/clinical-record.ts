@@ -7,12 +7,13 @@ export interface ClinicalRecord {
   type: ClinicalRecordType; // Renombrado de recordType para coincidir con la DB
   date: string; // Renombrado de recordDate para coincidir con la DB (YYYY-MM-DD)
   title: string;
-  room?: string; // Nuevo: Campo para la sala de la evaluación
+  room?: string; // Campo para la sala de la evaluación
+
   createdAt: string; // Cadena ISO
   updatedAt: string; // Cadena ISO
   attachments: { name: string; url: string; type: string; path?: string }[]; // path es para la gestión en Supabase Storage
 
-  // Campos específicos de Registro de Evaluación (mapeados a columnas de la DB)
+  // Campos específicos de Registro de Evaluación (UAPORRINO)
   school_level?: string;
   reason_for_consultation?: string;
   medical_diagnosis?: string;
@@ -38,6 +39,36 @@ export interface ClinicalRecord {
   synthesis_acoustic_perception?: string;
   phonodiagnosis?: string;
   observations_suggestions?: string;
+
+  // Campos específicos de Registro de Evaluación (RBC) - Nuevos campos
+  lateralidad?: string;
+  direccion?: string;
+  telefono?: string; // Ya existe en Patient, pero si es específico del informe, se puede duplicar o referenciar
+  ocupacion?: string;
+  diagnosticos_previos?: string;
+  instrumento_plepaf?: boolean;
+  instrumento_test_boston?: boolean;
+  instrumento_protocolo_pragmatico?: boolean;
+  instrumento_ceti?: boolean;
+  instrumento_cadl2?: boolean;
+  instrumento_ace_r?: boolean;
+  instrumento_protocolo_cognitivo?: boolean;
+  instrumento_pauta_ofa?: boolean;
+  otros_instrumentos?: string;
+  organos_fonoarticulatorios?: string;
+  audicion?: string;
+  deglucion?: string;
+  caracteristicas_vocales?: string;
+  caracteristicas_habla?: string;
+  caracteristicas_linguisticas?: string;
+  caracteristicas_cognitivas?: string;
+  caracteristicas_comunicativas?: string;
+  hipotesis_diagnostica?: string;
+  severidad?: string;
+  justificacion_diagnostico?: string;
+  derivacion_psicologo?: boolean;
+  derivacion_otra?: string;
+  nombre_evaluador?: string;
 
   // Campos específicos de Plan de Intervención (mapeados a columnas de la DB)
   geers_moog_category?: "Detección" | "Discriminación" | "Identificación" | "Reconocimiento" | "Comprensión";
