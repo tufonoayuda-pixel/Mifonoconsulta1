@@ -281,6 +281,11 @@ const protocolsData: ProtocolCategory[] = [
         description: "Cuestionario para evaluar la capacidad de realizar actividades de la vida diaria.",
         url: "https://calvida-tadlq.space.z.ai",
       },
+      {
+        name: "CADL-2 (Comunicative Activities of Daily Living - 2)",
+        description: "Evaluación de las habilidades comunicativas funcionales en contextos de la vida diaria.",
+        url: "https://calvida-cadl2.space.z.ai",
+      },
     ],
   },
 ];
