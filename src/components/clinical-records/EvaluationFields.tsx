@@ -17,13 +17,17 @@ interface EvaluationFieldsProps {
   form: UseFormReturn<ClinicalRecordFormValues>; // Accept form as a prop
   patientRut?: string;
   patientAge?: number;
+  room?: string; // Nuevo: Aceptar la sala como prop
 }
 
-const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ form, patientRut, patientAge }) => {
+const EvaluationFields: React.FC<EvaluationFieldsProps> = ({ form, patientRut, patientAge, room }) => {
   // Removed useFormContext()
 
   return (
     <div className="space-y-6">
+      {room && (
+        <h2 className="text-xl font-bold mb-4">Evaluación para Sala: {room}</h2>
+      )}
       <h3 className="text-lg font-semibold">I. ANTECEDENTES DE IDENTIFICACIÓN</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormItem>

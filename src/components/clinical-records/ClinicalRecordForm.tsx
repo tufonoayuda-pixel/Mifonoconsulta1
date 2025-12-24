@@ -63,6 +63,7 @@ const clinicalRecordFormSchema = z.object({
   }),
   date: z.string().min(1, { message: "Fecha del registro es obligatoria." }),
   title: z.string().min(1, { message: "Título es obligatorio." }),
+  room: z.string().optional(), // Nuevo: Campo para la sala
   attachments: z.array(z.object({ name: z.string(), url: z.string(), type: z.string(), path: z.string().optional() })).optional(),
 
   // Evaluation Record Specific Fields
@@ -151,6 +152,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
       ? {
           ...initialData,
           date: initialData.date || format(new Date(), "yyyy-MM-dd"),
+          room: initialData.room || "UAPORRINO", // Default room for existing records
           attachments: initialData.attachments || [],
           school_level: initialData.school_level || "",
           reason_for_consultation: initialData.reason_for_consultation || "",
@@ -204,6 +206,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
           type: initialRecordType,
           date: format(new Date(), "yyyy-MM-dd"),
           title: "",
+          room: "UAPORRINO", // Default room for new records
           attachments: [],
           school_level: "", reason_for_consultation: "", medical_diagnosis: "", anamnesis_info: "",
           family_context: "", previous_therapies: "", evaluation_conditions: "", hearing_aids_use: "",
@@ -229,6 +232,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
   const selectedPatientId = form.watch("patientId");
   const selectedRecordType = form.watch("type");
   const selectedRecordDate = form.watch("date");
+  const selectedRoom = form.watch("room"); // Watch for selected room
   const currentAttachments = form.watch("attachments");
 
   const selectedPatient = availablePatients.find((p) => p.id === selectedPatientId);
@@ -243,6 +247,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
       form.reset({
         ...initialData,
         date: initialData.date || format(new Date(), "yyyy-MM-dd"),
+        room: initialData.room || "UAPORRINO", // Default room for existing records
         attachments: initialData.attachments || [],
         school_level: initialData.school_level || "",
         reason_for_consultation: initialData.reason_for_consultation || "",
@@ -297,6 +302,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         type: initialRecordType,
         date: format(new Date(), "yyyy-MM-dd"),
         title: "",
+        room: "UAPORRINO", // Default room for new records
         attachments: [],
         school_level: "", reason_for_consultation: "", medical_diagnosis: "", anamnesis_info: "",
         family_context: "", previous_therapies: "", evaluation_conditions: "", hearing_aids_use: "",
@@ -326,6 +332,9 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
       switch (selectedRecordType) {
         case "Evaluación":
           defaultTitle = `Informe de Evaluación - ${selectedPatient.name}`;
+          if (selectedRoom) {
+            defaultTitle += ` (${selectedRoom})`;
+          }
           break;
         case "Plan de Intervención":
           defaultTitle = `Plan de Intervención - ${selectedPatient.name}`;
@@ -336,7 +345,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
       }
       form.setValue("title", defaultTitle);
     }
-  }, [selectedPatient, selectedRecordType, initialData, form]);
+  }, [selectedPatient, selectedRecordType, selectedRoom, initialData, form]); // Added selectedRoom to dependencies
 
   const handleSubmit = async (values: ClinicalRecordFormValues) => {
     if (!selectedPatient) {
@@ -475,7 +484,9 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Selecciona un paciente" />
+                              <SelectValue placeholder="Selecciona un paciente">
+                                {selectedPatient ? `${selectedPatient.name} (RUT: ${selectedPatient.rut})` : "Selecciona un paciente"}
+                              </SelectValue>
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -502,6 +513,30 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                   </Button>
                 </div>
               </div>
+
+              {selectedRecordType === "Evaluación" && (
+                <FormField
+                  control={form.control}
+                  name="room"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sala de Evaluación</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona la sala de evaluación" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="UAPORRINO">UAPORRINO</SelectItem>
+                          <SelectItem value="RBC">RBC</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               {selectedRecordType === "Registro de Sesión" && (
                 <FormField
@@ -609,6 +644,7 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
                   form={form} // Pass form directly
                   patientRut={selectedPatient?.rut}
                   patientAge={selectedPatient?.age}
+                  room={selectedRoom} // Pass selected room
                 />
               )}
               {selectedRecordType === "Plan de Intervención" && (

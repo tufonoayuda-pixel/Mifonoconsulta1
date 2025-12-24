@@ -7,6 +7,7 @@ export interface ClinicalRecord {
   type: ClinicalRecordType; // Renombrado de recordType para coincidir con la DB
   date: string; // Renombrado de recordDate para coincidir con la DB (YYYY-MM-DD)
   title: string;
+  room?: string; // Nuevo: Campo para la sala de la evaluación
   createdAt: string; // Cadena ISO
   updatedAt: string; // Cadena ISO
   attachments: { name: string; url: string; type: string; path?: string }[]; // path es para la gestión en Supabase Storage
