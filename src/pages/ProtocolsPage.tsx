@@ -251,6 +251,11 @@ const protocolsData: ProtocolCategory[] = [
         description: "Protocolo para la evaluación y registro de la voz hablada en adultos.",
         url: "https://voz-hablada.space.z.ai",
       },
+      {
+        name: "LAB VOZ",
+        description: "Plataforma para el análisis y entrenamiento de la voz.",
+        url: "https://lab-voz.vercel.app/",
+      },
     ],
   },
   {
