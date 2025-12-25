@@ -201,14 +201,16 @@ const HomeTasksPage: React.FC = () => {
     documentTitle: `Tareas_para_Casa_${format(new Date(), "yyyyMMdd_HHmmss")}`,
     pageStyle: `
       @page {
-        size: A4;
-        margin: 20mm;
+        size: Letter; /* Standard Letter size */
+        margin: 2.5cm; /* 2.5 cm on all sides */
       }
       body {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
-        font-family: Arial, sans-serif; /* Added font family */
-        font-size: 14pt; /* Added font size */
+        font-family: Arial, sans-serif !important; /* Recommended sans-serif font */
+        font-size: 12pt !important; /* Main body font size */
+        color: black !important; /* High contrast */
+        line-height: 1.5 !important; /* 1.5 line spacing */
       }
       /* Hide elements with 'no-print' class */
       .no-print {
@@ -219,12 +221,33 @@ const HomeTasksPage: React.FC = () => {
         display: block !important;
         color: black !important; /* Force black text for printing */
         font-family: Arial, sans-serif !important; /* Ensure font for printing */
-        font-size: 14pt !important; /* Ensure font size for printing */
+        font-size: 12pt !important; /* Ensure font size for printing */
+        line-height: 1.5 !important;
       }
       #printable-content * {
         color: black !important; /* Force black text for all children */
         font-family: Arial, sans-serif !important; /* Ensure font for all children */
-        font-size: 14pt !important; /* Ensure font size for all children */
+        line-height: 1.5 !important;
+      }
+      #printable-content h1 {
+        font-size: 16pt !important; /* Titles 14-16pt */
+        font-weight: bold !important;
+        color: black !important;
+      }
+      #printable-content h2 {
+        font-size: 14pt !important; /* Titles 14-16pt */
+        font-weight: bold !important;
+        color: black !important;
+      }
+      #printable-content p {
+        font-size: 12pt !important;
+        color: black !important;
+        line-height: 1.5 !important;
+      }
+      #printable-content .text-xs { /* For smaller text like dates */
+        font-size: 11pt !important; /* Instructions/clarifications 11-12pt */
+        font-style: italic !important;
+        color: #333 !important; /* Darker grey for instructions */
       }
       .printable-table {
         width: 100%;
@@ -235,14 +258,19 @@ const HomeTasksPage: React.FC = () => {
         border: 1px solid #ccc;
         padding: 8px;
         text-align: left;
+        color: black !important; /* Ensure table text is black */
+        font-size: 12pt !important;
+        line-height: 1.5 !important;
       }
       .printable-table th {
         background-color: #f2f2f2;
+        font-weight: bold !important;
       }
       .task-image {
-        max-width: 100px;
-        max-height: 100px;
-        object-fit: cover;
+        max-width: 150px; /* Adjusted for better print layout */
+        max-height: 150px;
+        object-fit: contain;
+        margin-top: 10px;
       }
     `,
   });
@@ -257,13 +285,20 @@ const HomeTasksPage: React.FC = () => {
       const printableElement = componentRef.current;
       const originalDisplay = printableElement.style.display;
       const originalColor = printableElement.style.color;
-      const originalFontFamily = printableElement.style.fontFamily; // Store original font family
-      const originalFontSize = printableElement.style.fontSize; // Store original font size
+      const originalFontFamily = printableElement.style.fontFamily;
+      const originalFontSize = printableElement.style.fontSize;
+      const originalLineHeight = printableElement.style.lineHeight;
+      const originalPadding = printableElement.style.padding;
+      const originalWidth = printableElement.style.width;
 
-      printableElement.style.display = 'block'; // Temporarily make it visible
-      printableElement.style.color = 'black'; // Temporarily force black text
-      printableElement.style.fontFamily = 'Arial, sans-serif'; // Set font family
-      printableElement.style.fontSize = '14pt'; // Set font size
+      // Temporarily apply print styles for html2canvas capture
+      printableElement.style.display = 'block';
+      printableElement.style.color = 'black';
+      printableElement.style.fontFamily = 'Arial, sans-serif';
+      printableElement.style.fontSize = '12pt';
+      printableElement.style.lineHeight = '1.5';
+      printableElement.style.padding = '2.5cm'; // Simulate margins
+      printableElement.style.width = '21.6cm'; // Letter width
 
       try {
         const canvas = await html2canvas(printableElement, {
@@ -275,18 +310,16 @@ const HomeTasksPage: React.FC = () => {
           throw new Error("Failed to generate canvas from printable content.");
         }
 
-        const imgData = canvas.toDataURL('image/jpeg', 0.9); // Changed to JPEG with quality
-        console.log("Generated imgData length:", imgData.length); // Log length for debugging
+        const imgData = canvas.toDataURL('image/jpeg', 0.9);
 
-        if (!imgData || imgData.length < 100) { // Basic check for empty/invalid data URL
+        if (!imgData || imgData.length < 100) {
           throw new Error("Generated image data is empty or invalid.");
         }
 
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth(); // A4 width in mm (210)
-        const pdfHeight = pdf.internal.pageSize.getHeight(); // A4 height in mm (297)
+        const pdf = new jsPDF('p', 'mm', 'letter'); // Set page format to 'letter'
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
 
-        // Calculate image dimensions to fit PDF page, maintaining aspect ratio
         const imgWidth = pdfWidth;
         const imgHeight = (canvas.height * pdfWidth) / canvas.width;
 
@@ -309,10 +342,14 @@ const HomeTasksPage: React.FC = () => {
         showError("Error al exportar a PDF: " + error.message);
         console.error("Error generating PDF:", error);
       } finally {
-        printableElement.style.display = originalDisplay; // Restore original display
-        printableElement.style.color = originalColor; // Restore original color
-        printableElement.style.fontFamily = originalFontFamily; // Restore original font family
-        printableElement.style.fontSize = originalFontSize; // Restore original font size
+        // Restore original styles
+        printableElement.style.display = originalDisplay;
+        printableElement.style.color = originalColor;
+        printableElement.style.fontFamily = originalFontFamily;
+        printableElement.style.fontSize = originalFontSize;
+        printableElement.style.lineHeight = originalLineHeight;
+        printableElement.style.padding = originalPadding;
+        printableElement.style.width = originalWidth;
       }
     } else {
       showError("No hay contenido para exportar a PDF.");
@@ -331,25 +368,48 @@ const HomeTasksPage: React.FC = () => {
     documentTitle: `Tarea_${taskToPrint?.title.replace(/\s/g, '_')}_${format(new Date(), "yyyyMMdd_HHmmss")}`,
     pageStyle: `
       @page {
-        size: A4;
-        margin: 20mm;
+        size: Letter; /* Standard Letter size */
+        margin: 2.5cm; /* 2.5 cm on all sides */
       }
       body {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
-        font-family: Arial, sans-serif; /* Added font family */
-        font-size: 14pt; /* Added font size */
+        font-family: Arial, sans-serif !important; /* Recommended sans-serif font */
+        font-size: 12pt !important; /* Main body font size */
+        color: black !important; /* High contrast */
+        line-height: 1.5 !important; /* 1.5 line spacing */
       }
       #single-task-printable-content {
         display: block !important;
         color: black !important; /* Force black text for printing */
         font-family: Arial, sans-serif !important; /* Ensure font for printing */
-        font-size: 14pt !important; /* Ensure font size for printing */
+        font-size: 12pt !important; /* Ensure font size for printing */
+        line-height: 1.5 !important;
       }
       #single-task-printable-content * {
         color: black !important; /* Force black text for all children */
         font-family: Arial, sans-serif !important; /* Ensure font for all children */
-        font-size: 14pt !important; /* Ensure font size for all children */
+        line-height: 1.5 !important;
+      }
+      #single-task-printable-content h1 {
+        font-size: 16pt !important; /* Titles 14-16pt */
+        font-weight: bold !important;
+        color: black !important;
+      }
+      #single-task-printable-content h2 {
+        font-size: 14pt !important; /* Titles 14-16pt */
+        font-weight: bold !important;
+        color: black !important;
+      }
+      #single-task-printable-content p {
+        font-size: 12pt !important;
+        color: black !important;
+        line-height: 1.5 !important;
+      }
+      #single-task-printable-content .text-xs { /* For smaller text like dates */
+        font-size: 11pt !important; /* Instructions/clarifications 11-12pt */
+        font-style: italic !important;
+        color: #333 !important; /* Darker grey for instructions */
       }
       .printable-task-card {
         border: 1px solid #ccc;
@@ -400,13 +460,20 @@ const HomeTasksPage: React.FC = () => {
         const printableElement = singleTaskPrintRef.current;
         const originalDisplay = printableElement.style.display;
         const originalColor = printableElement.style.color;
-        const originalFontFamily = printableElement.style.fontFamily; // Store original font family
-        const originalFontSize = printableElement.style.fontSize; // Store original font size
+        const originalFontFamily = printableElement.style.fontFamily;
+        const originalFontSize = printableElement.style.fontSize;
+        const originalLineHeight = printableElement.style.lineHeight;
+        const originalPadding = printableElement.style.padding;
+        const originalWidth = printableElement.style.width;
 
-        printableElement.style.display = 'block'; // Temporarily make it visible
-        printableElement.style.color = 'black'; // Temporarily force black text
-        printableElement.style.fontFamily = 'Arial, sans-serif'; // Set font family
-        printableElement.style.fontSize = '14pt'; // Set font size
+        // Temporarily apply print styles for html2canvas capture
+        printableElement.style.display = 'block';
+        printableElement.style.color = 'black';
+        printableElement.style.fontFamily = 'Arial, sans-serif';
+        printableElement.style.fontSize = '12pt';
+        printableElement.style.lineHeight = '1.5';
+        printableElement.style.padding = '2.5cm'; // Simulate margins
+        printableElement.style.width = '21.6cm'; // Letter width
 
         try {
           const canvas = await html2canvas(printableElement, {
@@ -424,21 +491,24 @@ const HomeTasksPage: React.FC = () => {
             throw new Error("Generated image data is empty or invalid.");
           }
 
-          const pdf = new jsPDF('p', 'mm', 'a4');
+          const pdf = new jsPDF('p', 'mm', 'letter'); // Set page format to 'letter'
           const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = pdf.internal.pageSize.getHeight();
+
+          const imgWidth = pdfWidth;
           const imgHeight = (canvas.height * pdfWidth) / canvas.width;
 
           let heightLeft = imgHeight;
           let position = 0;
 
-          pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
-          heightLeft -= pdf.internal.pageSize.getHeight();
+          pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pdfHeight;
 
           while (heightLeft >= 0) {
             position = heightLeft - imgHeight;
             pdf.addPage();
-            pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
-            heightLeft -= pdf.internal.pageSize.getHeight();
+            pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pdfHeight;
           }
 
           pdf.save(`Tarea_${taskToPrint.title.replace(/\s/g, '_')}_${format(new Date(), "yyyyMMdd_HHmmss")}.pdf`);
@@ -447,10 +517,14 @@ const HomeTasksPage: React.FC = () => {
           showError("Error al exportar a PDF: " + error.message);
           console.error("Error generating PDF:", error);
         } finally {
-          printableElement.style.display = originalDisplay; // Restore original display
-          printableElement.style.color = originalColor; // Restore original color
-          printableElement.style.fontFamily = originalFontFamily; // Restore original font family
-          printableElement.style.fontSize = originalFontSize; // Restore original font size
+          // Restore original styles
+          printableElement.style.display = originalDisplay;
+          printableElement.style.color = originalColor;
+          printableElement.style.fontFamily = originalFontFamily;
+          printableElement.style.fontSize = originalFontSize;
+          printableElement.style.lineHeight = originalLineHeight;
+          printableElement.style.padding = originalPadding;
+          printableElement.style.width = originalWidth;
           setTaskToPrint(null); // Clear the task after processing
           setTriggerSinglePdf(false); // Reset trigger
         }
