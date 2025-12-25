@@ -288,6 +288,16 @@ const protocolsData: ProtocolCategory[] = [
       },
     ],
   },
+  {
+    category: "Motricidad Orofacial",
+    items: [
+      {
+        name: "VFRV (Valoración Funcional de la Respiración y la Voz)",
+        description: "Protocolo para la valoración funcional de la respiración y la voz.",
+        url: "https://mo-vfrv.space.z.ai",
+      },
+    ],
+  },
 ];
 
 const ProtocolsPage: React.FC = () => {
