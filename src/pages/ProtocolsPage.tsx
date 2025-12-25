@@ -149,7 +149,7 @@ const protocolsData: ProtocolCategory[] = [
       {
         name: "EIDEFO",
         description: "Plataforma de evaluación de disfagia. Para ingresar es usuario: test y clave: password.",
-        url: "https://eidefo2.vercel.app/login", // Updated URL
+        url: "https://eidefo2.vercel.app/login",
       },
       {
         name: "Escala de Severidad de Disfagia",
@@ -255,6 +255,11 @@ const protocolsData: ProtocolCategory[] = [
         name: "LAB VOZ",
         description: "Plataforma para el análisis y entrenamiento de la voz.",
         url: "https://lab-voz.vercel.app/",
+      },
+      {
+        name: "VHI-30 (Índice de Incapacidad Vocal)",
+        description: "Cuestionario para evaluar el impacto de los problemas de voz en la calidad de vida.",
+        url: "https://voz-vhi30.space.z.ai",
       },
     ],
   },
