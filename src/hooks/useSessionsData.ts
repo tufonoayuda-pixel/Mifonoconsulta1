@@ -140,8 +140,7 @@ export const useSessionsData = () => {
 
       console.log("Payload for Supabase insert:", payload);
 
-      const { error } = await db.from("sessions").insert(payload);
-
+      const { error } = await db.from("sessions").insert(payload); // This already returns { data, error }
       if (error) throw error;
       return sessionsToInsert.length > 1 ? `${sessionsToInsert.length} sesiones recurrentes programadas exitosamente (o en cola para sincronizar).` : "Sesión programada exitosamente (o en cola para sincronizar).";
     },
@@ -178,8 +177,7 @@ export const useSessionsData = () => {
       };
       console.log("Payload for Supabase update:", payload);
 
-      const { error } = await db.from("sessions").update(payload).match({ id: updatedSession.id });
-
+      const { error } = await db.from("sessions").update(payload).match({ id: updatedSession.id }); // This already returns { data, error }
       if (error) throw error;
       return "Sesión actualizada exitosamente (o en cola para sincronizar).";
     },

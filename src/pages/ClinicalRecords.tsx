@@ -219,13 +219,91 @@ const ClinicalRecords = () => {
     },
   });
 
-  const handleFormSubmit = (record: ClinicalRecord) => {
-    if (editingRecord) {
-      updateClinicalRecordMutation.mutate(record);
-    } else {
-      addClinicalRecordMutation.mutate(record);
+  const handleFormSubmit = async (values: ClinicalRecordFormValues) => {
+    if (!selectedPatient) {
+      showError("Debe seleccionar un paciente.");
+      return;
     }
-    closeForm();
+
+    const now = new Date().toISOString();
+    const recordToSubmit: Partial<ClinicalRecord> = {
+      ...values,
+      patientName: selectedPatient.name,
+      createdAt: initialData?.createdAt || now,
+      updatedAt: now,
+    };
+
+    // Clean up empty strings to null for DB
+    for (const key in recordToSubmit) {
+      if (recordToSubmit[key as keyof ClinicalRecord] === "") {
+        recordToSubmit[key as keyof ClinicalRecord] = null as any;
+      }
+    }
+
+    const filesToUpload = currentAttachments?.filter(file => file.url.startsWith("blob:")) || [];
+    const existingAttachments = currentAttachments?.filter(file => !file.url.startsWith("blob:")) || [];
+
+    try {
+      let recordId = values.id;
+      if (initialData) {
+        const { error } = await db.from("clinical_records").update(recordToSubmit).match({ id: initialData.id });
+        if (error) throw error;
+        showSuccess("Registro clínico actualizado exitosamente (o en cola para sincronizar).");
+      } else {
+        const { data, error } = await db.from("clinical_records").insert(recordToSubmit); // Removed .select("id").single()
+        if (error) throw error;
+        recordId = (data as ClinicalRecord).id; // Cast data to ClinicalRecord to access id
+        showSuccess("Registro clínico añadido exitosamente (o en cola para sincronizar).");
+      }
+
+      if (recordId) {
+        const oldAttachments = initialData?.attachments || [];
+        const attachmentsToDelete = oldAttachments.filter(
+          oldAtt => !existingAttachments.some(newAtt => newAtt.path === oldAtt.path)
+        );
+
+        for (const att of attachmentsToDelete) {
+          if (att.path) {
+            await supabase.onlineClient.storage.from("clinical-record-attachments").remove([att.path]);
+            await db.from("attachments").delete().match({ file_url: att.url });
+          }
+        }
+
+        for (const file of filesToUpload) {
+          const fileExtension = file.name.split(".").pop();
+          const filePath = `${recordId}/${crypto.randomUUID()}.${fileExtension}`;
+          const { data: uploadData, error: uploadError } = await supabase.onlineClient.storage
+            .from("clinical-record-attachments")
+            .upload(filePath, await fetch(file.url).then(res => res.blob()), {
+              cacheControl: '3600',
+              upsert: false
+            });
+
+          if (uploadError) throw uploadError;
+
+          const { data: publicUrlData } = supabase.onlineClient.storage
+            .from("clinical-record-attachments")
+            .getPublicUrl(filePath);
+
+          if (publicUrlData?.publicUrl) {
+            const { error: insertAttachmentError } = await db.from("attachments").insert({
+              clinical_record_id: recordId,
+              file_name: file.name,
+              file_type: file.type,
+              file_url: publicUrlData.publicUrl,
+              file_path: filePath,
+            });
+            if (insertAttachmentError) throw insertAttachmentError;
+          }
+        }
+      }
+
+      onSubmit(recordToSubmit as ClinicalRecord);
+      closeForm();
+    } catch (error: any) {
+      showError("Error al guardar el registro clínico: " + error.message);
+      console.error("Error saving clinical record:", error);
+    }
   };
 
   const openAddForm = (type: ClinicalRecordType) => {

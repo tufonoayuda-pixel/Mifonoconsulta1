@@ -92,7 +92,7 @@ const WeeklyPlanner: React.FC = () => {
   // Add schedule mutation
   const addScheduleMutation = useMutation<Schedule, Error, ScheduleFormValues>({
     mutationFn: async (newSchedule) => {
-      const { data, error } = await db.from("schedules").insert(newSchedule).select().single();
+      const { data, error } = await db.from("schedules").insert(newSchedule); // Removed .select().single()
       if (error) throw error;
       return data as Schedule;
     },
@@ -110,7 +110,7 @@ const WeeklyPlanner: React.FC = () => {
   // Update schedule mutation
   const updateScheduleMutation = useMutation<Schedule, Error, ScheduleFormValues>({
     mutationFn: async (updatedSchedule) => {
-      const { data, error } = await db.from("schedules").update(updatedSchedule).match({ id: updatedSchedule.id }).select().single();
+      const { data, error } = await db.from("schedules").update(updatedSchedule).match({ id: updatedSchedule.id }); // Removed .select().single()
       if (error) throw error;
       return data as Schedule;
     },
