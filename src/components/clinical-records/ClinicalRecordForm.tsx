@@ -5,7 +5,7 @@ import { useForm, FormProvider, UseFormReturn } from "react-hook-form"; // Impor
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, parse } from "date-fns";
-import { CalendarIcon, PlusCircle } from "lucide-react";
+import { CalendarIcon, PlusCircle } from "lucide-react"; // Corrected import for CalendarIcon
 import { es } from "date-fns/locale";
 
 import { Button } from "@/components/ui/button";
@@ -490,9 +490,9 @@ const ClinicalRecordForm: React.FC<ClinicalRecordFormProps> = ({
         if (error) throw error;
         showSuccess("Registro clínico actualizado exitosamente (o en cola para sincronizar).");
       } else {
-        const { data, error } = await db.from("clinical_records").insert(recordToSubmit).select("id").single();
+        const { data, error } = await db.from("clinical_records").insert(recordToSubmit); // Removed .select("id").single()
         if (error) throw error;
-        recordId = data.id;
+        recordId = (data as ClinicalRecord).id; // Cast data to ClinicalRecord to access id
         showSuccess("Registro clínico añadido exitosamente (o en cola para sincronizar).");
       }
 

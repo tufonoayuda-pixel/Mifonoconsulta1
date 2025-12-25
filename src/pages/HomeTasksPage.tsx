@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from "react"; // Import useEffect
-import { PlusCircle, Search, Printer, FileDown } from "lucide-react";
+import { PlusCircle, Search, Printer, FileDown, CalendarIcon } from "lucide-react"; // Corrected import for CalendarIcon
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/patients/data-table"; // Reusing patient data-table for now
 import { createHomeTaskColumns } from "@/components/home-tasks/columns";

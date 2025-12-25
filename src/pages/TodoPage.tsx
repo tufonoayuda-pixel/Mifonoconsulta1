@@ -14,7 +14,7 @@ import { z } from "zod";
 import { format, parseISO } from "date-fns"; // Import parseISO
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { CalendarIcon } from "@/components/ui/calendar"; // Import CalendarIcon
+import { CalendarIcon } from "lucide-react"; // Corrected import for CalendarIcon
 
 import { Todo } from "@/types/todo";
 import { supabase, db } from "@/integrations/supabase/client";

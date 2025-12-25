@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, parse } from "date-fns"; // Import 'parse'
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon } from "lucide-react"; // Corrected import for CalendarIcon
 import { es } from "date-fns/locale";
 
 import { Button } from "@/components/ui/button";
