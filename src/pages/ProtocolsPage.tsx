@@ -149,7 +149,7 @@ const protocolsData: ProtocolCategory[] = [
       {
         name: "EIDEFO",
         description: "Plataforma de evaluación de disfagia. Para ingresar es usuario: test y clave: password.",
-        url: "https://eidefo.vercel.app/login",
+        url: "https://eidefo2.vercel.app/login", // Updated URL
       },
       {
         name: "Escala de Severidad de Disfagia",
