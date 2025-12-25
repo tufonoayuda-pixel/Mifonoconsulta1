@@ -301,6 +301,11 @@ const protocolsData: ProtocolCategory[] = [
         description: "Protocolo para la valoración funcional de la respiración y la voz.",
         url: "https://mo-vfrv.space.z.ai",
       },
+      {
+        name: "Parálisis Facial",
+        description: "Herramienta para la evaluación y seguimiento de la parálisis facial.",
+        url: "https://mo-paralfacial.space.z.ai",
+      },
     ],
   },
 ];
